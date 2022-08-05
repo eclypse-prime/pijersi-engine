@@ -13,6 +13,12 @@ namespace PijersiEngine
         }
     }
 
+    int *Board::playAuto()
+    {
+        int *move = new int[6];
+        return move;
+    }
+
     int Board::coordsToIndex(int i, int j)
     {
         int index;
