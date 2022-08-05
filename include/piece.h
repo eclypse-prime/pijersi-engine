@@ -3,7 +3,7 @@
 
 namespace PijersiEngine
 {
-    enum Type
+    enum PieceType
     {
         Scissors,
         Paper,
@@ -11,14 +11,31 @@ namespace PijersiEngine
         Wise
     };
 
+    enum PieceColour
+    {
+        White,
+        Black
+    };
+
     class Piece
     {
-        public:
-            Piece(Type type);
-            Type getType();
-        
-        private:
-            Type type;
+    public:
+        Piece(PieceColour newColour, PieceType newType, int newI, int newJ);
+        PieceType getType();
+        int getI();
+        int getJ();
+        void setCoords(int newI, int newJ);
+        Piece *getBottom();
+        void setBottom(Piece *newBottom);
+
+        ~Piece();
+
+    private:
+        PieceColour colour;
+        PieceType type;
+        int i;
+        int j;
+        Piece *bottom;
     };
 }
 #endif
