@@ -37,3 +37,6 @@
 # SWIG generated files
 src/pijersi_engine_wrap.cxx
 wrap/
+
+# Build folder
+build/
