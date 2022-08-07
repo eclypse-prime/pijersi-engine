@@ -3,6 +3,14 @@
 
 namespace PijersiEngine
 {
+    Board::Board()
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            cells[k] = nullptr;
+        }
+    }
+
     void Board::playManual(int move[6])
     {
     }
@@ -27,65 +35,120 @@ namespace PijersiEngine
         return index;
     }
 
-    void Board::move(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
+    void Board::move(int iStart, int jStart, int iEnd, int jEnd)
     {
         Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-        if (movingPiece != nullptr)
+
+        // Delete the eaten piece if there is one
+        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        if (endPiece != nullptr)
         {
-            if (iMid < 0 || jMid < 0)
-            {
-                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-                if (endPiece == nullptr)
-                {
-                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-                    cells[coordsToIndex(iStart, jStart)] = nullptr;
-                }
-                else if (endPiece->colour != movingPiece->colour)
-                {
-                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-                    cells[coordsToIndex(iStart, jStart)] = nullptr;
-                    delete endPiece;
-                }
-                else
-                {
-                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-                    if (movingPiece->bottom != nullptr)
-                    {
-                        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
-                    }
-                    else
-                    {
-                        cells[coordsToIndex(iStart, jStart)] = nullptr;
-                    }
-                    movingPiece->bottom = endPiece;
-                }
-            }
-            else
-            {
-                Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
-                if (midPiece != nullptr && midPiece->colour == movingPiece->colour)
-                {
-                    if (movingPiece->bottom != nullptr)
-                    {
-                        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
-                    }
-                    else
-                    {
-                        cells[coordsToIndex(iStart, jStart)] = nullptr;
-                    }
-                    movingPiece->bottom = midPiece;
-                    Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-                    if (endPiece != nullptr)
-                    {
-                        delete endPiece;
-                    }
-                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-                }
-                else
-                {
-                }
-            }
+            delete endPiece;
         }
+
+        // Move the piece to the target cell
+        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        // Set the starting cell as empty
+        cells[coordsToIndex(iStart, jStart)] = nullptr;
+    }
+
+    void Board::stack(int iStart, int jStart, int iEnd, int jEnd)
+    {
+        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+
+        // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
+        // Else, set the starting cell as empty
+        Piece *bottomPiece = movingPiece->bottom;
+        if (movingPiece->bottom != nullptr)
+        {
+            cells[coordsToIndex(iStart, jStart)] = bottomPiece;
+        }
+        else
+        {
+            cells[coordsToIndex(iStart, jStart)] = nullptr;
+        }
+
+        // Move the top piece to the target cell and set its new bottom piece
+        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        movingPiece->bottom = endPiece;
+    }
+
+    void Board::unstack(int iStart, int jStart, int iEnd, int jEnd)
+    {
+        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+
+        // Delete the eaten piece if there is one
+        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        if (endPiece != nullptr)
+        {
+            delete endPiece;
+        }
+        // Leave the bottom piece in the starting cell
+        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+        // Remove the bottom piece from the moving piece
+        movingPiece->bottom = nullptr;
+        // Move the top piece to the target cell
+        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+    }
+
+    void Board::play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
+    {
+        // Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+        // if (movingPiece != nullptr)
+        // {
+        //     if (iMid < 0 || jMid < 0)
+        //     {
+        //         Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        //         if (endPiece == nullptr)
+        //         {
+        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        //             cells[coordsToIndex(iStart, jStart)] = nullptr;
+        //         }
+        //         else if (endPiece->colour != movingPiece->colour)
+        //         {
+        //             delete endPiece;
+        //         }
+        //         else
+        //         {
+        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        //             if (movingPiece->bottom != nullptr)
+        //             {
+        //                 cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+        //             }
+        //             else
+        //             {
+        //                 cells[coordsToIndex(iStart, jStart)] = nullptr;
+        //             }
+        //             movingPiece->bottom = endPiece;
+        //         }
+        //     }
+        //     else
+        //     {
+        //         Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
+        //         if (midPiece != nullptr && midPiece->colour == movingPiece->colour)
+        //         {
+        //             if (movingPiece->bottom != nullptr)
+        //             {
+        //                 cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+        //             }
+        //             else
+        //             {
+        //                 cells[coordsToIndex(iStart, jStart)] = nullptr;
+        //             }
+        //             movingPiece->bottom = midPiece;
+        //             Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        //             if (endPiece != nullptr)
+        //             {
+        //                 delete endPiece;
+        //             }
+        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        //         }
+        //         else
+        //         {
+        //         }
+        //     }
+        // }
     }
 
     Piece *Board::at(int i, int j)
@@ -135,7 +198,7 @@ namespace PijersiEngine
         cells[coordsToIndex(5, 3)]->bottom = new Piece(White, Wise);
     }
 
-    char pieceToChar(Piece* piece)
+    char pieceToChar(Piece *piece)
     {
         char res = ' ';
         if (piece->colour == White)
@@ -193,7 +256,7 @@ namespace PijersiEngine
                     // std::cout << coordsToIndex(i,j) << std::endl;
                     char char1 = ' ';
                     char char2 = ' ';
-                    Piece* piece = cells[coordsToIndex(i, j)];
+                    Piece *piece = cells[coordsToIndex(i, j)];
                     if (piece != nullptr)
                     {
                         char1 = pieceToChar(piece);
@@ -213,7 +276,7 @@ namespace PijersiEngine
                     // std::cout << coordsToIndex(i,j) << std::endl;
                     char char1 = ' ';
                     char char2 = ' ';
-                    Piece* piece = cells[coordsToIndex(i, j)];
+                    Piece *piece = cells[coordsToIndex(i, j)];
                     if (piece != nullptr)
                     {
                         char1 = pieceToChar(piece);
