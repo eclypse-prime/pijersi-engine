@@ -7,10 +7,10 @@ namespace PijersiEngine
     class Board
     {
     public:
+        Board();
         void playManual(int move[6]);
         int *playAuto();
         int coordsToIndex(int i, int j);
-        void move(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd);
         Piece *at(int i, int j);
         void addPiece(Piece *piece, int i, int j);
         void init();
@@ -18,6 +18,11 @@ namespace PijersiEngine
 
     private:
         Piece *cells[45];
+
+        void move(int iStart, int jStart, int iEnd, int jEnd);
+        void stack(int iStart, int jStart, int iEnd, int jEnd);
+        void unstack(int iStart, int jStart, int iEnd, int jEnd);
+        void play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd);
 
         bool checkWin();
         int *availableMoves(Piece piece);
