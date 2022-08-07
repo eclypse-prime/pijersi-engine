@@ -17,25 +17,13 @@ namespace PijersiEngine
         Black
     };
 
-    class Piece
+    struct Piece
     {
-    public:
-        Piece(PieceColour newColour, PieceType newType, int newI, int newJ);
-        PieceType getType();
-        int getI();
-        int getJ();
-        void setCoords(int newI, int newJ);
-        Piece *getBottom();
-        void setBottom(Piece *newBottom);
-
-        ~Piece();
-
-    private:
+        Piece(PieceColour newColour, PieceType newType);
         PieceColour colour;
         PieceType type;
-        int i;
-        int j;
         Piece *bottom;
+        ~Piece();
     };
 }
 #endif

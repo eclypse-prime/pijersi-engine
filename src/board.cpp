@@ -1,16 +1,10 @@
 #include <board.h>
+#include <iostream>
 
 namespace PijersiEngine
 {
     void Board::playManual(int move[6])
     {
-        Piece *piece = cells[coordsToIndex(move[0], move[1])];
-        if (piece != nullptr)
-        {
-            cells[coordsToIndex(move[0], move[1])] = nullptr;
-            cells[coordsToIndex(move[4], move[5])] = piece;
-            piece->setCoords(move[4], move[5]);
-        }
     }
 
     int *Board::playAuto()
@@ -24,58 +18,240 @@ namespace PijersiEngine
         int index;
         if (i % 2 == 0)
         {
-            index = 15 * i / 2 + j;
+            index = 13 * i / 2 + j;
         }
         else
         {
-            index = 8 + 15 * (i - 1) / 2 + j;
+            index = 6 + 13 * (i - 1) / 2 + j;
         }
         return index;
     }
 
+    void Board::move(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
+    {
+        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+        if (movingPiece != nullptr)
+        {
+            if (iMid < 0 || jMid < 0)
+            {
+                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                if (endPiece == nullptr)
+                {
+                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+                    cells[coordsToIndex(iStart, jStart)] = nullptr;
+                }
+                else if (endPiece->colour != movingPiece->colour)
+                {
+                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+                    cells[coordsToIndex(iStart, jStart)] = nullptr;
+                    delete endPiece;
+                }
+                else
+                {
+                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+                    if (movingPiece->bottom != nullptr)
+                    {
+                        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+                    }
+                    else
+                    {
+                        cells[coordsToIndex(iStart, jStart)] = nullptr;
+                    }
+                    movingPiece->bottom = endPiece;
+                }
+            }
+            else
+            {
+                Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
+                if (midPiece != nullptr && midPiece->colour == movingPiece->colour)
+                {
+                    if (movingPiece->bottom != nullptr)
+                    {
+                        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+                    }
+                    else
+                    {
+                        cells[coordsToIndex(iStart, jStart)] = nullptr;
+                    }
+                    movingPiece->bottom = midPiece;
+                    Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                    if (endPiece != nullptr)
+                    {
+                        delete endPiece;
+                    }
+                    cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+                }
+                else
+                {
+                }
+            }
+        }
+    }
+
     Piece *Board::at(int i, int j)
     {
+        std::cout << cells[coordsToIndex(i, j)]->colour << std::endl;
         return cells[coordsToIndex(i, j)];
     }
 
-    void Board::addPiece(Piece *piece)
+    void Board::addPiece(Piece *piece, int i, int j)
     {
-        int i = piece->getJ();
-        int j = piece->getI();
+        // std::cout << piece->colour << pieceToChar(piece) << std::endl;
         cells[coordsToIndex(i, j)] = piece;
     }
 
     void Board::init()
     {
         // Black pieces
-        addPiece(new Piece(Black, Scissors, 0, 0));
-        addPiece(new Piece(Black, Paper, 0, 1));
-        addPiece(new Piece(Black, Rock, 0, 2));
-        addPiece(new Piece(Black, Scissors, 0, 3));
-        addPiece(new Piece(Black, Paper, 0, 4));
-        addPiece(new Piece(Black, Rock, 0, 5));
-        addPiece(new Piece(Black, Paper, 1, 0));
-        addPiece(new Piece(Black, Rock, 1, 1));
-        addPiece(new Piece(Black, Scissors, 1, 2));
-        addPiece(new Piece(Black, Wise, 1, 3));
-        addPiece(new Piece(Black, Rock, 1, 4));
-        addPiece(new Piece(Black, Scissors, 1, 5));
-        addPiece(new Piece(Black, Paper, 1, 6));
+        addPiece(new Piece(Black, Scissors), 0, 0);
+        addPiece(new Piece(Black, Paper), 0, 1);
+        addPiece(new Piece(Black, Rock), 0, 2);
+        addPiece(new Piece(Black, Scissors), 0, 3);
+        addPiece(new Piece(Black, Paper), 0, 4);
+        addPiece(new Piece(Black, Rock), 0, 5);
+        addPiece(new Piece(Black, Paper), 1, 0);
+        addPiece(new Piece(Black, Rock), 1, 1);
+        addPiece(new Piece(Black, Scissors), 1, 2);
+        addPiece(new Piece(Black, Wise), 1, 3);
+        addPiece(new Piece(Black, Rock), 1, 4);
+        addPiece(new Piece(Black, Scissors), 1, 5);
+        addPiece(new Piece(Black, Paper), 1, 6);
+        cells[coordsToIndex(1, 3)]->bottom = new Piece(Black, Wise);
 
         // White pieces
-        addPiece(new Piece(White, Paper, 5, 0));
-        addPiece(new Piece(White, Scissors, 5, 1));
-        addPiece(new Piece(White, Rock, 5, 2));
-        addPiece(new Piece(White, Wise, 5, 3));
-        addPiece(new Piece(White, Scissors, 5, 4));
-        addPiece(new Piece(White, Rock, 5, 5));
-        addPiece(new Piece(White, Paper, 5, 6));
-        addPiece(new Piece(White, Rock, 6, 0));
-        addPiece(new Piece(White, Paper, 6, 1));
-        addPiece(new Piece(White, Scissors, 6, 2));
-        addPiece(new Piece(White, Rock, 6, 3));
-        addPiece(new Piece(White, Paper, 6, 4));
-        addPiece(new Piece(White, Scissors, 6, 5));
+        addPiece(new Piece(White, Paper), 5, 0);
+        addPiece(new Piece(White, Scissors), 5, 1);
+        addPiece(new Piece(White, Rock), 5, 2);
+        addPiece(new Piece(White, Wise), 5, 3);
+        addPiece(new Piece(White, Scissors), 5, 4);
+        addPiece(new Piece(White, Rock), 5, 5);
+        addPiece(new Piece(White, Paper), 5, 6);
+        addPiece(new Piece(White, Rock), 6, 0);
+        addPiece(new Piece(White, Paper), 6, 1);
+        addPiece(new Piece(White, Scissors), 6, 2);
+        addPiece(new Piece(White, Rock), 6, 3);
+        addPiece(new Piece(White, Paper), 6, 4);
+        addPiece(new Piece(White, Scissors), 6, 5);
+        cells[coordsToIndex(5, 3)]->bottom = new Piece(White, Wise);
+    }
+
+    char pieceToChar(Piece* piece)
+    {
+        char res = ' ';
+        if (piece->colour == White)
+        {
+            switch (piece->type)
+            {
+            case Scissors:
+                res = 'S';
+                break;
+            case Paper:
+                res = 'P';
+                break;
+            case Rock:
+                res = 'R';
+                break;
+            case Wise:
+                res = 'W';
+                break;
+            default:
+                break;
+            }
+        }
+        else if (piece->colour == Black)
+        {
+            switch (piece->type)
+            {
+            case Scissors:
+                res = 's';
+                break;
+            case Paper:
+                res = 'p';
+                break;
+            case Rock:
+                res = 'r';
+                break;
+            case Wise:
+                res = 'w';
+                break;
+            default:
+                break;
+            }
+        }
+        return res;
+    }
+
+    void Board::print()
+    {
+        for (int i = 0; i < 7; i++)
+        {
+            if (i % 2 == 0)
+            {
+                std::cout << ' ';
+                for (int j = 0; j < 6; j++)
+                {
+                    // std::cout << coordsToIndex(i,j) << std::endl;
+                    char char1 = ' ';
+                    char char2 = ' ';
+                    Piece* piece = cells[coordsToIndex(i, j)];
+                    if (piece != nullptr)
+                    {
+                        char1 = pieceToChar(piece);
+                        if (piece->bottom != nullptr)
+                        {
+                            char2 = pieceToChar(piece->bottom);
+                        }
+                    }
+                    std::cout << char1 << char2;
+                }
+                std::cout << std::endl;
+            }
+            else
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    // std::cout << coordsToIndex(i,j) << std::endl;
+                    char char1 = ' ';
+                    char char2 = ' ';
+                    Piece* piece = cells[coordsToIndex(i, j)];
+                    if (piece != nullptr)
+                    {
+                        char1 = pieceToChar(piece);
+                        if (piece->bottom != nullptr)
+                        {
+                            char2 = pieceToChar(piece->bottom);
+                        }
+                    }
+                    std::cout << char1 << char2;
+                }
+                std::cout << std::endl;
+            }
+        }
+    }
+
+    bool Board::checkWin()
+    {
+        for (int k = 0; k < 6; k++)
+        {
+            if (cells[k] != nullptr)
+            {
+                if (cells[k]->colour == White)
+                {
+                    return true;
+                }
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != nullptr)
+            {
+                if (cells[k]->colour == White)
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 }

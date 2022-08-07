@@ -1,4 +1,4 @@
-%module PijersiEngine
+%module PijersiCore
 
 %{
     #include <board.h>
