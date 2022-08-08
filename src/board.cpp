@@ -102,28 +102,34 @@ namespace PijersiEngine
         Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
         if (movingPiece != nullptr)
         {
+            // If there is no intermediate move
             if (iMid < 0 || jMid < 0)
             {
                 Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
                 if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
                 {
+                    // Simple move
                     move(iStart, jStart, iEnd, jEnd);
                 }
             }
+            // There is an intermediate move
             else
             {
                 Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
                 Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                // The piece at the mid coordinates is an ally : stack and move
                 if (midPiece != nullptr && midPiece->colour == movingPiece->colour && (iMid != iStart || jMid != jStart))
                 {
                     stack(iStart, jStart, iMid, jMid);
                     move(iMid, jMid, iEnd, jEnd);
                 }
+                // The piece at the end coordinates is an ally : move and stack
                 else if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
                 {
                     move(iStart, jStart, iMid, jMid);
                     stack(iMid, jMid, iEnd, jEnd);
                 }
+                // The end coordinates contain an enemy or no piece : move and unstack
                 else
                 {
                     move(iStart, jStart, iMid, jMid);
