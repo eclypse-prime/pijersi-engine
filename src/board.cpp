@@ -13,6 +13,7 @@ namespace PijersiEngine
 
     void Board::playManual(int move[6])
     {
+        play(move[0], move[1], move[2], move[3], move[4], move[5]);
     }
 
     int *Board::playAuto()
@@ -37,19 +38,23 @@ namespace PijersiEngine
 
     void Board::move(int iStart, int jStart, int iEnd, int jEnd)
     {
-        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-
-        // Delete the eaten piece if there is one
-        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-        if (endPiece != nullptr)
+        // Do nothing if start and end coordinate are identical
+        if (iStart != iEnd || jStart != jEnd)
         {
-            delete endPiece;
-        }
+            Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
 
-        // Move the piece to the target cell
-        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-        // Set the starting cell as empty
-        cells[coordsToIndex(iStart, jStart)] = nullptr;
+            // Delete the eaten piece if there is one
+            Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+            if (endPiece != nullptr)
+            {
+                delete endPiece;
+            }
+
+            // Move the piece to the target cell
+            cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+            // Set the starting cell as empty
+            cells[coordsToIndex(iStart, jStart)] = nullptr;
+        }
     }
 
     void Board::stack(int iStart, int jStart, int iEnd, int jEnd)
@@ -94,61 +99,39 @@ namespace PijersiEngine
 
     void Board::play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
     {
-        // Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-        // if (movingPiece != nullptr)
-        // {
-        //     if (iMid < 0 || jMid < 0)
-        //     {
-        //         Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-        //         if (endPiece == nullptr)
-        //         {
-        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-        //             cells[coordsToIndex(iStart, jStart)] = nullptr;
-        //         }
-        //         else if (endPiece->colour != movingPiece->colour)
-        //         {
-        //             delete endPiece;
-        //         }
-        //         else
-        //         {
-        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-        //             if (movingPiece->bottom != nullptr)
-        //             {
-        //                 cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
-        //             }
-        //             else
-        //             {
-        //                 cells[coordsToIndex(iStart, jStart)] = nullptr;
-        //             }
-        //             movingPiece->bottom = endPiece;
-        //         }
-        //     }
-        //     else
-        //     {
-        //         Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
-        //         if (midPiece != nullptr && midPiece->colour == movingPiece->colour)
-        //         {
-        //             if (movingPiece->bottom != nullptr)
-        //             {
-        //                 cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
-        //             }
-        //             else
-        //             {
-        //                 cells[coordsToIndex(iStart, jStart)] = nullptr;
-        //             }
-        //             movingPiece->bottom = midPiece;
-        //             Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-        //             if (endPiece != nullptr)
-        //             {
-        //                 delete endPiece;
-        //             }
-        //             cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-        //         }
-        //         else
-        //         {
-        //         }
-        //     }
-        // }
+        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+        if (movingPiece != nullptr)
+        {
+            if (iMid < 0 || jMid < 0)
+            {
+                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
+                {
+                    move(iStart, jStart, iEnd, jEnd);
+                }
+            }
+            else
+            {
+                Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
+                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                if (midPiece != nullptr && midPiece->colour == movingPiece->colour && (iMid != iStart || jMid != jStart))
+                {
+                    stack(iStart, jStart, iMid, jMid);
+                    move(iMid, jMid, iEnd, jEnd);
+                }
+                else if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
+                {
+                    move(iStart, jStart, iMid, jMid);
+                    stack(iMid, jMid, iEnd, jEnd);
+                }
+                else
+                {
+                    move(iStart, jStart, iMid, jMid);
+                    unstack(iMid, jMid, iEnd, jEnd);
+                }
+            }
+
+        }
     }
 
     Piece *Board::at(int i, int j)
