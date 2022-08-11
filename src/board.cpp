@@ -18,7 +18,7 @@ namespace PijersiEngine
 
     int *Board::playAuto()
     {
-        int *move = new int[6];
+        int *move = new int[6]();
         return move;
     }
 
