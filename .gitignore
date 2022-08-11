@@ -34,6 +34,9 @@
 # VSCode
 .vscode/
 
+# Visual Studio
+.vs/
+
 # SWIG generated files
 src/pijersi_engine_wrap.cxx
 wrap/
