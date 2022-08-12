@@ -152,6 +152,33 @@ namespace PijersiEngine
         cells[coordsToIndex(i, j)] = piece;
     }
 
+    void Board::setState(int colours[45], int tops[45], int bottoms[45])
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != nullptr)
+            {
+                delete cells[k];
+                cells[k] = nullptr;
+            }
+        }
+        for (int k = 0; k < 45; k++)
+        {
+            if (colours[k] != -1 && tops[k] != -1)
+            {
+                PieceColour colour = static_cast<PieceColour>(colours[k]);
+                PieceType topType = static_cast<PieceType>(tops[k]);
+                cells[k] = new Piece(colour, topType);
+
+                if (bottoms[k] != -1)
+                {
+                    PieceType bottomType = static_cast<PieceType>(bottoms[k]);
+                    cells[k]->bottom = new Piece(colour, bottomType);
+                }
+            }
+        }
+    }
+
     void Board::init()
     {
         // Black pieces
