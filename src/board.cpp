@@ -155,9 +155,65 @@ namespace PijersiEngine
         return cells[coordsToIndex(i, j)];
     }
 
+    int evaluatePiece(Piece *piece, int i)
+    {
+        int score;
+        if (piece->colour == White)
+        {
+            score = 7-i;
+            if (piece->bottom != nullptr)
+            {
+                score = score * 2 + 3;
+            }
+            if (i == 0)
+            {
+                score = score * 100;
+            }
+        }
+        else
+        {
+            score = -i-1;
+            if (piece->bottom != nullptr)
+            {
+                score = score * 2 - 3;
+            }
+            if (i == 6)
+            {
+                score = score * 100;
+            }
+        }
+        return score;
+    }
+
     int Board::evaluate()
     {
-        return 0;
+        int score = 0;
+        for (int i = 0; i < 7; i++)
+        {
+            if (i % 2 == 0)
+            {
+                for (int j = 0; j < 6; j++)
+                {
+                    Piece *piece = cells[coordsToIndex(i,j)];
+                    if (piece != nullptr)
+                    {
+                        score += evaluatePiece(piece, i);
+                    }
+                }
+            }
+            else
+            {
+                for (int j = 0; j < 7; j++)
+                {
+                    Piece *piece = cells[coordsToIndex(i,j)];
+                    if (piece != nullptr)
+                    {
+                        score += evaluatePiece(piece, i);
+                    }
+                }
+            }
+        }
+        return score;
     }
 
     void Board::addPiece(Piece *piece, int i, int j)
