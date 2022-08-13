@@ -1,5 +1,6 @@
 #include <board.h>
 #include <iostream>
+#include <string>
 
 namespace PijersiEngine
 {
@@ -138,12 +139,25 @@ namespace PijersiEngine
             }
 
         }
+        if (movingPiece->colour == White)
+        {
+            currentPlayer = Black;
+        }
+        else
+        {
+            currentPlayer = White;
+        }
     }
 
     Piece *Board::at(int i, int j)
     {
         std::cout << cells[coordsToIndex(i, j)]->colour << std::endl;
         return cells[coordsToIndex(i, j)];
+    }
+
+    int Board::evaluate()
+    {
+        return 0;
     }
 
     void Board::addPiece(Piece *piece, int i, int j)
@@ -262,11 +276,17 @@ namespace PijersiEngine
 
     void Board::print()
     {
+        std::cout << toString();
+    }
+
+    std::string Board::toString()
+    {
+        std::string output = "";
         for (int i = 0; i < 7; i++)
         {
             if (i % 2 == 0)
             {
-                std::cout << ' ';
+                output +=  ' ';
                 for (int j = 0; j < 6; j++)
                 {
                     // std::cout << coordsToIndex(i,j) << std::endl;
@@ -281,9 +301,10 @@ namespace PijersiEngine
                             char2 = pieceToChar(piece->bottom);
                         }
                     }
-                    std::cout << char1 << char2;
+                    output += char1;
+                    output += char2;
                 }
-                std::cout << std::endl;
+                output += '\n';
             }
             else
             {
@@ -301,11 +322,13 @@ namespace PijersiEngine
                             char2 = pieceToChar(piece->bottom);
                         }
                     }
-                    std::cout << char1 << char2;
+                    output += char1;
+                    output += char2;
                 }
-                std::cout << std::endl;
+                output += '\n';
             }
         }
+        return output;
     }
 
     bool Board::checkWin()

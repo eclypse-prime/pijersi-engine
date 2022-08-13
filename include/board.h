@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 #include <piece.h>
+#include <string>
 
 namespace PijersiEngine
 {
@@ -12,12 +13,15 @@ namespace PijersiEngine
         int *playAuto();
         int coordsToIndex(int i, int j);
         Piece *at(int i, int j);
+        int evaluate();
         void setState(int colours[45], int top[45], int bottom[45]);
         void init();
         void print();
+        std::string toString();
 
     private:
         Piece *cells[45];
+        PieceColour currentPlayer = White;
 
         void addPiece(Piece *piece, int i, int j);
         void move(int iStart, int jStart, int iEnd, int jEnd);
