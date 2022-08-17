@@ -35,7 +35,7 @@ namespace PijersiEngine
         bool checkWin();
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
-        vector<int> availableMoves(int i, int j)
+        vector<int> availableMoves(int i, int j);
 
     };
     char pieceToChar(Piece *piece);
