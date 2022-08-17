@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 
+using namespace std;
+
 namespace PijersiEngine
 {
     Board::Board()
@@ -137,7 +139,6 @@ namespace PijersiEngine
                     unstack(iMid, jMid, iEnd, jEnd);
                 }
             }
-
         }
         if (movingPiece->colour == White)
         {
@@ -151,7 +152,6 @@ namespace PijersiEngine
 
     Piece *Board::at(int i, int j)
     {
-        std::cout << cells[coordsToIndex(i, j)]->colour << std::endl;
         return cells[coordsToIndex(i, j)];
     }
 
@@ -160,7 +160,7 @@ namespace PijersiEngine
         int score;
         if (piece->colour == White)
         {
-            score = 7-i;
+            score = 7 - i;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 + 3;
@@ -172,7 +172,7 @@ namespace PijersiEngine
         }
         else
         {
-            score = -i-1;
+            score = -i - 1;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 - 3;
@@ -194,7 +194,7 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 6; j++)
                 {
-                    Piece *piece = cells[coordsToIndex(i,j)];
+                    Piece *piece = cells[coordsToIndex(i, j)];
                     if (piece != nullptr)
                     {
                         score += evaluatePiece(piece, i);
@@ -205,7 +205,7 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 7; j++)
                 {
-                    Piece *piece = cells[coordsToIndex(i,j)];
+                    Piece *piece = cells[coordsToIndex(i, j)];
                     if (piece != nullptr)
                     {
                         score += evaluatePiece(piece, i);
@@ -218,7 +218,6 @@ namespace PijersiEngine
 
     void Board::addPiece(Piece *piece, int i, int j)
     {
-        // std::cout << piece->colour << pieceToChar(piece) << std::endl;
         cells[coordsToIndex(i, j)] = piece;
     }
 
@@ -332,20 +331,19 @@ namespace PijersiEngine
 
     void Board::print()
     {
-        std::cout << toString();
+        cout << toString();
     }
 
-    std::string Board::toString()
+    string Board::toString()
     {
-        std::string output = "";
+        string output = "";
         for (int i = 0; i < 7; i++)
         {
             if (i % 2 == 0)
             {
-                output +=  ' ';
+                output += ' ';
                 for (int j = 0; j < 6; j++)
                 {
-                    // std::cout << coordsToIndex(i,j) << std::endl;
                     char char1 = ' ';
                     char char2 = ' ';
                     Piece *piece = cells[coordsToIndex(i, j)];
@@ -366,7 +364,6 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 7; j++)
                 {
-                    // std::cout << coordsToIndex(i,j) << std::endl;
                     char char1 = ' ';
                     char char2 = ' ';
                     Piece *piece = cells[coordsToIndex(i, j)];
@@ -410,6 +407,110 @@ namespace PijersiEngine
             }
         }
         return false;
+    }
+
+    vector<int> Board::neighbours(int i, int j)
+    {
+        return neighbours(coordsToIndex(i, j));
+    }
+
+    vector<int> Board::neighbours(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                return vector<int>({1,6,7});
+            case 1:
+                return vector<int>({0,2,7,8});
+            case 2:
+                return vector<int>({1,3,8,9});
+            case 3:
+                return vector<int>({2,4,9,10});
+            case 4:
+                return vector<int>({3,5,10,11});
+            case 5:
+                return vector<int>({4,11,12});
+            case 6:
+                return vector<int>({0,7,13});
+            case 7:
+                return vector<int>({0,1,6,8,13,14});
+            case 8:
+                return vector<int>({1,2,7,9,14,15});
+            case 9:
+                return vector<int>({2,3,8,10,15,16});
+            case 10:
+                return vector<int>({3,4,9,11,16,17});
+            case 11:
+                return vector<int>({4,5,10,12,17,18});
+            case 12:
+                return vector<int>({5,11,18});
+            case 13:
+                return vector<int>({6,7,14,19,20});
+            case 14:
+                return vector<int>({7,8,13,15,20,21});
+            case 15:
+                return vector<int>({8,9,14,16,21,22});
+            case 16:
+                return vector<int>({9,10,15,17,22,23});
+            case 17:
+                return vector<int>({10,11,16,18,23,24});
+            case 18:
+                return vector<int>({11,12,17,24,25});
+            case 19:
+                return vector<int>({13,20,26});
+            case 20:
+                return vector<int>({13,14,19,21,26,27});
+            case 21:
+                return vector<int>({14,15,20,22,27,28});
+            case 22:
+                return vector<int>({15,16,21,23,28,29});
+            case 23:
+                return vector<int>({16,17,22,24,29,30});
+            case 24:
+                return vector<int>({17,18,23,25,30,31});
+            case 25:
+                return vector<int>({18,24,31});
+            case 26:
+                return vector<int>({19,20,27,32,33});
+            case 27:
+                return vector<int>({20,21,26,28,33,34});
+            case 28:
+                return vector<int>({21,22,27,29,34,35});
+            case 29:
+                return vector<int>({22,23,28,30,35,36});
+            case 30:
+                return vector<int>({23,24,29,31,36,37});
+            case 31:
+                return vector<int>({24,25,30,37,38});
+            case 32:
+                return vector<int>({26,33,39});
+            case 33:
+                return vector<int>({26,27,32,34,39,40});
+            case 34:
+                return vector<int>({27,28,33,35,40,41});
+            case 35:
+                return vector<int>({28,29,34,36,41,42});
+            case 36:
+                return vector<int>({29,30,35,37,42,43});
+            case 37:
+                return vector<int>({30,31,36,38,43,44});
+            case 38:
+                return vector<int>({31,37,44});
+            case 39:
+                return vector<int>({32,33,40});
+            case 40:
+                return vector<int>({33,34,39,41});
+            case 41:
+                return vector<int>({34,35,40,42});
+            case 42:
+                return vector<int>({35,36,41,43});
+            case 43:
+                return vector<int>({36,37,42,44});
+            case 44:
+                return vector<int>({37,38,43});
+            default:
+                return vector<int>();
+        }
     }
 
 }

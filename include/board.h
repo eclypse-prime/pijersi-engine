@@ -2,6 +2,9 @@
 #define BOARD_H
 #include <piece.h>
 #include <string>
+#include <vector>
+
+using namespace std;
 
 namespace PijersiEngine
 {
@@ -17,7 +20,7 @@ namespace PijersiEngine
         void setState(int colours[45], int top[45], int bottom[45]);
         void init();
         void print();
-        std::string toString();
+        string toString();
 
     private:
         Piece *cells[45];
@@ -30,7 +33,8 @@ namespace PijersiEngine
         void play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd);
 
         bool checkWin();
-        int *availableMoves(Piece piece);
+        vector<int> neighbours(int i, int j);
+        vector<int> neighbours(int index);
     };
     char pieceToChar(Piece *piece);
 }
