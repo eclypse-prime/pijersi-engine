@@ -13,9 +13,9 @@ def coords_index(i: int, j: int) -> int:
     return index
 
 
-def find_neighbours(i: int, j: int ) -> List[int]:
+def find_neighbours(i: int, j: int) -> List[int]:
     neighbours = []
-    index = coords_index(i,j)
+    index = coords_index(i, j)
     if j > 0 or i % 2 == 0:
         if j > 0:
             neighbours.append(index - 1)
@@ -25,7 +25,7 @@ def find_neighbours(i: int, j: int ) -> List[int]:
             neighbours.append(index + 6)
 
     if (i % 2 == 0) or (i % 2 == 1 and j < 6):
-        if (i%2 == 0 and j < 5) or (i % 2 == 1 and j < 6):
+        if (i % 2 == 0 and j < 5) or (i % 2 == 1 and j < 6):
             neighbours.append(index + 1)
         if i > 0:
             neighbours.append(index - 6)
@@ -36,31 +36,24 @@ def find_neighbours(i: int, j: int ) -> List[int]:
     return neighbours
 
 
+def print_case(i: int, j: int):
+    index = coords_index(i, j)
+    print(f"case {index}:")
+    line = "    return vector<int>({"
+    neighbours = find_neighbours(i, j)
+    n = len(find_neighbours(i, j))
+    for k in range(n):
+        line += str(neighbours[k])
+        if k < n-1:
+            line += ","
+    line += "});"
+    print(line)
+
 
 for i in range(7):
     if i % 2 == 0:
         for j in range(6):
-            index = coords_index(i,j)
-            print(f"case {index}:")
-            line = "    return vector<int>({"
-            neighbours = find_neighbours(i,j)
-            n = len(find_neighbours(i,j))
-            for k in range(n):
-                line += str(neighbours[k])
-                if k < n-1:
-                    line += ","
-            line += "});"
-            print(line)
+            print_case(i, j)
     else:
         for j in range(7):
-            index = coords_index(i,j)
-            print(f"case {index}:")
-            line = "    return vector<int>({"
-            neighbours = find_neighbours(i,j)
-            n = len(find_neighbours(i,j))
-            for k in range(n):
-                line += str(neighbours[k])
-                if k < n-1:
-                    line += ","
-            line += "});"
-            print(line)
+            print_case(i, j)
