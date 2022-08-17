@@ -1,4 +1,4 @@
-"""A helper script to generate the switch case in Board::neighbours(int index)
+"""A helper script to generate the switch case in Board::neighbours2(int index)
 I wanted to hardcode this so I created this script to generate all the cases in C++ code.
 """
 
@@ -13,24 +13,24 @@ def coords_index(i: int, j: int) -> int:
     return index
 
 
-def find_neighbours(i: int, j: int ) -> List[int]:
+def find_neighbours(i: int, j: int) -> List[int]:
     neighbours = []
     index = coords_index(i,j)
-    if j > 0 or i % 2 == 0:
-        if j > 0:
-            neighbours.append(index - 1)
-        if i > 0:
-            neighbours.append(index - 7)
-        if i < 6:
-            neighbours.append(index + 6)
+    if j > 1 or (i % 2 == 0 and j > 0):
+        if j > 1:
+            neighbours.append(index - 2)
+        if i > 1:
+            neighbours.append(index - 14)
+        if i < 5:
+            neighbours.append(index + 12)
 
-    if (i % 2 == 0) or (i % 2 == 1 and j < 6):
-        if (i%2 == 0 and j < 5) or (i % 2 == 1 and j < 6):
-            neighbours.append(index + 1)
-        if i > 0:
-            neighbours.append(index - 6)
-        if i < 6:
-            neighbours.append(index + 7)
+    if (i%2 == 0 and j < 5) or (i % 2 == 1 and j < 6):
+        if (i%2 == 0 and j < 4) or (i % 2 == 1 and j < 5):
+            neighbours.append(index + 2)
+        if i > 1:
+            neighbours.append(index - 12)
+        if i < 5:
+            neighbours.append(index + 14)
 
     neighbours.sort()
     return neighbours
