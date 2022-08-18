@@ -602,6 +602,51 @@ namespace PijersiEngine
             return vector<int>({29, 31, 41});
         case 44:
             return vector<int>({30, 42});
+        default:
+            return vector<int>();
         }
+    }
+
+    bool Board::isMoveValid(int indexStart, int indexEnd)
+    {
+        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour){
+            return false;
+        }
+        return true;
+    }
+
+    bool Board::isMove2Valid(int indexStart, int indexEnd)
+    {
+        if (cells[(indexEnd+indexStart)/2] != nullptr)
+        {
+            return false;
+        }
+        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour){
+            return false;
+        }
+        return true;
+    }
+
+    bool Board::isStackValid(int indexStart, int indexEnd)
+    {
+        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour && cells[indexEnd]->bottom == nullptr)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    bool Board::isUnstackValid(int indexStart, int indexEnd)
+    {
+        if (cells[indexEnd] == nullptr)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    vector<int> Board::availableMoves(int i, int j)
+    {
+        return vector<int>();
     }
 }

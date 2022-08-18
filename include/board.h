@@ -35,6 +35,12 @@ namespace PijersiEngine
         bool checkWin();
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
+
+        bool isMoveValid(int indexStart, int indexEnd);
+        bool isMove2Valid(int indexStart, int indexEnd);
+        bool isStackValid(int indexStart, int indexEnd);
+        bool isUnstackValid(int indexStart, int indexEnd);
+
         vector<int> availableMoves(int i, int j);
 
     };
