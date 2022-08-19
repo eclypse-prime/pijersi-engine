@@ -15,8 +15,8 @@ namespace PijersiEngine
         Board(Board &board);
         ~Board();
 
-        void playManual(int move[6]);
-        int *playAuto();
+        void playManual(vector<int> move);
+        vector<int> playAuto(int recursionDepth);
         int evaluate();
         void setState(int colours[45], int top[45], int bottom[45]);
         void init();
@@ -25,6 +25,7 @@ namespace PijersiEngine
         void print();
         string toString();
 
+        bool checkWin();
 
     private:
         Piece *cells[45];
@@ -34,14 +35,13 @@ namespace PijersiEngine
         void move(int iStart, int jStart, int iEnd, int jEnd);
         void stack(int iStart, int jStart, int iEnd, int jEnd);
         void unstack(int iStart, int jStart, int iEnd, int jEnd);
+        void playManual(int move[6]);
         void play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd);
 
-        bool checkWin();
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
 
-        // switch to vector
-        int evaluateMove(int move[6]);
+        int evaluateMove(int move[6], int recursionDepth);
 
         bool isMoveValid(int indexStart, int indexEnd);
         bool isMove2Valid(int indexStart, int indexEnd);

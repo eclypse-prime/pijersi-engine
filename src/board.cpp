@@ -23,8 +23,8 @@ namespace PijersiEngine
 
     void indexToCoords(int index, int *i, int *j)
     {
-        *i = 2*(index/13);
-        *j = index%13;
+        *i = 2 * (index / 13);
+        *j = index % 13;
         if (*j > 5)
         {
             *j -= 6;
@@ -70,46 +70,39 @@ namespace PijersiEngine
         }
     }
 
+    void Board::playManual(vector<int> move)
+    {
+        play(move[0], move[1], move[2], move[3], move[4], move[5]);
+    }
+
     void Board::playManual(int move[6])
     {
         play(move[0], move[1], move[2], move[3], move[4], move[5]);
     }
 
-    // Very naive algorithm for now, minimax and alphabeta for later
-    int *Board::playAuto()
+    // Minimax, implement alphabeta later
+    vector<int> Board::playAuto(int recursionDepth)
     {
         vector<int> moves = vector<int>();
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != nullptr && cells[k]->colour == currentPlayer)
             {
-                int i,j;
+                int i, j;
                 indexToCoords(k, &i, &j);
                 vector<int> pieceMoves = availableMoves(i, j);
                 moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
-                
             }
-            // if (k==1)
-            // {
-            //     for (int kk = 0; kk < moves.size()/6; kk++)
-            //     {
-            //         for (int kkk = 0; kkk < 6; kkk++)
-            //         {
-            //             cout << moves[kk*6+kkk] << " ";
-            //         }
-            //         cout << endl;
-            //     }
-            // }
         }
 
         if (moves.size() > 0)
         {
             int index = 0;
-            int extremum = evaluateMove(moves.data());
+            int extremum = evaluateMove(moves.data(), recursionDepth);
 
-            for (int k = 1; k < moves.size()/6; k++)
+            for (int k = 1; k < moves.size() / 6; k++)
             {
-                int score = evaluateMove(moves.data()+6*k);
+                int score = evaluateMove(moves.data() + 6 * k, recursionDepth);
                 if ((currentPlayer == White && score > extremum) || (currentPlayer == Black && score < extremum))
                 {
                     index = k;
@@ -117,12 +110,14 @@ namespace PijersiEngine
                 }
             }
 
-            int *move = moves.data() + 6*index;
+            vector<int>::const_iterator first = moves.begin() + 6 * index;
+            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int> move(first, last);
             playManual(move);
             return move;
         }
 
-        int *move = new int[6]();
+        vector<int> move = vector<int>(6);
         return move;
     }
 
@@ -195,12 +190,8 @@ namespace PijersiEngine
             // If there is no intermediate move
             if (iMid < 0 || jMid < 0)
             {
-                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-                if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
-                {
-                    // Simple move
-                    move(iStart, jStart, iEnd, jEnd);
-                }
+                // Simple move
+                move(iStart, jStart, iEnd, jEnd);
             }
             // There is an intermediate move
             else
@@ -254,7 +245,7 @@ namespace PijersiEngine
             }
             if (i == 0)
             {
-                score = score * 100;
+                score = score * 10000;
             }
         }
         else
@@ -266,7 +257,7 @@ namespace PijersiEngine
             }
             if (i == 6)
             {
-                score = score * 100;
+                score = score * 10000;
             }
         }
         return score;
@@ -487,7 +478,7 @@ namespace PijersiEngine
         {
             if (cells[k] != nullptr)
             {
-                if (cells[k]->colour == White)
+                if (cells[k]->colour == Black)
                 {
                     return true;
                 }
@@ -721,7 +712,7 @@ namespace PijersiEngine
 
     bool Board::isMove2Valid(int indexStart, int indexEnd)
     {
-        if (cells[(indexEnd+indexStart)/2] != nullptr)
+        if (cells[(indexEnd + indexStart) / 2] != nullptr)
         {
             return false;
         }
@@ -766,7 +757,7 @@ namespace PijersiEngine
 
     vector<int> Board::availableMoves(int iStart, int jStart)
     {
-        int indexStart = coordsToIndex(iStart,jStart);
+        int indexStart = coordsToIndex(iStart, jStart);
 
         Piece *movingPiece = cells[indexStart];
 
@@ -867,7 +858,7 @@ namespace PijersiEngine
                             moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
                         }
                     }
-                    
+
                     // stack, 2-range move
                     for (int indexEnd : neighbours2(indexMid))
                     {
@@ -930,16 +921,27 @@ namespace PijersiEngine
         return moves;
     }
 
-    int Board::evaluateMove(int move[6])
+    int Board::evaluateMove(int move[6], int recursionDepth)
     {
         Board *newBoard = new Board(*this);
         newBoard->playManual(move);
+
+        if (newBoard->checkWin())
+        {
+            int newScore = newBoard->evaluate();
+            delete newBoard;
+            return newScore;
+        }
+
+        if (recursionDepth > 0)
+        {
+            newBoard->playAuto(recursionDepth-1);
+        }
 
         int newScore = newBoard->evaluate();
         delete newBoard;
 
         return newScore;
     }
-
 
 }
