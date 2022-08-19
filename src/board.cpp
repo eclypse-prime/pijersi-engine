@@ -1,6 +1,7 @@
 #include <board.h>
 #include <iostream>
 #include <string>
+#include <omp.h>
 
 using namespace std;
 
@@ -100,6 +101,7 @@ namespace PijersiEngine
             int index = 0;
             int extremum = evaluateMove(moves.data(), recursionDepth);
 
+            #pragma omp parallel for
             for (int k = 1; k < moves.size() / 6; k++)
             {
                 int score = evaluateMove(moves.data() + 6 * k, recursionDepth);
@@ -468,7 +470,7 @@ namespace PijersiEngine
         {
             if (cells[k] != nullptr)
             {
-                if (cells[k]->colour == White)
+                if (cells[k]->colour == White && cells[k]->type != Wise)
                 {
                     return true;
                 }
@@ -478,7 +480,7 @@ namespace PijersiEngine
         {
             if (cells[k] != nullptr)
             {
-                if (cells[k]->colour == Black)
+                if (cells[k]->colour == Black && cells[k]->type != Wise)
                 {
                     return true;
                 }
