@@ -12,15 +12,19 @@ namespace PijersiEngine
     {
     public:
         Board();
+        Board(Board &board);
+        ~Board();
+
         void playManual(int move[6]);
         int *playAuto();
-        int coordsToIndex(int i, int j);
-        Piece *at(int i, int j);
         int evaluate();
         void setState(int colours[45], int top[45], int bottom[45]);
         void init();
+
+        Piece *at(int i, int j);
         void print();
         string toString();
+
 
     private:
         Piece *cells[45];
@@ -36,13 +40,15 @@ namespace PijersiEngine
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
 
+        // switch to vector
+        int evaluateMove(int move[6]);
+
         bool isMoveValid(int indexStart, int indexEnd);
         bool isMove2Valid(int indexStart, int indexEnd);
         bool isStackValid(int indexStart, int indexEnd);
         bool isUnstackValid(int indexStart, int indexEnd);
 
         vector<int> availableMoves(int i, int j);
-
     };
     char pieceToChar(Piece *piece);
 }

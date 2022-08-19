@@ -6,26 +6,8 @@ using namespace std;
 
 namespace PijersiEngine
 {
-    Board::Board()
-    {
-        for (int k = 0; k < 45; k++)
-        {
-            cells[k] = nullptr;
-        }
-    }
 
-    void Board::playManual(int move[6])
-    {
-        play(move[0], move[1], move[2], move[3], move[4], move[5]);
-    }
-
-    int *Board::playAuto()
-    {
-        int *move = new int[6]();
-        return move;
-    }
-
-    int Board::coordsToIndex(int i, int j)
+    int coordsToIndex(int i, int j)
     {
         int index;
         if (i % 2 == 0)
@@ -37,6 +19,111 @@ namespace PijersiEngine
             index = 6 + 13 * (i - 1) / 2 + j;
         }
         return index;
+    }
+
+    void indexToCoords(int index, int *i, int *j)
+    {
+        *i = 2*(index/13);
+        *j = index%13;
+        if (*j > 5)
+        {
+            *j -= 6;
+            *i += 1;
+        }
+    }
+
+    Board::Board()
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            cells[k] = nullptr;
+        }
+    }
+
+    Board::Board(Board &board)
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            if (board.cells[k] != nullptr)
+            {
+                cells[k] = new Piece(board.cells[k]->colour, board.cells[k]->type);
+                if (board.cells[k]->bottom != nullptr)
+                {
+                    cells[k]->bottom = new Piece(board.cells[k]->bottom->colour, board.cells[k]->bottom->type);
+                }
+            }
+            else
+            {
+                cells[k] = nullptr;
+            }
+        }
+    }
+
+    Board::~Board()
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != nullptr)
+            {
+                delete cells[k];
+            }
+        }
+    }
+
+    void Board::playManual(int move[6])
+    {
+        play(move[0], move[1], move[2], move[3], move[4], move[5]);
+    }
+
+    // Very naive algorithm for now, minimax and alphabeta for later
+    int *Board::playAuto()
+    {
+        vector<int> moves = vector<int>();
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != nullptr && cells[k]->colour == currentPlayer)
+            {
+                int i,j;
+                indexToCoords(k, &i, &j);
+                vector<int> pieceMoves = availableMoves(i, j);
+                moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+                
+            }
+            // if (k==1)
+            // {
+            //     for (int kk = 0; kk < moves.size()/6; kk++)
+            //     {
+            //         for (int kkk = 0; kkk < 6; kkk++)
+            //         {
+            //             cout << moves[kk*6+kkk] << " ";
+            //         }
+            //         cout << endl;
+            //     }
+            // }
+        }
+
+        if (moves.size() > 0)
+        {
+            int index = 0;
+            int extremum = evaluateMove(moves.data());
+
+            for (int k = 1; k < moves.size()/6; k++)
+            {
+                int score = evaluateMove(moves.data()+6*k);
+                if ((currentPlayer == White && score > extremum) || (currentPlayer == Black && score < extremum))
+                {
+                    index = k;
+                    extremum = score;
+                }
+            }
+
+            int *move = moves.data() + 6*index;
+            playManual(move);
+            return move;
+        }
+
+        int *move = new int[6]();
+        return move;
     }
 
     void Board::move(int iStart, int jStart, int iEnd, int jEnd)
@@ -607,10 +694,27 @@ namespace PijersiEngine
         }
     }
 
+    bool canTake(PieceType source, PieceType target)
+    {
+        if (source == Scissors && target == Paper || source == Paper && target == Rock || source == Rock && target == Scissors)
+        {
+            return true;
+        }
+        return false;
+    }
+
     bool Board::isMoveValid(int indexStart, int indexEnd)
     {
-        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour){
-            return false;
+        if (cells[indexEnd] != nullptr)
+        {
+            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            {
+                return false;
+            }
+            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -621,8 +725,16 @@ namespace PijersiEngine
         {
             return false;
         }
-        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour){
-            return false;
+        if (cells[indexEnd] != nullptr)
+        {
+            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            {
+                return false;
+            }
+            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            {
+                return false;
+            }
         }
         return true;
     }
@@ -638,15 +750,196 @@ namespace PijersiEngine
 
     bool Board::isUnstackValid(int indexStart, int indexEnd)
     {
-        if (cells[indexEnd] == nullptr)
+        if (cells[indexEnd] != nullptr)
         {
-            return true;
+            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            {
+                return false;
+            }
+            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            {
+                return false;
+            }
         }
-        return false;
+        return true;
     }
 
-    vector<int> Board::availableMoves(int i, int j)
+    vector<int> Board::availableMoves(int iStart, int jStart)
     {
-        return vector<int>();
+        int indexStart = coordsToIndex(iStart,jStart);
+
+        Piece *movingPiece = cells[indexStart];
+
+        vector<int> moves = vector<int>();
+
+        if (movingPiece->bottom == nullptr)
+        {
+            // 1-range first action
+            for (int indexMid : neighbours(indexStart))
+            {
+                // 1-range move
+                if (isMoveValid(indexStart, indexMid))
+                {
+                    int iEnd, jEnd;
+                    indexToCoords(indexMid, &iEnd, &jEnd);
+                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iEnd, jEnd});
+                }
+                // stack, [1/2-range move] optional
+                if (isStackValid(indexStart, indexMid))
+                {
+                    int iMid, jMid;
+                    indexToCoords(indexMid, &iMid, &jMid);
+
+                    // stack only
+                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+
+                    // stack, 0/1-range move
+                    for (int indexEnd : neighbours(indexMid))
+                    {
+                        if (isMoveValid(indexMid, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+
+                    // stack, 2-range move
+                    for (int indexEnd : neighbours2(indexMid))
+                    {
+                        if (isMove2Valid(indexMid, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+                }
+            }
+        }
+        else
+        {
+            // 1-range first action
+            for (int indexMid : neighbours(indexStart))
+            {
+
+                // 1-range move, [stack or unstack] optional
+                if (isMoveValid(indexStart, indexMid))
+                {
+                    int iMid, jMid;
+                    indexToCoords(indexMid, &iMid, &jMid);
+
+                    // 1-range move
+                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iMid, jMid});
+
+                    // 1-range move, stack or unstack
+                    for (int indexEnd : neighbours(indexMid))
+                    {
+                        // 1-range move, stack
+                        if (isStackValid(indexStart, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+
+                        // 1-range move, unstack
+                        if (isUnstackValid(indexStart, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+                }
+                // stack, [1/2-range move] optional
+                if (isStackValid(indexStart, indexMid))
+                {
+                    int iMid, jMid;
+                    indexToCoords(indexMid, &iMid, &jMid);
+                    // stack, 1-range move
+                    for (int indexEnd : neighbours(indexMid))
+                    {
+                        if (isMoveValid(indexMid, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+                    
+                    // stack, 2-range move
+                    for (int indexEnd : neighbours2(indexMid))
+                    {
+                        if (isMove2Valid(indexMid, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+
+                    // stack only
+                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+                }
+
+                // unstack
+                if (isUnstackValid(indexStart, indexMid))
+                {
+                    // unstack only
+                    int iMid, jMid;
+                    indexToCoords(indexMid, &iMid, &jMid);
+                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+                }
+            }
+
+            // 2 range first action
+            for (int indexMid : neighbours2(indexStart))
+            {
+                if (isMove2Valid(indexStart, indexMid))
+                {
+                    int iMid, jMid;
+                    indexToCoords(indexMid, &iMid, &jMid);
+
+                    // 2-range move
+                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iMid, jMid});
+
+                    // 2-range move, stack or unstack
+                    for (int indexEnd : neighbours(indexMid))
+                    {
+                        // 2-range move, stack
+                        if (isStackValid(indexStart, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+
+                        // 2-range move, unstack
+                        if (isUnstackValid(indexStart, indexEnd))
+                        {
+                            int iEnd, jEnd;
+                            indexToCoords(indexEnd, &iEnd, &jEnd);
+                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                        }
+                    }
+                }
+            }
+        }
+
+        return moves;
     }
+
+    int Board::evaluateMove(int move[6])
+    {
+        Board *newBoard = new Board(*this);
+        newBoard->playManual(move);
+
+        int newScore = newBoard->evaluate();
+        delete newBoard;
+
+        return newScore;
+    }
+
+
 }
