@@ -736,6 +736,9 @@ namespace PijersiEngine
     {
         if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour && cells[indexEnd]->bottom == nullptr)
         {
+            if (cells[indexStart]->type == Wise && cells[indexEnd]->type != Wise) {
+                return false;
+            }
             return true;
         }
         return false;
