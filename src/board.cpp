@@ -245,7 +245,7 @@ namespace PijersiEngine
             {
                 score = score * 2 + 3;
             }
-            if (i == 0)
+            if (i == 0 && piece->type != Wise)
             {
                 score = score * 10000;
             }
@@ -257,7 +257,7 @@ namespace PijersiEngine
             {
                 score = score * 2 - 3;
             }
-            if (i == 6)
+            if (i == 6 && piece->type != Wise)
             {
                 score = score * 10000;
             }
