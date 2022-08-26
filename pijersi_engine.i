@@ -8,7 +8,9 @@
 
 %include "carrays.i"
 %include "std_vector.i"
+%include "stdint.i"
 %array_class(int, intArray);
+%array_class(uint8_t, byteArray);
 namespace std {
    %template(IntVector) vector<int>;
 }
