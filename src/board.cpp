@@ -278,7 +278,11 @@ namespace PijersiEngine
         int score;
         if (piece->colour == White)
         {
-            score = 8 + 7 - i;
+            score = 8;
+            if (piece->type != Wise)
+            {
+                score = score + 7 - i;
+            }
             if (piece->bottom != nullptr)
             {
                 score = score * 2 + 3;
@@ -290,7 +294,12 @@ namespace PijersiEngine
         }
         else
         {
-            score = -8 -i - 1;
+            score = -8;
+            if (piece->type != Wise)
+            {
+                score = score -i - 1;
+            }
+            score = -8 ;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 - 3;
