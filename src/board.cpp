@@ -35,44 +35,51 @@ namespace PijersiEngine
         }
     }
 
+    uint8_t addBottom(uint8_t piece, uint8_t newBottom)
+    {
+        return piece + (newBottom << 4);
+    }
+
+    uint8_t createPiece(PieceColour colour, PieceType type)
+    {
+        uint8_t piece = 1;
+        if (colour == Black) {
+            piece += 2;
+        }
+        switch (type)
+        {
+            case Scissors:
+                break;
+            case Paper:
+                piece += 4;
+                break;
+            case Rock:
+                piece += 8;
+                break;
+            case Wise:
+                piece += 12;
+                break;
+        }
+        return piece;
+    }
+
     Board::Board()
     {
         for (int k = 0; k < 45; k++)
         {
-            cells[k] = nullptr;
+            cells[k] = 0;
         }
     }
 
     Board::Board(Board &board)
     {
-        for (int k = 0; k < 45; k++)
-        {
-            if (board.cells[k] != nullptr)
-            {
-                cells[k] = new Piece(board.cells[k]->colour, board.cells[k]->type);
-                if (board.cells[k]->bottom != nullptr)
-                {
-                    cells[k]->bottom = new Piece(board.cells[k]->bottom->colour, board.cells[k]->bottom->type);
-                }
-            }
-            else
-            {
-                cells[k] = nullptr;
-            }
-        }
+        setState(board.cells);
         currentPlayer = board.currentPlayer;
     }
 
-    Board::~Board()
-    {
-        for (int k = 0; k < 45; k++)
-        {
-            if (cells[k] != nullptr)
-            {
-                delete cells[k];
-            }
-        }
-    }
+    // Board::~Board()
+    // {
+    // }
 
     void Board::playManual(vector<int> move)
     {
@@ -90,12 +97,15 @@ namespace PijersiEngine
         vector<int> moves = vector<int>();
         for (int k = 0; k < 45; k++)
         {
-            if (cells[k] != nullptr && cells[k]->colour == currentPlayer)
+            if (cells[k] != 0)
             {
-                int i, j;
-                indexToCoords(k, &i, &j);
-                vector<int> pieceMoves = availableMoves(i, j);
-                moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+                if ((cells[k] & 2) == (static_cast<PieceColour>(currentPlayer) << 1))
+                {
+                    int i, j;
+                    indexToCoords(k, &i, &j);
+                    vector<int> pieceMoves = availableMoves(i, j);
+                    moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+                }
             }
         }
 
@@ -166,66 +176,42 @@ namespace PijersiEngine
         // Do nothing if start and end coordinate are identical
         if (iStart != iEnd || jStart != jEnd)
         {
-            Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-
-            // Delete the eaten piece if there is one
-            Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-            if (endPiece != nullptr)
-            {
-                delete endPiece;
-            }
-
             // Move the piece to the target cell
-            cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+            cells[coordsToIndex(iEnd, jEnd)] = cells[coordsToIndex(iStart, jStart)];
+
             // Set the starting cell as empty
-            cells[coordsToIndex(iStart, jStart)] = nullptr;
+            cells[coordsToIndex(iStart, jStart)] = 0;
         }
     }
 
     void Board::stack(int iStart, int jStart, int iEnd, int jEnd)
     {
-        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
+        uint8_t endPiece = cells[coordsToIndex(iEnd, jEnd)];
 
         // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
-        // Else, set the starting cell as empty
-        Piece *bottomPiece = movingPiece->bottom;
-        if (movingPiece->bottom != nullptr)
-        {
-            cells[coordsToIndex(iStart, jStart)] = bottomPiece;
-        }
-        else
-        {
-            cells[coordsToIndex(iStart, jStart)] = nullptr;
-        }
+        cells[coordsToIndex(iStart, jStart)] = (movingPiece >> 4);
 
         // Move the top piece to the target cell and set its new bottom piece
-        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
-        movingPiece->bottom = endPiece;
+        cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15) + (endPiece << 4);
     }
 
     void Board::unstack(int iStart, int jStart, int iEnd, int jEnd)
     {
-        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
+        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
 
-        // Delete the eaten piece if there is one
-        Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
-        if (endPiece != nullptr)
-        {
-            delete endPiece;
-        }
         // Leave the bottom piece in the starting cell
-        cells[coordsToIndex(iStart, jStart)] = movingPiece->bottom;
+        cells[coordsToIndex(iStart, jStart)] = (movingPiece >> 4);
         // Remove the bottom piece from the moving piece
-        movingPiece->bottom = nullptr;
         // Move the top piece to the target cell
-        cells[coordsToIndex(iEnd, jEnd)] = movingPiece;
+        // Will overwrite the eaten piece if there is one
+        cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15);
     }
 
     void Board::play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
     {
-        Piece *movingPiece = cells[coordsToIndex(iStart, jStart)];
-        if (movingPiece != nullptr)
+        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
+        if (movingPiece != 0)
         {
             // If there is no intermediate move
             if (iMid < 0 || jMid < 0)
@@ -236,16 +222,16 @@ namespace PijersiEngine
             // There is an intermediate move
             else
             {
-                Piece *midPiece = cells[coordsToIndex(iMid, jMid)];
-                Piece *endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                uint8_t midPiece = cells[coordsToIndex(iMid, jMid)];
+                uint8_t endPiece = cells[coordsToIndex(iEnd, jEnd)];
                 // The piece at the mid coordinates is an ally : stack and move
-                if (midPiece != nullptr && midPiece->colour == movingPiece->colour && (iMid != iStart || jMid != jStart))
+                if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (iMid != iStart || jMid != jStart))
                 {
                     stack(iStart, jStart, iMid, jMid);
                     move(iMid, jMid, iEnd, jEnd);
                 }
                 // The piece at the end coordinates is an ally : move and stack
-                else if (endPiece != nullptr && endPiece->colour == movingPiece->colour)
+                else if (endPiece != 0 && (endPiece & 2) == (movingPiece & 2))
                 {
                     move(iStart, jStart, iMid, jMid);
                     stack(iMid, jMid, iEnd, jEnd);
@@ -258,7 +244,7 @@ namespace PijersiEngine
                 }
             }
         }
-        if (movingPiece->colour == White)
+        if ((movingPiece & 2) == 0)
         {
             currentPlayer = Black;
         }
@@ -268,26 +254,29 @@ namespace PijersiEngine
         }
     }
 
-    Piece *Board::at(int i, int j)
+    uint8_t Board::at(int i, int j)
     {
         return cells[coordsToIndex(i, j)];
     }
 
-    int evaluatePiece(Piece *piece, int i)
+    int evaluatePiece(uint8_t piece, int i)
     {
         int score;
-        if (piece->colour == White)
+        if ((piece & 2) == 0)
         {
             score = 8;
-            if (piece->type != Wise)
+            // If piece is not Wise
+            if ((piece & 12) != 12)
             {
                 score = score + 7 - i;
             }
-            if (piece->bottom != nullptr)
+            // If piece is on a stack
+            if (piece >= 16)
             {
                 score = score * 2 + 3;
             }
-            if (i == 0 && piece->type != Wise)
+            // If piece is on a winning area and not Wise
+            if (i == 0 && (piece & 12) != 12)
             {
                 score = score * 10000;
             }
@@ -295,15 +284,18 @@ namespace PijersiEngine
         else
         {
             score = -8;
-            if (piece->type != Wise)
+            // If piece is not Wise
+            if ((piece & 12) != 12)
             {
                 score = score -i - 1;
             }
-            if (piece->bottom != nullptr)
+            // If piece is on a stack
+            if (piece >= 16)
             {
                 score = score * 2 - 3;
             }
-            if (i == 6 && piece->type != Wise)
+            // If piece is on a winning area and not Wise
+            if (i == 6 && (piece & 12) != 12)
             {
                 score = score * 10000;
             }
@@ -320,8 +312,8 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 6; j++)
                 {
-                    Piece *piece = cells[coordsToIndex(i, j)];
-                    if (piece != nullptr)
+                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    if (piece != 0)
                     {
                         score += evaluatePiece(piece, i);
                     }
@@ -331,8 +323,8 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 7; j++)
                 {
-                    Piece *piece = cells[coordsToIndex(i, j)];
-                    if (piece != nullptr)
+                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    if (piece != 0)
                     {
                         score += evaluatePiece(piece, i);
                     }
@@ -342,110 +334,89 @@ namespace PijersiEngine
         return score;
     }
 
-    void Board::addPiece(Piece *piece, int i, int j)
+    void Board::addPiece(uint8_t piece, int i, int j)
     {
         cells[coordsToIndex(i, j)] = piece;
     }
 
-    void Board::setState(int colours[45], int tops[45], int bottoms[45])
+    void Board::setState(uint8_t newState[45])
     {
         for (int k = 0; k < 45; k++)
         {
-            if (cells[k] != nullptr)
-            {
-                delete cells[k];
-                cells[k] = nullptr;
-            }
-        }
-        for (int k = 0; k < 45; k++)
-        {
-            if (colours[k] != -1 && tops[k] != -1)
-            {
-                PieceColour colour = static_cast<PieceColour>(colours[k]);
-                PieceType topType = static_cast<PieceType>(tops[k]);
-                cells[k] = new Piece(colour, topType);
-
-                if (bottoms[k] != -1)
-                {
-                    PieceType bottomType = static_cast<PieceType>(bottoms[k]);
-                    cells[k]->bottom = new Piece(colour, bottomType);
-                }
-            }
+            cells[k] = newState[k];
         }
     }
 
     void Board::init()
     {
         // Black pieces
-        addPiece(new Piece(Black, Scissors), 0, 0);
-        addPiece(new Piece(Black, Paper), 0, 1);
-        addPiece(new Piece(Black, Rock), 0, 2);
-        addPiece(new Piece(Black, Scissors), 0, 3);
-        addPiece(new Piece(Black, Paper), 0, 4);
-        addPiece(new Piece(Black, Rock), 0, 5);
-        addPiece(new Piece(Black, Paper), 1, 0);
-        addPiece(new Piece(Black, Rock), 1, 1);
-        addPiece(new Piece(Black, Scissors), 1, 2);
-        addPiece(new Piece(Black, Wise), 1, 3);
-        addPiece(new Piece(Black, Rock), 1, 4);
-        addPiece(new Piece(Black, Scissors), 1, 5);
-        addPiece(new Piece(Black, Paper), 1, 6);
-        cells[coordsToIndex(1, 3)]->bottom = new Piece(Black, Wise);
+        addPiece(createPiece(Black, Scissors), 0, 0);
+        addPiece(createPiece(Black, Paper), 0, 1);
+        addPiece(createPiece(Black, Rock), 0, 2);
+        addPiece(createPiece(Black, Scissors), 0, 3);
+        addPiece(createPiece(Black, Paper), 0, 4);
+        addPiece(createPiece(Black, Rock), 0, 5);
+        addPiece(createPiece(Black, Paper), 1, 0);
+        addPiece(createPiece(Black, Rock), 1, 1);
+        addPiece(createPiece(Black, Scissors), 1, 2);
+        addPiece(addBottom(createPiece(Black, Wise),createPiece(Black, Wise)), 1, 3);
+        addPiece(createPiece(Black, Rock), 1, 4);
+        addPiece(createPiece(Black, Scissors), 1, 5);
+        addPiece(createPiece(Black, Paper), 1, 6);
 
         // White pieces
-        addPiece(new Piece(White, Paper), 5, 0);
-        addPiece(new Piece(White, Scissors), 5, 1);
-        addPiece(new Piece(White, Rock), 5, 2);
-        addPiece(new Piece(White, Wise), 5, 3);
-        addPiece(new Piece(White, Scissors), 5, 4);
-        addPiece(new Piece(White, Rock), 5, 5);
-        addPiece(new Piece(White, Paper), 5, 6);
-        addPiece(new Piece(White, Rock), 6, 0);
-        addPiece(new Piece(White, Paper), 6, 1);
-        addPiece(new Piece(White, Scissors), 6, 2);
-        addPiece(new Piece(White, Rock), 6, 3);
-        addPiece(new Piece(White, Paper), 6, 4);
-        addPiece(new Piece(White, Scissors), 6, 5);
-        cells[coordsToIndex(5, 3)]->bottom = new Piece(White, Wise);
+        addPiece(createPiece(White, Paper), 5, 0);
+        addPiece(createPiece(White, Scissors), 5, 1);
+        addPiece(createPiece(White, Rock), 5, 2);
+        addPiece(addBottom(createPiece(White, Wise),createPiece(White, Wise)), 5, 3);
+        addPiece(createPiece(White, Scissors), 5, 4);
+        addPiece(createPiece(White, Rock), 5, 5);
+        addPiece(createPiece(White, Paper), 5, 6);
+        addPiece(createPiece(White, Rock), 6, 0);
+        addPiece(createPiece(White, Paper), 6, 1);
+        addPiece(createPiece(White, Scissors), 6, 2);
+        addPiece(createPiece(White, Rock), 6, 3);
+        addPiece(createPiece(White, Paper), 6, 4);
+        addPiece(createPiece(White, Scissors), 6, 5);
     }
 
-    char pieceToChar(Piece *piece)
+    char pieceToChar(uint8_t piece)
     {
         char res = ' ';
-        if (piece->colour == White)
+        if ((piece & 2) == 0)
         {
-            switch (piece->type)
+            switch (piece & 12)
             {
-            case Scissors:
+            case 0:
                 res = 'S';
                 break;
-            case Paper:
+            case 4:
                 res = 'P';
                 break;
-            case Rock:
+            case 8:
                 res = 'R';
                 break;
-            case Wise:
+            case 12:
                 res = 'W';
                 break;
             default:
                 break;
             }
         }
-        else if (piece->colour == Black)
+        else if ((piece & 2) == 2)
         {
-            switch (piece->type)
+            switch (piece & 12)
             {
-            case Scissors:
+            case 0:
                 res = 's';
                 break;
-            case Paper:
+            case 4:
                 res = 'p';
                 break;
-            case Rock:
+            case 8:
                 res = 'r';
                 break;
-            case Wise:
+            case 12:
                 res = 'w';
                 break;
             default:
@@ -470,15 +441,16 @@ namespace PijersiEngine
                 output += ' ';
                 for (int j = 0; j < 6; j++)
                 {
-                    char char1 = ' ';
+                    char char1 = '.';
                     char char2 = ' ';
-                    Piece *piece = cells[coordsToIndex(i, j)];
-                    if (piece != nullptr)
+                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    if (piece != 0)
                     {
                         char1 = pieceToChar(piece);
-                        if (piece->bottom != nullptr)
+                        // If the piece is a stack
+                        if (piece >= 16)
                         {
-                            char2 = pieceToChar(piece->bottom);
+                            char2 = pieceToChar(piece >> 4);
                         }
                     }
                     output += char1;
@@ -490,15 +462,16 @@ namespace PijersiEngine
             {
                 for (int j = 0; j < 7; j++)
                 {
-                    char char1 = ' ';
+                    char char1 = '.';
                     char char2 = ' ';
-                    Piece *piece = cells[coordsToIndex(i, j)];
-                    if (piece != nullptr)
+                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    if (piece != 0)
                     {
                         char1 = pieceToChar(piece);
-                        if (piece->bottom != nullptr)
+                        // If the piece is a stack
+                        if (piece >= 16)
                         {
-                            char2 = pieceToChar(piece->bottom);
+                            char2 = pieceToChar(piece >> 4);
                         }
                     }
                     output += char1;
@@ -514,9 +487,10 @@ namespace PijersiEngine
     {
         for (int k = 0; k < 6; k++)
         {
-            if (cells[k] != nullptr)
+            if (cells[k] != 0)
             {
-                if (cells[k]->colour == White && cells[k]->type != Wise)
+                // If piece is White and not Wise
+                if ((cells[k] & 2) == 0 && (cells[k] & 12) != 12)
                 {
                     return true;
                 }
@@ -524,9 +498,10 @@ namespace PijersiEngine
         }
         for (int k = 39; k < 45; k++)
         {
-            if (cells[k] != nullptr)
+            if (cells[k] != 0)
             {
-                if (cells[k]->colour == Black && cells[k]->type != Wise)
+                // If piece is Black and not Wise
+                if ((cells[k] & 2) == 2 && (cells[k] & 12) != 12)
                 {
                     return true;
                 }
@@ -733,24 +708,36 @@ namespace PijersiEngine
         }
     }
 
-    bool canTake(PieceType source, PieceType target)
+    // bool canTake(PieceType source, PieceType target)
+    // {
+    //     if (source == Scissors && target == Paper || source == Paper && target == Rock || source == Rock && target == Scissors)
+    //     {
+    //         return true;
+    //     }
+    //     return false;
+    // }
+    bool canTake(uint8_t source, uint8_t target)
     {
-        if (source == Scissors && target == Paper || source == Paper && target == Rock || source == Rock && target == Scissors)
+        uint8_t sourceType = source & 12;
+        uint8_t targetType = target & 12;
+        // Scissors > Paper, Paper > Rock, Rock > Scissors
+        if (sourceType == 0 && targetType == 4 || sourceType == 4 && targetType == 8 || sourceType == 8 && targetType == 0)
         {
             return true;
         }
         return false;
     }
 
-    bool Board::isMoveValid(Piece *movingPiece, int indexEnd)
+    bool Board::isMoveValid(uint8_t movingPiece, int indexEnd)
     {
-        if (cells[indexEnd] != nullptr)
+        if (cells[indexEnd] != 0)
         {
-            if (cells[indexEnd]->colour == movingPiece->colour)
+            // If the end piece and the moving piece are the same colour
+            if ((cells[indexEnd] & 2) == (movingPiece & 2))
             {
                 return false;
             }
-            if (!canTake(movingPiece->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -758,19 +745,21 @@ namespace PijersiEngine
         return true;
     }
 
-    bool Board::isMove2Valid(Piece *movingPiece, int indexStart, int indexEnd)
+    bool Board::isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd)
     {
-        if (cells[(indexEnd + indexStart) / 2] != nullptr)
+        // If there is a piece blocking the move (cell between the start and end positions)
+        if (cells[(indexEnd + indexStart) / 2] != 0)
         {
             return false;
         }
-        if (cells[indexEnd] != nullptr)
+        if (cells[indexEnd] != 0)
         {
-            if (cells[indexEnd]->colour == movingPiece->colour)
+            // If the end piece and the moving piece are the same colour
+            if ((cells[indexEnd] & 2) == (movingPiece & 2))
             {
                 return false;
             }
-            if (!canTake(movingPiece->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -778,11 +767,15 @@ namespace PijersiEngine
         return true;
     }
 
-    bool Board::isStackValid(Piece *movingPiece, int indexEnd)
+    bool Board::isStackValid(uint8_t movingPiece, int indexEnd)
     {
-        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == movingPiece->colour && cells[indexEnd]->bottom == nullptr)
+        // If the end cell is not empty
+        // If the target piece and the moving piece are the same colour
+        // If the end piece is not a stack
+        if ((cells[indexEnd] != 0) && ((cells[indexEnd] & 2) == (movingPiece & 2)) && (cells[indexEnd] < 16))
         {
-            if (movingPiece->type == Wise && cells[indexEnd]->type != Wise)
+            // If the upper piece is Wise and the target piece is not Wise
+            if ((movingPiece & 12) == 12 && (cells[indexEnd] & 12) != 12)
             {
                 return false;
             }
@@ -791,15 +784,16 @@ namespace PijersiEngine
         return false;
     }
 
-    bool Board::isUnstackValid(Piece *movingPiece, int indexEnd)
+    bool Board::isUnstackValid(uint8_t movingPiece, int indexEnd)
     {
-        if (cells[indexEnd] != nullptr)
+        if (cells[indexEnd] != 0)
         {
-            if (cells[indexEnd]->colour == movingPiece->colour)
+            // If the cells are the same colour
+            if ((cells[indexEnd] & 2) == (movingPiece & 2))
             {
                 return false;
             }
-            if (!canTake(movingPiece->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -811,11 +805,12 @@ namespace PijersiEngine
     {
         int indexStart = coordsToIndex(iStart, jStart);
 
-        Piece *movingPiece = cells[indexStart];
+        uint8_t movingPiece = cells[indexStart];
 
         vector<int> moves = vector<int>();
 
-        if (movingPiece->bottom == nullptr)
+        // If the piece is not a stack
+        if (movingPiece < 16)
         {
             // 1-range first action
             for (int indexMid : neighbours(indexStart))
@@ -991,7 +986,7 @@ namespace PijersiEngine
         vector<int> moves = vector<int>();
         for (int k = 0; k < 45; k++)
         {
-            if (newBoard->cells[k] != nullptr && newBoard->cells[k]->colour == newBoard->currentPlayer)
+            if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (static_cast<PieceColour>(newBoard->currentPlayer) << 1))
             {
                 int i, j;
                 indexToCoords(k, &i, &j);

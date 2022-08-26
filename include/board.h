@@ -3,6 +3,7 @@
 #include <piece.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 using namespace std;
 
@@ -13,25 +14,25 @@ namespace PijersiEngine
     public:
         Board();
         Board(Board &board);
-        ~Board();
+        // ~Board();
 
         void playManual(vector<int> move);
         vector<int> playAuto(int recursionDepth);
         int evaluate();
-        void setState(int colours[45], int top[45], int bottom[45]);
+        void setState(uint8_t newState[45]);
         void init();
 
-        Piece *at(int i, int j);
+        uint8_t at(int i, int j);
         void print();
         string toString();
 
         bool checkWin();
 
     private:
-        Piece *cells[45];
+        uint8_t cells[45];
         PieceColour currentPlayer = White;
 
-        void addPiece(Piece *piece, int i, int j);
+        void addPiece(uint8_t piece, int i, int j);
         void move(int iStart, int jStart, int iEnd, int jEnd);
         void stack(int iStart, int jStart, int iEnd, int jEnd);
         void unstack(int iStart, int jStart, int iEnd, int jEnd);
@@ -43,13 +44,12 @@ namespace PijersiEngine
 
         int evaluateMove(int move[6], int recursionDepth);
 
-        bool isMoveValid(Piece *movingPiece, int indexEnd);
-        bool isMove2Valid(Piece *movingPiece, int indexStart, int indexEnd);
-        bool isStackValid(Piece *movingPiece, int indexEnd);
-        bool isUnstackValid(Piece *movingPiece, int indexEnd);
+        bool isMoveValid(uint8_t movingPiece, int indexEnd);
+        bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd);
+        bool isStackValid(uint8_t movingPiece, int indexEnd);
+        bool isUnstackValid(uint8_t movingPiece, int indexEnd);
 
         vector<int> availableMoves(int i, int j);
     };
-    char pieceToChar(Piece *piece);
 }
 #endif
