@@ -116,8 +116,8 @@ namespace PijersiEngine
             int index = 0;
             int *extremums = new int[moves.size() / 6];
 
-            int alpha = (currentPlayer == White) ? INT_MIN : INT_MAX;
-            int beta = (currentPlayer == White) ? INT_MAX : INT_MIN;
+            int alpha = INT_MIN;
+            int beta = INT_MAX;
             int extremum = (currentPlayer == White) ? INT_MIN : INT_MAX;
 
             #pragma omp parallel
@@ -1004,10 +1004,11 @@ namespace PijersiEngine
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
                     maximum = max(maximum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));
-                    if (maximum >= beta)
+                    if (maximum > beta)
                     {
                         break;
                     }
+                    alpha = max(alpha, maximum);
                 }
                 score = maximum;
             }
@@ -1017,10 +1018,11 @@ namespace PijersiEngine
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
                     minimum = min(minimum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));
-                    if (minimum <= alpha)
+                    if (minimum < alpha)
                     {
                         break;
                     }
+                    beta = min(beta, minimum);
                 }
                 score = minimum;
             }
