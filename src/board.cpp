@@ -299,7 +299,6 @@ namespace PijersiEngine
             {
                 score = score -i - 1;
             }
-            score = -8 ;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 - 3;
