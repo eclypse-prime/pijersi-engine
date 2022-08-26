@@ -16,14 +16,5 @@ namespace PijersiEngine
         White,
         Black
     };
-
-    struct Piece
-    {
-        Piece(PieceColour newColour, PieceType newType);
-        PieceColour colour;
-        PieceType type;
-        Piece *bottom;
-        ~Piece();
-    };
 }
 #endif
