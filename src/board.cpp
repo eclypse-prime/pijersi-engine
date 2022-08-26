@@ -2,6 +2,8 @@
 #include <iostream>
 #include <string>
 #include <omp.h>
+#include <algorithm>
+#include <random>
 
 using namespace std;
 
@@ -58,6 +60,7 @@ namespace PijersiEngine
                 cells[k] = nullptr;
             }
         }
+        currentPlayer = board.currentPlayer;
     }
 
     Board::~Board()
@@ -98,19 +101,54 @@ namespace PijersiEngine
 
         if (moves.size() > 0)
         {
-            int index = 0;
-            int extremum = evaluateMove(moves.data(), recursionDepth);
 
-            #pragma omp parallel for
-            for (int k = 1; k < moves.size() / 6; k++)
+            int index = 0;
+            int *extremums = new int[moves.size() / 6];
+            extremums[0] = evaluateMove(moves.data(), recursionDepth);
+            int extremum = extremums[0];
+
+            #pragma omp parallel
             {
-                int score = evaluateMove(moves.data() + 6 * k, recursionDepth);
-                if ((currentPlayer == White && score > extremum) || (currentPlayer == Black && score < extremum))
+                #pragma omp for
+                for (int k = 1; k < moves.size() / 6; k++)
                 {
-                    index = k;
-                    extremum = score;
+                    extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth);
+                }
+
+                if (currentPlayer == White)
+                {
+                    #pragma omp for reduction(max : extremum)
+                    for (int k = 1; k < moves.size() / 6; k++)
+                    {
+                        if ((extremums[k] > extremum))
+                        {
+                            extremum = extremums[k];
+                        }
+                    }
+                }
+                else
+                {
+                    #pragma omp for reduction(min : extremum)
+                    for (int k = 1; k < moves.size() / 6; k++)
+                    {
+                        if (extremums[k] < extremum)
+                        {
+                            extremum = extremums[k];
+                        }
+                    }
                 }
             }
+
+            for (int k = 0; k < moves.size() / 6; k++)
+            {
+                if (extremums[k] == extremum)
+                {
+                    index = k;
+                    break;
+                }
+            }
+
+            delete extremums;
 
             vector<int>::const_iterator first = moves.begin() + 6 * index;
             vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
@@ -240,7 +278,7 @@ namespace PijersiEngine
         int score;
         if (piece->colour == White)
         {
-            score = 7 - i;
+            score = 8 + 7 - i;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 + 3;
@@ -252,7 +290,7 @@ namespace PijersiEngine
         }
         else
         {
-            score = -i - 1;
+            score = -8 -i - 1;
             if (piece->bottom != nullptr)
             {
                 score = score * 2 - 3;
@@ -607,7 +645,7 @@ namespace PijersiEngine
         case 6:
             return vector<int>({8, 20});
         case 7:
-            return vector<int>({9, 21});
+            return vector<int>({9, 19, 21});
         case 8:
             return vector<int>({6, 10, 20, 22});
         case 9:
@@ -633,7 +671,7 @@ namespace PijersiEngine
         case 19:
             return vector<int>({7, 21, 33});
         case 20:
-            return vector<int>({8, 22, 34});
+            return vector<int>({6, 8, 22, 32, 34});
         case 21:
             return vector<int>({7, 9, 19, 23, 33, 35});
         case 22:
@@ -659,7 +697,7 @@ namespace PijersiEngine
         case 32:
             return vector<int>({20, 34});
         case 33:
-            return vector<int>({21, 35});
+            return vector<int>({19, 21, 35});
         case 34:
             return vector<int>({20, 22, 32, 36});
         case 35:
@@ -696,15 +734,15 @@ namespace PijersiEngine
         return false;
     }
 
-    bool Board::isMoveValid(int indexStart, int indexEnd)
+    bool Board::isMoveValid(Piece *movingPiece, int indexEnd)
     {
         if (cells[indexEnd] != nullptr)
         {
-            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            if (cells[indexEnd]->colour == movingPiece->colour)
             {
                 return false;
             }
-            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece->type, cells[indexEnd]->type))
             {
                 return false;
             }
@@ -712,7 +750,7 @@ namespace PijersiEngine
         return true;
     }
 
-    bool Board::isMove2Valid(int indexStart, int indexEnd)
+    bool Board::isMove2Valid(Piece *movingPiece, int indexStart, int indexEnd)
     {
         if (cells[(indexEnd + indexStart) / 2] != nullptr)
         {
@@ -720,11 +758,11 @@ namespace PijersiEngine
         }
         if (cells[indexEnd] != nullptr)
         {
-            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            if (cells[indexEnd]->colour == movingPiece->colour)
             {
                 return false;
             }
-            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece->type, cells[indexEnd]->type))
             {
                 return false;
             }
@@ -732,11 +770,12 @@ namespace PijersiEngine
         return true;
     }
 
-    bool Board::isStackValid(int indexStart, int indexEnd)
+    bool Board::isStackValid(Piece *movingPiece, int indexEnd)
     {
-        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == cells[indexStart]->colour && cells[indexEnd]->bottom == nullptr)
+        if (cells[indexEnd] != nullptr && cells[indexEnd]->colour == movingPiece->colour && cells[indexEnd]->bottom == nullptr)
         {
-            if (cells[indexStart]->type == Wise && cells[indexEnd]->type != Wise) {
+            if (movingPiece->type == Wise && cells[indexEnd]->type != Wise)
+            {
                 return false;
             }
             return true;
@@ -744,15 +783,15 @@ namespace PijersiEngine
         return false;
     }
 
-    bool Board::isUnstackValid(int indexStart, int indexEnd)
+    bool Board::isUnstackValid(Piece *movingPiece, int indexEnd)
     {
         if (cells[indexEnd] != nullptr)
         {
-            if (cells[indexEnd]->colour == cells[indexStart]->colour)
+            if (cells[indexEnd]->colour == movingPiece->colour)
             {
                 return false;
             }
-            if (!canTake(cells[indexStart]->type, cells[indexEnd]->type))
+            if (!canTake(movingPiece->type, cells[indexEnd]->type))
             {
                 return false;
             }
@@ -774,14 +813,14 @@ namespace PijersiEngine
             for (int indexMid : neighbours(indexStart))
             {
                 // 1-range move
-                if (isMoveValid(indexStart, indexMid))
+                if (isMoveValid(movingPiece, indexMid))
                 {
                     int iEnd, jEnd;
                     indexToCoords(indexMid, &iEnd, &jEnd);
                     moves.insert(moves.end(), {iStart, jStart, -1, -1, iEnd, jEnd});
                 }
                 // stack, [1/2-range move] optional
-                if (isStackValid(indexStart, indexMid))
+                if (isStackValid(movingPiece, indexMid))
                 {
                     int iMid, jMid;
                     indexToCoords(indexMid, &iMid, &jMid);
@@ -792,7 +831,7 @@ namespace PijersiEngine
                     // stack, 0/1-range move
                     for (int indexEnd : neighbours(indexMid))
                     {
-                        if (isMoveValid(indexMid, indexEnd))
+                        if (isMoveValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -803,7 +842,7 @@ namespace PijersiEngine
                     // stack, 2-range move
                     for (int indexEnd : neighbours2(indexMid))
                     {
-                        if (isMove2Valid(indexMid, indexEnd))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -820,7 +859,7 @@ namespace PijersiEngine
             {
 
                 // 1-range move, [stack or unstack] optional
-                if (isMoveValid(indexStart, indexMid))
+                if (isMoveValid(movingPiece, indexMid))
                 {
                     int iMid, jMid;
                     indexToCoords(indexMid, &iMid, &jMid);
@@ -832,7 +871,7 @@ namespace PijersiEngine
                     for (int indexEnd : neighbours(indexMid))
                     {
                         // 1-range move, stack
-                        if (isStackValid(indexStart, indexEnd))
+                        if (isStackValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -840,7 +879,7 @@ namespace PijersiEngine
                         }
 
                         // 1-range move, unstack
-                        if (isUnstackValid(indexStart, indexEnd))
+                        if (isUnstackValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -849,14 +888,14 @@ namespace PijersiEngine
                     }
                 }
                 // stack, [1/2-range move] optional
-                if (isStackValid(indexStart, indexMid))
+                if (isStackValid(movingPiece, indexMid))
                 {
                     int iMid, jMid;
                     indexToCoords(indexMid, &iMid, &jMid);
                     // stack, 1-range move
                     for (int indexEnd : neighbours(indexMid))
                     {
-                        if (isMoveValid(indexMid, indexEnd))
+                        if (isMoveValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -867,7 +906,7 @@ namespace PijersiEngine
                     // stack, 2-range move
                     for (int indexEnd : neighbours2(indexMid))
                     {
-                        if (isMove2Valid(indexMid, indexEnd))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -880,7 +919,7 @@ namespace PijersiEngine
                 }
 
                 // unstack
-                if (isUnstackValid(indexStart, indexMid))
+                if (isUnstackValid(movingPiece, indexMid))
                 {
                     // unstack only
                     int iMid, jMid;
@@ -892,7 +931,7 @@ namespace PijersiEngine
             // 2 range first action
             for (int indexMid : neighbours2(indexStart))
             {
-                if (isMove2Valid(indexStart, indexMid))
+                if (isMove2Valid(movingPiece, indexStart, indexMid))
                 {
                     int iMid, jMid;
                     indexToCoords(indexMid, &iMid, &jMid);
@@ -904,7 +943,7 @@ namespace PijersiEngine
                     for (int indexEnd : neighbours(indexMid))
                     {
                         // 2-range move, stack
-                        if (isStackValid(indexStart, indexEnd))
+                        if (isStackValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -912,7 +951,7 @@ namespace PijersiEngine
                         }
 
                         // 2-range move, unstack
-                        if (isUnstackValid(indexStart, indexEnd))
+                        if (isUnstackValid(movingPiece, indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -931,22 +970,67 @@ namespace PijersiEngine
         Board *newBoard = new Board(*this);
         newBoard->playManual(move);
 
-        if (newBoard->checkWin())
+        int score;
+
+        if (newBoard->checkWin() || recursionDepth <= 0)
         {
-            int newScore = newBoard->evaluate();
+            score = newBoard->evaluate();
             delete newBoard;
-            return newScore;
+            return score;
         }
 
-        if (recursionDepth > 0)
+        // newBoard->playAuto(recursionDepth-1, maxDepth);
+        vector<int> moves = vector<int>();
+        for (int k = 0; k < 45; k++)
         {
-            newBoard->playAuto(recursionDepth-1);
+            if (newBoard->cells[k] != nullptr && newBoard->cells[k]->colour == newBoard->currentPlayer)
+            {
+                int i, j;
+                indexToCoords(k, &i, &j);
+                vector<int> pieceMoves = newBoard->availableMoves(i, j);
+                moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+            }
         }
+        if (moves.size() > 0)
+        {
+            int index = 0;
+            int *extremums = new int[moves.size() / 6];
+            extremums[0] = newBoard->evaluateMove(moves.data(), recursionDepth - 1);
+            int extremum = extremums[0];
 
-        int newScore = newBoard->evaluate();
+            for (int k = 1; k < moves.size() / 6; k++)
+            {
+                extremums[k] = newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1);
+            }
+
+            if (newBoard->currentPlayer == White)
+            {
+                for (int k = 1; k < moves.size() / 6; k++)
+                {
+                    if ((extremums[k] > extremum))
+                    {
+                        index = k;
+                        extremum = extremums[k];
+                    }
+                }
+            }
+            else
+            {
+                for (int k = 1; k < moves.size() / 6; k++)
+                {
+                    if (extremums[k] < extremum)
+                    {
+                        index = k;
+                        extremum = extremums[k];
+                    }
+                }
+            }
+            score = extremum;
+            delete extremums;
+        }
         delete newBoard;
 
-        return newScore;
+        return score;
     }
 
 }

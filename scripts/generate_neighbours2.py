@@ -16,7 +16,7 @@ def coords_index(i: int, j: int) -> int:
 def find_neighbours(i: int, j: int) -> List[int]:
     neighbours = []
     index = coords_index(i, j)
-    if j > 1 or (i % 2 == 0 and j > 0):
+    if j > 0:
         if j > 1:
             neighbours.append(index - 2)
         if i > 1:

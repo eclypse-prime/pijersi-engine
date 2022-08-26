@@ -43,10 +43,10 @@ namespace PijersiEngine
 
         int evaluateMove(int move[6], int recursionDepth);
 
-        bool isMoveValid(int indexStart, int indexEnd);
-        bool isMove2Valid(int indexStart, int indexEnd);
-        bool isStackValid(int indexStart, int indexEnd);
-        bool isUnstackValid(int indexStart, int indexEnd);
+        bool isMoveValid(Piece *movingPiece, int indexEnd);
+        bool isMove2Valid(Piece *movingPiece, int indexStart, int indexEnd);
+        bool isStackValid(Piece *movingPiece, int indexEnd);
+        bool isUnstackValid(Piece *movingPiece, int indexEnd);
 
         vector<int> availableMoves(int i, int j);
     };
