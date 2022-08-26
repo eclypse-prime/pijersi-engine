@@ -42,7 +42,7 @@ namespace PijersiEngine
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
 
-        int evaluateMove(int move[6], int recursionDepth);
+        int evaluateMove(int move[6], int recursionDepth, int alpha, int beta);
 
         bool isMoveValid(uint8_t movingPiece, int indexEnd);
         bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd);

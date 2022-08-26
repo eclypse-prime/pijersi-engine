@@ -4,6 +4,7 @@
 #include <omp.h>
 #include <algorithm>
 #include <random>
+#include <limits>
 
 using namespace std;
 
@@ -114,21 +115,23 @@ namespace PijersiEngine
 
             int index = 0;
             int *extremums = new int[moves.size() / 6];
-            extremums[0] = evaluateMove(moves.data(), recursionDepth);
-            int extremum = extremums[0];
+
+            int alpha = (currentPlayer == White) ? INT_MIN : INT_MAX;
+            int beta = (currentPlayer == White) ? INT_MAX : INT_MIN;
+            int extremum = (currentPlayer == White) ? INT_MIN : INT_MAX;
 
             #pragma omp parallel
             {
                 #pragma omp for
-                for (int k = 1; k < moves.size() / 6; k++)
+                for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth);
+                    extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta);
                 }
 
                 if (currentPlayer == White)
                 {
                     #pragma omp for reduction(max : extremum)
-                    for (int k = 1; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 6; k++)
                     {
                         if ((extremums[k] > extremum))
                         {
@@ -139,7 +142,7 @@ namespace PijersiEngine
                 else
                 {
                     #pragma omp for reduction(min : extremum)
-                    for (int k = 1; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 6; k++)
                     {
                         if (extremums[k] < extremum)
                         {
@@ -968,7 +971,7 @@ namespace PijersiEngine
         return moves;
     }
 
-    int Board::evaluateMove(int move[6], int recursionDepth)
+    int Board::evaluateMove(int move[6], int recursionDepth, int alpha, int beta)
     {
         Board *newBoard = new Board(*this);
         newBoard->playManual(move);
@@ -982,7 +985,6 @@ namespace PijersiEngine
             return score;
         }
 
-        // newBoard->playAuto(recursionDepth-1, maxDepth);
         vector<int> moves = vector<int>();
         for (int k = 0; k < 45; k++)
         {
@@ -996,40 +998,32 @@ namespace PijersiEngine
         }
         if (moves.size() > 0)
         {
-            int index = 0;
-            int *extremums = new int[moves.size() / 6];
-            extremums[0] = newBoard->evaluateMove(moves.data(), recursionDepth - 1);
-            int extremum = extremums[0];
-
-            for (int k = 1; k < moves.size() / 6; k++)
-            {
-                extremums[k] = newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1);
-            }
-
             if (newBoard->currentPlayer == White)
             {
-                for (int k = 1; k < moves.size() / 6; k++)
+                int maximum = INT_MIN;
+                for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    if ((extremums[k] > extremum))
+                    maximum = max(maximum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));
+                    if (maximum >= beta)
                     {
-                        index = k;
-                        extremum = extremums[k];
+                        break;
                     }
                 }
+                score = maximum;
             }
             else
             {
-                for (int k = 1; k < moves.size() / 6; k++)
+                int minimum = INT_MAX;
+                for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    if (extremums[k] < extremum)
+                    minimum = min(minimum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));
+                    if (minimum <= alpha)
                     {
-                        index = k;
-                        extremum = extremums[k];
+                        break;
                     }
                 }
+                score = minimum;
             }
-            score = extremum;
-            delete extremums;
         }
         delete newBoard;
 
