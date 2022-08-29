@@ -4,7 +4,7 @@
 #include <omp.h>
 #include <algorithm>
 #include <random>
-#include <limits>
+#include <cfloat>
 
 using namespace std;
 
@@ -114,15 +114,16 @@ namespace PijersiEngine
         {
 
             int index = 0;
-            int *extremums = new int[moves.size() / 6];
+            float *extremums = new float[moves.size() / 6];
 
-            int alpha = INT_MIN;
-            int beta = INT_MAX;
-            int extremum = (currentPlayer == White) ? INT_MIN : INT_MAX;
+            float alpha = -FLT_MAX;
+            float beta = FLT_MAX;
+            float extremum = (currentPlayer == White) ? -FLT_MAX : FLT_MAX;
 
             #pragma omp parallel
             {
                 #pragma omp for
+                // #pragma acc parallel loop
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
                     extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta);
@@ -130,7 +131,7 @@ namespace PijersiEngine
 
                 if (currentPlayer == White)
                 {
-                    #pragma omp for reduction(max : extremum)
+                    #pragma omp for simd reduction(max : extremum)
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         if ((extremums[k] > extremum))
@@ -141,7 +142,7 @@ namespace PijersiEngine
                 }
                 else
                 {
-                    #pragma omp for reduction(min : extremum)
+                    #pragma omp for simd reduction(min : extremum)
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         if (extremums[k] < extremum)
@@ -262,31 +263,31 @@ namespace PijersiEngine
         return cells[coordsToIndex(i, j)];
     }
 
-    int evaluatePiece(uint8_t piece, int i)
+    float evaluatePiece(uint8_t piece, int i)
     {
-        int score;
+        float score;
         if ((piece & 2) == 0)
         {
-            score = 8;
+            score = 8.f;
             // If piece is not Wise
             if ((piece & 12) != 12)
             {
-                score = score + 7 - i;
+                score = score + 7.f - i;
             }
             // If piece is on a stack
             if (piece >= 16)
             {
-                score = score * 2 + 3;
+                score = score * 2.f + 3.f;
             }
             // If piece is on a winning area and not Wise
             if (i == 0 && (piece & 12) != 12)
             {
-                score = score * 10000;
+                score = score * 10000.f;
             }
         }
         else
         {
-            score = -8;
+            score = -8.f;
             // If piece is not Wise
             if ((piece & 12) != 12)
             {
@@ -295,18 +296,18 @@ namespace PijersiEngine
             // If piece is on a stack
             if (piece >= 16)
             {
-                score = score * 2 - 3;
+                score = score * 2.f - 3.f;
             }
             // If piece is on a winning area and not Wise
             if (i == 6 && (piece & 12) != 12)
             {
-                score = score * 10000;
+                score = score * 10000.f;
             }
         }
         return score;
     }
 
-    int Board::evaluate()
+    float Board::evaluate()
     {
         int score = 0;
         for (int i = 0; i < 7; i++)
@@ -971,12 +972,12 @@ namespace PijersiEngine
         return moves;
     }
 
-    int Board::evaluateMove(int move[6], int recursionDepth, int alpha, int beta)
+    float Board::evaluateMove(int move[6], int recursionDepth, float alpha, float beta)
     {
         Board *newBoard = new Board(*this);
         newBoard->playManual(move);
 
-        int score;
+        float score;
 
         if (newBoard->checkWin() || recursionDepth <= 0)
         {
@@ -1000,7 +1001,7 @@ namespace PijersiEngine
         {
             if (newBoard->currentPlayer == White)
             {
-                int maximum = INT_MIN;
+                float maximum = -FLT_MAX;
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
                     maximum = max(maximum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));
@@ -1014,7 +1015,7 @@ namespace PijersiEngine
             }
             else
             {
-                int minimum = INT_MAX;
+                float minimum = FLT_MAX;
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
                     minimum = min(minimum, newBoard->evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta));

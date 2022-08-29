@@ -18,7 +18,7 @@ namespace PijersiEngine
 
         void playManual(vector<int> move);
         vector<int> playAuto(int recursionDepth);
-        int evaluate();
+        float evaluate();
         void setState(uint8_t newState[45]);
         void init();
 
@@ -27,10 +27,10 @@ namespace PijersiEngine
         string toString();
 
         bool checkWin();
+        PieceColour currentPlayer = White;
 
     private:
         uint8_t cells[45];
-        PieceColour currentPlayer = White;
 
         void addPiece(uint8_t piece, int i, int j);
         void move(int iStart, int jStart, int iEnd, int jEnd);
@@ -42,7 +42,7 @@ namespace PijersiEngine
         vector<int> neighbours(int index);
         vector<int> neighbours2(int index);
 
-        int evaluateMove(int move[6], int recursionDepth, int alpha, int beta);
+        float evaluateMove(int move[6], int recursionDepth, float alpha, float beta);
 
         bool isMoveValid(uint8_t movingPiece, int indexEnd);
         bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd);
