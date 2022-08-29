@@ -8,6 +8,7 @@
 
 %include "carrays.i"
 %include "std_vector.i"
+%include "std_array.i"
 %include "stdint.i"
 %array_class(int, intArray);
 %array_class(uint8_t, byteArray);

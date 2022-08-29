@@ -70,12 +70,30 @@ namespace PijersiEngine
         {
             cells[k] = 0;
         }
+        weights = {15, 15, 15, 8, -1, -1, -1, 0, 18, 18, 18, 11, -1, -1, -1, 0, -9, -9, -9, -8, -1, -1, -1, 0, -12, -12, -12, -11, -1, -1, -1, 0};
+    }
+
+    Board::Board(array<float, 32> newWeights) : Board()
+    {
+        for (int k = 0; k < 32; k++)
+        {
+            weights[k] = newWeights[k];
+        }
+    }
+
+    Board::Board(Board &board, array<float, 32> newWeights) : Board(board)
+    {
+        for (int k = 0; k < 32; k++)
+        {
+            weights[k] = newWeights[k];
+        }
     }
 
     Board::Board(Board &board)
     {
         setState(board.cells);
         currentPlayer = board.currentPlayer;
+        weights = {15, 15, 15, 8, -1, -1, -1, 0, 18, 18, 18, 11, -1, -1, -1, 0, -9, -9, -9, -8, -1, -1, -1, 0, -12, -12, -12, -11, -1, -1, -1, 0};
     }
 
     // Board::~Board()
@@ -92,7 +110,7 @@ namespace PijersiEngine
         play(move[0], move[1], move[2], move[3], move[4], move[5]);
     }
 
-    // Minimax, implement alphabeta later
+    // Minimax with Alphabeta pruning
     vector<int> Board::playAuto(int recursionDepth)
     {
         vector<int> moves = vector<int>();
@@ -263,47 +281,29 @@ namespace PijersiEngine
         return cells[coordsToIndex(i, j)];
     }
 
-    float evaluatePiece(uint8_t piece, int i)
+    float Board::evaluatePiece(uint8_t piece, int i)
     {
-        float score;
-        if ((piece & 2) == 0)
+        int index = (piece & 2) * 8 + (piece & 4) / 4;
+
+        float score = weights[index] + i * weights[index + 4];
+
+        // If there is a bottom
+        if (piece >= 16)
         {
-            score = 8.f;
-            // If piece is not Wise
-            if ((piece & 12) != 12)
+            uint8_t bottom = piece >> 4;
+            index = 8 + (piece & 2) * 8 + (piece & 4) / 4;
+            score += weights[index] + i * weights[index + 4];
+        }
+
+        // If piece is winning
+        if ((piece & 12) != 12)
+        {
+            if (((piece & 2) == 0 && (i == 0)) || (piece & 2) == 2 && (i == 6))
             {
-                score = score + 7.f - i;
-            }
-            // If piece is on a stack
-            if (piece >= 16)
-            {
-                score = score * 2.f + 3.f;
-            }
-            // If piece is on a winning area and not Wise
-            if (i == 0 && (piece & 12) != 12)
-            {
-                score = score * 10000.f;
+                score *= 10000.f;
             }
         }
-        else
-        {
-            score = -8.f;
-            // If piece is not Wise
-            if ((piece & 12) != 12)
-            {
-                score = score -i - 1;
-            }
-            // If piece is on a stack
-            if (piece >= 16)
-            {
-                score = score * 2.f - 3.f;
-            }
-            // If piece is on a winning area and not Wise
-            if (i == 6 && (piece & 12) != 12)
-            {
-                score = score * 10000.f;
-            }
-        }
+    
         return score;
     }
 

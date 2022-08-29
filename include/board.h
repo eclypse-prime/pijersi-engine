@@ -3,6 +3,7 @@
 #include <piece.h>
 #include <string>
 #include <vector>
+#include <array>
 #include <cstdint>
 
 using namespace std;
@@ -14,6 +15,8 @@ namespace PijersiEngine
     public:
         Board();
         Board(Board &board);
+        Board(array<float, 32> newWeights);
+        Board(Board &board, array<float, 32> newWeights);
         // ~Board();
 
         void playManual(vector<int> move);
@@ -29,6 +32,8 @@ namespace PijersiEngine
         bool checkWin();
         PieceColour currentPlayer = White;
 
+        array<float, 32> weights;
+
     private:
         uint8_t cells[45];
 
@@ -43,6 +48,7 @@ namespace PijersiEngine
         vector<int> neighbours2(int index);
 
         float evaluateMove(int move[6], int recursionDepth, float alpha, float beta);
+        float evaluatePiece(uint8_t piece, int i);
 
         bool isMoveValid(uint8_t movingPiece, int indexEnd);
         bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd);
