@@ -112,7 +112,7 @@ namespace PijersiEngine
         {
             if (cells[k] != 0)
             {
-                if ((cells[k] & 2) == (static_cast<PieceColour>(currentPlayer) << 1))
+                if ((cells[k] & 2) == (currentPlayer << 1))
                 {
                     int i, j;
                     indexToCoords(k, &i, &j);
@@ -130,7 +130,7 @@ namespace PijersiEngine
 
             float alpha = -FLT_MAX;
             float beta = FLT_MAX;
-            float extremum = (currentPlayer == White) ? -FLT_MAX : FLT_MAX;
+            float extremum = (currentPlayer == 0) ? -FLT_MAX : FLT_MAX;
 
             #pragma omp parallel
             {
@@ -141,7 +141,7 @@ namespace PijersiEngine
                     extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta);
                 }
 
-                if (currentPlayer == White)
+                if (currentPlayer == 0)
                 {
                     #pragma omp for simd reduction(max : extremum)
                     for (int k = 0; k < moves.size() / 6; k++)
@@ -260,14 +260,8 @@ namespace PijersiEngine
                 }
             }
         }
-        if ((movingPiece & 2) == 0)
-        {
-            currentPlayer = Black;
-        }
-        else
-        {
-            currentPlayer = White;
-        }
+        // Set current player to the other colour.
+        currentPlayer = (~movingPiece & 2) >> 1;
     }
 
     uint8_t Board::at(int i, int j)
@@ -392,7 +386,7 @@ namespace PijersiEngine
         addPiece(createPiece(White, Scissors), 6, 5);
 
         // Set active player to White
-        currentPlayer = White;
+        currentPlayer = 0;
     }
 
     char pieceToChar(uint8_t piece)
@@ -1002,7 +996,7 @@ namespace PijersiEngine
         moves.reserve(2048);
         for (int k = 0; k < 45; k++)
         {
-            if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (static_cast<PieceColour>(newBoard->currentPlayer) << 1))
+            if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (newBoard->currentPlayer << 1))
             {
                 int i, j;
                 indexToCoords(k, &i, &j);
@@ -1012,7 +1006,7 @@ namespace PijersiEngine
         }
         if (moves.size() > 0)
         {
-            if (newBoard->currentPlayer == White)
+            if (newBoard->currentPlayer == 0)
             {
                 float maximum = -FLT_MAX;
                 for (int k = 0; k < moves.size() / 6; k++)

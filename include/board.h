@@ -27,7 +27,7 @@ namespace PijersiEngine
         string toString();
 
         bool checkWin();
-        PieceColour currentPlayer = White;
+        uint8_t currentPlayer = 0;
 
     private:
         uint8_t cells[45];
