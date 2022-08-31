@@ -1,6 +1,7 @@
 #include <board.h>
 #include <iostream>
 #include <string>
+#include <cstdint>
 #include <omp.h>
 #include <algorithm>
 #include <random>
@@ -34,6 +35,16 @@ namespace PijersiEngine
             *j -= 6;
             *i += 1;
         }
+    }
+
+    int indexToLine(int index)
+    {
+        int i = 2 * (index/13);
+        if ((index%13) > 5)
+        {
+            i += 1;
+        }
+        return i;
     }
 
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
@@ -96,7 +107,7 @@ namespace PijersiEngine
     vector<int> Board::playAuto(int recursionDepth)
     {
         vector<int> moves = vector<int>();
-        moves.reserve(1024);
+        moves.reserve(2048);
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != 0)
@@ -266,44 +277,28 @@ namespace PijersiEngine
 
     float evaluatePiece(uint8_t piece, int i)
     {
+
         float score;
-        if ((piece & 2) == 0)
+        // If the piece isn't Wise
+        if ((piece & 12) != 12)
         {
-            score = 8.f;
-            // If piece is not Wise
-            if ((piece & 12) != 12)
+            score = 15.f - 12.f * (piece & 2) - i;
+
+            // If the piece is in a winning position
+            if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
             {
-                score = score + 7.f - i;
-            }
-            // If piece is on a stack
-            if (piece >= 16)
-            {
-                score = score * 2.f + 3.f;
-            }
-            // If piece is on a winning area and not Wise
-            if (i == 0 && (piece & 12) != 12)
-            {
-                score = score * 10000.f;
+                score *= 10000.f;
             }
         }
         else
         {
-            score = -8.f;
-            // If piece is not Wise
-            if ((piece & 12) != 12)
-            {
-                score = score -i - 1;
-            }
-            // If piece is on a stack
-            if (piece >= 16)
-            {
-                score = score * 2.f - 3.f;
-            }
-            // If piece is on a winning area and not Wise
-            if (i == 6 && (piece & 12) != 12)
-            {
-                score = score * 10000.f;
-            }
+            score = ((piece & 2) - 1) * -8;
+        }
+
+        // If the piece is a stack
+        if (piece >= 16)
+        {
+            score = score * 2 - 3 * ((piece & 2) - 1);
         }
         return score;
     }
@@ -311,31 +306,37 @@ namespace PijersiEngine
     float Board::evaluate()
     {
         int score = 0;
-        for (int i = 0; i < 7; i++)
+        for (int k = 0; k < 45; k++)
         {
-            if (i % 2 == 0)
+            if (cells[k] != 0)
             {
-                for (int j = 0; j < 6; j++)
-                {
-                    uint8_t piece = cells[coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        score += evaluatePiece(piece, i);
-                    }
-                }
-            }
-            else
-            {
-                for (int j = 0; j < 7; j++)
-                {
-                    uint8_t piece = cells[coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        score += evaluatePiece(piece, i);
-                    }
-                }
+                score += evaluatePiece(cells[k], indexToLine(k));
             }
         }
+        // for (int i = 0; i < 7; i++)
+        // {
+
+            // if (i % 2 == 0)
+            // {
+            //     for (int j = 0; j < 6; j++)
+            //     {
+            //         if (cells[coordsToIndex(i, j)] != 0)
+            //         {
+            //             score += evaluatePiece(cells[coordsToIndex(i, j)], i);
+            //         }
+            //     }
+            // }
+            // else
+            // {
+            //     for (int j = 0; j < 7; j++)
+            //     {
+            //         if (cells[coordsToIndex(i, j)] != 0)
+            //         {
+            //             score += evaluatePiece(cells[coordsToIndex(i, j)], i);
+            //         }
+            //     }
+            // }
+        // }
         return score;
     }
 
@@ -822,7 +823,7 @@ namespace PijersiEngine
         uint8_t movingPiece = cells[indexStart];
 
         vector<int> moves = vector<int>();
-        moves.reserve(64);
+        moves.reserve(128);
 
         // If the piece is not a stack
         if (movingPiece < 16)
@@ -998,7 +999,7 @@ namespace PijersiEngine
         }
 
         vector<int> moves = vector<int>();
-        moves.reserve(1024);
+        moves.reserve(2048);
         for (int k = 0; k < 45; k++)
         {
             if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (static_cast<PieceColour>(newBoard->currentPlayer) << 1))
