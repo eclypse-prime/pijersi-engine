@@ -96,6 +96,7 @@ namespace PijersiEngine
     vector<int> Board::playAuto(int recursionDepth)
     {
         vector<int> moves = vector<int>();
+        moves.reserve(1024);
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != 0)
@@ -821,6 +822,7 @@ namespace PijersiEngine
         uint8_t movingPiece = cells[indexStart];
 
         vector<int> moves = vector<int>();
+        moves.reserve(64);
 
         // If the piece is not a stack
         if (movingPiece < 16)
@@ -996,6 +998,7 @@ namespace PijersiEngine
         }
 
         vector<int> moves = vector<int>();
+        moves.reserve(1024);
         for (int k = 0; k < 45; k++)
         {
             if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (static_cast<PieceColour>(newBoard->currentPlayer) << 1))
