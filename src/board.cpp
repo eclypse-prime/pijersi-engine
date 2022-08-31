@@ -353,6 +353,12 @@ namespace PijersiEngine
 
     void Board::init()
     {
+        // Reset board
+        for (int k = 0; k < 45; k++)
+        {
+            cells[k] = 0;
+        }
+
         // Black pieces
         addPiece(createPiece(Black, Scissors), 0, 0);
         addPiece(createPiece(Black, Paper), 0, 1);
@@ -382,6 +388,9 @@ namespace PijersiEngine
         addPiece(createPiece(White, Rock), 6, 3);
         addPiece(createPiece(White, Paper), 6, 4);
         addPiece(createPiece(White, Scissors), 6, 5);
+
+        // Set active player to White
+        currentPlayer = White;
     }
 
     char pieceToChar(uint8_t piece)
