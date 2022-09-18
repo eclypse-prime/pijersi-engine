@@ -9,9 +9,14 @@
 
 using namespace std;
 
+
 namespace PijersiEngine
 {
+    random_device rd; // Obtaining random number from hardware
+    mt19937 gen(rd()); // Seeding generator
+    uniform_real_distribution<float> distribution(-0.25f, 0.25f); // Defining uniform distribution
 
+    // Converts a (i, j) coordinate set to an index
     int coordsToIndex(int i, int j)
     {
         int index;
@@ -26,6 +31,7 @@ namespace PijersiEngine
         return index;
     }
 
+    // Converts an index to a (i, j) coordinate set
     void indexToCoords(int index, int *i, int *j)
     {
         *i = 2 * (index / 13);
@@ -37,6 +43,7 @@ namespace PijersiEngine
         }
     }
 
+    // Converts an index to a line number
     int indexToLine(int index)
     {
         int i = 2 * (index/13);
@@ -47,11 +54,13 @@ namespace PijersiEngine
         return i;
     }
 
+    // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
     {
         return piece + (newBottom << 4);
     }
 
+    // Creates a piece of chosen colour and type
     uint8_t createPiece(PieceColour colour, PieceType type)
     {
         uint8_t piece = 1;
@@ -75,6 +84,7 @@ namespace PijersiEngine
         return piece;
     }
 
+    // Board constructor
     Board::Board()
     {
         for (int k = 0; k < 45; k++)
@@ -83,6 +93,7 @@ namespace PijersiEngine
         }
     }
 
+    // Board copy constructor
     Board::Board(Board &board)
     {
         setState(board.cells);
@@ -92,6 +103,7 @@ namespace PijersiEngine
     // Board::~Board()
     // {
     // }
+
 
     void Board::playManual(vector<int> move)
     {
@@ -103,15 +115,19 @@ namespace PijersiEngine
         play(move[0], move[1], move[2], move[3], move[4], move[5]);
     }
 
-    // Minimax, implement alphabeta later
-    vector<int> Board::playAuto(int recursionDepth)
+    // Calculates a move using alphabeta minimax algorithm of chosen depth.
+    // Plays the move and returns it
+    vector<int> Board::playAuto(int recursionDepth, bool random)
     {
         vector<int> moves = vector<int>();
+        // Reserve space in vector for optimization purposes
         moves.reserve(2048);
+        // Calculate possible moves
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != 0)
             {
+                // Choose pieces of the current player's colour
                 if ((cells[k] & 2) == (currentPlayer << 1))
                 {
                     int i, j;
@@ -124,53 +140,48 @@ namespace PijersiEngine
 
         if (moves.size() > 0)
         {
-
             int index = 0;
             float *extremums = new float[moves.size() / 6];
 
             float alpha = -FLT_MAX;
             float beta = FLT_MAX;
-            float extremum = (currentPlayer == 0) ? -FLT_MAX : FLT_MAX;
-
-            #pragma omp parallel
+            
+            // Evaluate possible moves
+            #pragma omp parallel for schedule(dynamic)
+            for (int k = 0; k < moves.size() / 6; k++)
             {
-                #pragma omp for
-                // #pragma acc parallel loop
+                extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta);
+            }
+
+            // Find best move
+            if (currentPlayer == 0)
+            {
+                float maximum = -FLT_MAX;
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    extremums[k] = evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta);
-                }
-
-                if (currentPlayer == 0)
-                {
-                    #pragma omp for simd reduction(max : extremum)
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? distribution(gen) : 0.f;
+                    float extremum = salt + extremums[k];
+                    if (extremum > maximum)
                     {
-                        if ((extremums[k] > extremum))
-                        {
-                            extremum = extremums[k];
-                        }
-                    }
-                }
-                else
-                {
-                    #pragma omp for simd reduction(min : extremum)
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        if (extremums[k] < extremum)
-                        {
-                            extremum = extremums[k];
-                        }
+                        maximum = extremum;
+                        index = k;
                     }
                 }
             }
-
-            for (int k = 0; k < moves.size() / 6; k++)
+            else
             {
-                if (extremums[k] == extremum)
+                float minimum = FLT_MAX;
+                for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    index = k;
-                    break;
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? distribution(gen) : 0.f;
+                    float extremum = salt + extremums[k];
+                    if (extremum < minimum)
+                    {
+                        minimum = extremum;
+                        index = k;
+                    }
                 }
             }
 
@@ -179,6 +190,7 @@ namespace PijersiEngine
             vector<int>::const_iterator first = moves.begin() + 6 * index;
             vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
             vector<int> move(first, last);
+            // Apply move
             playManual(move);
             return move;
         }
@@ -187,6 +199,7 @@ namespace PijersiEngine
         return move;
     }
 
+    // Applies a move between chosen coordinates
     void Board::move(int iStart, int jStart, int iEnd, int jEnd)
     {
         // Do nothing if start and end coordinate are identical
@@ -200,6 +213,7 @@ namespace PijersiEngine
         }
     }
 
+    // Applies a stack between chosen coordinates
     void Board::stack(int iStart, int jStart, int iEnd, int jEnd)
     {
         uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
@@ -212,6 +226,7 @@ namespace PijersiEngine
         cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15) + (endPiece << 4);
     }
 
+    // Applies an unstack between chosen coordinates
     void Board::unstack(int iStart, int jStart, int iEnd, int jEnd)
     {
         uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
@@ -224,6 +239,7 @@ namespace PijersiEngine
         cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15);
     }
 
+    // Plays the selected move
     void Board::play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd)
     {
         uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
@@ -269,6 +285,7 @@ namespace PijersiEngine
         return cells[coordsToIndex(i, j)];
     }
 
+    // Evaluate piece according to its position, colour and type
     float evaluatePiece(uint8_t piece, int i)
     {
 
@@ -297,6 +314,7 @@ namespace PijersiEngine
         return score;
     }
 
+    // Evaluates the board
     float Board::evaluate()
     {
         int score = 0;
@@ -307,38 +325,16 @@ namespace PijersiEngine
                 score += evaluatePiece(cells[k], indexToLine(k));
             }
         }
-        // for (int i = 0; i < 7; i++)
-        // {
-
-            // if (i % 2 == 0)
-            // {
-            //     for (int j = 0; j < 6; j++)
-            //     {
-            //         if (cells[coordsToIndex(i, j)] != 0)
-            //         {
-            //             score += evaluatePiece(cells[coordsToIndex(i, j)], i);
-            //         }
-            //     }
-            // }
-            // else
-            // {
-            //     for (int j = 0; j < 7; j++)
-            //     {
-            //         if (cells[coordsToIndex(i, j)] != 0)
-            //         {
-            //             score += evaluatePiece(cells[coordsToIndex(i, j)], i);
-            //         }
-            //     }
-            // }
-        // }
         return score;
     }
 
+    // Adds a piece to the designated coordinates
     void Board::addPiece(uint8_t piece, int i, int j)
     {
         cells[coordsToIndex(i, j)] = piece;
     }
 
+    // Sets the board to a chosen state
     void Board::setState(uint8_t newState[45])
     {
         for (int k = 0; k < 45; k++)
@@ -347,6 +343,7 @@ namespace PijersiEngine
         }
     }
 
+    // Initializes the board to the starting position
     void Board::init()
     {
         // Reset board
@@ -389,11 +386,15 @@ namespace PijersiEngine
         currentPlayer = 0;
     }
 
+    // Converts a piece to char format
+    // Used for debug purposes
     char pieceToChar(uint8_t piece)
     {
         char res = ' ';
+        // If the piece is White
         if ((piece & 2) == 0)
         {
+            // Read the piece's type
             switch (piece & 12)
             {
             case 0:
@@ -412,8 +413,10 @@ namespace PijersiEngine
                 break;
             }
         }
+        // If the piece is Black
         else if ((piece & 2) == 2)
         {
+            // Read the piece's type
             switch (piece & 12)
             {
             case 0:
@@ -435,11 +438,15 @@ namespace PijersiEngine
         return res;
     }
 
+    // Prints the board
+    // Used for debug purposes
     void Board::print()
     {
         cout << toString();
     }
 
+    // Returns the state of the board in string format
+    // Used for debug purposes
     string Board::toString()
     {
         string output = "";
@@ -492,6 +499,7 @@ namespace PijersiEngine
         return output;
     }
 
+    // Returns true if the board is in a winning position
     bool Board::checkWin()
     {
         for (int k = 0; k < 6; k++)
@@ -519,6 +527,7 @@ namespace PijersiEngine
         return false;
     }
 
+    // Returns the 2-range neighbours of the designated cell
     vector<int> Board::neighbours(int index)
     {
         switch (index)
@@ -618,6 +627,7 @@ namespace PijersiEngine
         }
     }
 
+    // Returns the 2-range neighbours of the designated cell
     vector<int> Board::neighbours2(int index)
     {
         switch (index)
@@ -978,13 +988,16 @@ namespace PijersiEngine
         return moves;
     }
 
+    // Evaluates a move by calculating the possible subsequent moves recursively
     float Board::evaluateMove(int move[6], int recursionDepth, float alpha, float beta)
     {
+        // Create a new board on which the move will be played
         Board *newBoard = new Board(*this);
         newBoard->playManual(move);
 
         float score;
 
+        // Stop the recursion if depth is 0 or a winning position is achieved
         if (newBoard->checkWin() || recursionDepth <= 0)
         {
             score = newBoard->evaluate();
@@ -993,7 +1006,9 @@ namespace PijersiEngine
         }
 
         vector<int> moves = vector<int>();
+        // Reserve space in vector for optimization purposes
         moves.reserve(2048);
+        // Find available moves
         for (int k = 0; k < 45; k++)
         {
             if (newBoard->cells[k] != 0 && (newBoard->cells[k] & 2) == (newBoard->currentPlayer << 1))
@@ -1004,6 +1019,8 @@ namespace PijersiEngine
                 moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
             }
         }
+
+        // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
             if (newBoard->currentPlayer == 0)

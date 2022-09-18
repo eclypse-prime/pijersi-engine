@@ -17,7 +17,7 @@ namespace PijersiEngine
         // ~Board();
 
         void playManual(vector<int> move);
-        vector<int> playAuto(int recursionDepth);
+        vector<int> playAuto(int recursionDepth, bool random = true);
         float evaluate();
         void setState(uint8_t newState[45]);
         void init();
