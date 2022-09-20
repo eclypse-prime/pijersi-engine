@@ -9,6 +9,21 @@ using namespace std;
 
 namespace PijersiEngine
 {
+    void _playManual(int move[6], uint8_t *cells);
+    vector<int> _availableMoves(int i, int j, uint8_t cells[45]);
+    void _move(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
+    void _stack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
+    void _unstack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
+    bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
+    bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45]);
+    bool _isStackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
+    bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
+    float _evaluate(uint8_t cells[45]);
+    float _evaluateMove(int move[6], int recursionDepth, float alpha, float beta, uint8_t cells[45], int currentPlayer);
+    void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45]);
+    vector<int> _neighbours(int index);
+    vector<int> _neighbours2(int index);
+
     class Board
     {
     public:
@@ -31,25 +46,10 @@ namespace PijersiEngine
 
     private:
         uint8_t cells[45];
-
+        float forecast;
         void addPiece(uint8_t piece, int i, int j);
-        void move(int iStart, int jStart, int iEnd, int jEnd);
-        void stack(int iStart, int jStart, int iEnd, int jEnd);
-        void unstack(int iStart, int jStart, int iEnd, int jEnd);
-        void playManual(int move[6]);
-        void play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd);
 
-        vector<int> neighbours(int index);
-        vector<int> neighbours2(int index);
-
-        float evaluateMove(int move[6], int recursionDepth, float alpha, float beta);
-
-        bool isMoveValid(uint8_t movingPiece, int indexEnd);
-        bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd);
-        bool isStackValid(uint8_t movingPiece, int indexEnd);
-        bool isUnstackValid(uint8_t movingPiece, int indexEnd);
-
-        vector<int> availableMoves(int i, int j);
     };
+
 }
 #endif
