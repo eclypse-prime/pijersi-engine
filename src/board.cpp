@@ -100,34 +100,12 @@ namespace PijersiEngine
         currentPlayer = board.currentPlayer;
     }
 
-    // Board::~Board()
-    // {
-    // }
-
-
-
     // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    // Plays the move and returns it
-    vector<int> Board::playAuto(int recursionDepth, bool random)
+    vector<int> Board::ponder(int recursionDepth, bool random)
     {
-        vector<int> moves = vector<int>();
-        // Reserve space in vector for optimization purposes
-        moves.reserve(2048);
-        // Calculate possible moves
-        for (int k = 0; k < 45; k++)
-        {
-            if (cells[k] != 0)
-            {
-                // Choose pieces of the current player's colour
-                if ((cells[k] & 2) == (currentPlayer << 1))
-                {
-                    int i, j;
-                    indexToCoords(k, &i, &j);
-                    vector<int> pieceMoves = _availableMoves(i, j, cells);
-                    moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
-                }
-            }
-        }
+
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
         if (moves.size() > 0)
         {
@@ -176,18 +154,86 @@ namespace PijersiEngine
                 }
             }
 
+            forecast = extremums[index];
+
             delete extremums;
 
             vector<int>::const_iterator first = moves.begin() + 6 * index;
             vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
             vector<int> move(first, last);
-            // Apply move
-            playManual(move);
             return move;
         }
+        return vector<int>({0, 0, 0, 0, 0, 0});
+    }
 
-        vector<int> move = vector<int>(6);
+    // Plays a move and returns it
+    vector<int> Board::playAuto(int recursionDepth, bool random)
+    {
+        // Calculate move
+        vector<int> move = ponder(recursionDepth, random);
+        // Apply move
+        playManual(move);
         return move;
+    }
+
+    // Chooses a random move
+    vector<int> Board::ponderRandom()
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+
+        uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
+
+        int index = intDistribution(gen);
+
+        vector<int>::const_iterator first = moves.begin() + 6 * index;
+        vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+        vector<int> move(first, last);
+        return move;
+    }
+
+    // Plays a random move and returns it
+    vector<int> Board::playRandom()
+    {
+        // Calculate move
+        vector<int> move = ponderRandom();
+        // Apply move
+        playManual(move);
+        return move;
+    }
+
+    // vector<int> Board::ponderMCTS()
+    // {
+        
+    // }
+
+    bool Board::isMoveLegal(vector<int> move)
+    {
+        if (cells[coordsToIndex(move[0], move[1])] == 0)
+        {
+            return false;
+        }
+        if ((cells[coordsToIndex(move[0], move[1])] & 2) != currentPlayer << 1)
+        {
+            return false;
+        }
+        vector<int> moves = _availablePieceMoves(move[0], move[1], cells);
+        for (int k = 0; k < moves.size()/6; k++)
+        {
+            bool legal = true;
+            for (int m = 0; m < 6; m++)
+            {
+                if (moves[k*6+m] != move[m])
+                {
+                    legal = false;
+                }
+            }
+            if (legal)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     // Applies a move between chosen coordinates
@@ -352,6 +398,11 @@ namespace PijersiEngine
     void Board::setState(uint8_t newState[45])
     {
         _setState(cells, newState);
+    }
+
+    uint8_t *Board::getState()
+    {
+        return cells;
     }
 
     // Initializes the board to the starting position
@@ -542,6 +593,11 @@ namespace PijersiEngine
     bool Board::checkWin()
     {
         return _checkWin(cells);
+    }
+
+    float Board::getForecast()
+    {
+        return forecast;
     }
 
     // Returns the 2-range neighbours of the designated cell
@@ -829,7 +885,31 @@ namespace PijersiEngine
         return true;
     }
 
-    vector<int> _availableMoves(int iStart, int jStart, uint8_t cells[45])
+    vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    {
+        vector<int> moves = vector<int>();
+        // Reserve space in vector for optimization purposes
+        moves.reserve(2048);
+        // Calculate possible moves
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                // Choose pieces of the current player's colour
+                if ((cells[k] & 2) == (player << 1))
+                {
+                    int i, j;
+                    indexToCoords(k, &i, &j);
+                    vector<int> pieceMoves = _availablePieceMoves(i, j, cells);
+                    moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+                }
+            }
+        }
+        return moves;
+    }
+
+    // Returns the list of possible moves for a specific piece
+    vector<int> _availablePieceMoves(int iStart, int jStart, uint8_t cells[45])
     {
         int indexStart = coordsToIndex(iStart, jStart);
 
@@ -853,7 +933,7 @@ namespace PijersiEngine
                     // stack, 2-range move
                     for (int indexEnd : _neighbours2(indexMid))
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd)/2) && _isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -864,7 +944,7 @@ namespace PijersiEngine
                     // stack, 0/1-range move
                     for (int indexEnd : _neighbours(indexMid))
                     {
-                        if (_isMoveValid(movingPiece, indexEnd, cells))
+                        if (_isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -950,6 +1030,9 @@ namespace PijersiEngine
                         }
 
                     }
+                    // 1-range move, unstack on starting position
+                    moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iStart, jStart});
+
                     // 1-range move
                     moves.insert(moves.end(), {iStart, jStart, -1, -1, iMid, jMid});
                 }
@@ -1018,20 +1101,7 @@ namespace PijersiEngine
             return score;
         }
 
-        vector<int> moves = vector<int>();
-        // Reserve space in vector for optimization purposes
-        moves.reserve(2048);
-        // Find available moves
-        for (int k = 0; k < 45; k++)
-        {
-            if (newCells[k] != 0 && (newCells[k] & 2) == (currentPlayer << 1))
-            {
-                int i, j;
-                indexToCoords(k, &i, &j);
-                vector<int> pieceMoves = _availableMoves(i, j, newCells);
-                moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
-            }
-        }
+        vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
 
         // Evaluate available moves and find the best one
         if (moves.size() > 0)

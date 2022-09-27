@@ -37,9 +37,7 @@
 # Visual Studio
 .vs/
 
-# SWIG generated files
+# SWIG generated files and build files
 src/pijersi_engine_wrap.cxx
-wrap/
-
-# Build folder
+wrap_csharp/
 build/

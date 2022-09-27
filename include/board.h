@@ -10,7 +10,8 @@ using namespace std;
 namespace PijersiEngine
 {
     void _playManual(int move[6], uint8_t *cells);
-    vector<int> _availableMoves(int i, int j, uint8_t cells[45]);
+    vector<int> _availablePieceMoves(int i, int j, uint8_t cells[45]);
+    vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45]);
     void _move(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
     void _stack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
     void _unstack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
@@ -24,6 +25,13 @@ namespace PijersiEngine
     vector<int> _neighbours(int index);
     vector<int> _neighbours2(int index);
 
+    enum Algorithm
+    {
+        Minimax,
+        MCTS,
+        Random
+    };
+
     class Board
     {
     public:
@@ -32,9 +40,15 @@ namespace PijersiEngine
         // ~Board();
 
         void playManual(vector<int> move);
+        vector<int> ponder(int recursionDepth, bool random);
         vector<int> playAuto(int recursionDepth, bool random = true);
+        vector<int> ponderRandom();
+        vector<int> playRandom();
+        // vector<int> ponderMCTS();
+        bool isMoveLegal(vector<int> move);
         float evaluate();
         void setState(uint8_t newState[45]);
+        uint8_t *getState();
         void init();
 
         uint8_t at(int i, int j);
@@ -42,14 +56,23 @@ namespace PijersiEngine
         string toString();
 
         bool checkWin();
+        float getForecast();
         uint8_t currentPlayer = 0;
 
     private:
         uint8_t cells[45];
         float forecast;
+
         void addPiece(uint8_t piece, int i, int j);
 
     };
+
+    // struct Node
+    // {
+    //     Board *board;
+    //     Node *parent;
+    //     vector<Node> children;
+    // };
 
 }
 #endif
