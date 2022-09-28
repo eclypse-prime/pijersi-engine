@@ -21,6 +21,7 @@ namespace PijersiEngine
     bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
     float _evaluate(uint8_t cells[45]);
     float _evaluateMove(int move[6], int recursionDepth, float alpha, float beta, uint8_t cells[45], int currentPlayer);
+    float _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45]);
     void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45]);
     vector<int> _neighbours(int index);
     vector<int> _neighbours2(int index);
@@ -44,7 +45,7 @@ namespace PijersiEngine
         vector<int> playAuto(int recursionDepth, bool random = true);
         vector<int> ponderRandom();
         vector<int> playRandom();
-        // vector<int> ponderMCTS();
+        vector<int> ponderMCTS(int seconds);
         bool isMoveLegal(vector<int> move);
         float evaluate();
         void setState(uint8_t newState[45]);
@@ -67,12 +68,23 @@ namespace PijersiEngine
 
     };
 
-    // struct Node
-    // {
-    //     Board *board;
-    //     Node *parent;
-    //     vector<Node> children;
-    // };
+    struct Node
+    {
+        Board *board;
+        Node *parent;
+        vector<Node> children;
+
+        int visits = 0;
+        int score;
+
+        Node(Node *parent, vector<int> move);
+        ~Node();
+
+        void expand();
+        bool isFinal();
+
+        void update(int win);
+    };
 
 }
 #endif

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <cfloat>
+#include <chrono>
 
 using namespace std;
 
@@ -202,10 +203,23 @@ namespace PijersiEngine
         return move;
     }
 
-    // vector<int> Board::ponderMCTS()
-    // {
-        
-    // }
+    vector<int> Board::ponderMCTS(int seconds)
+    {
+        Node root(nullptr, vector<int>());
+
+        auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
+
+        do
+        {
+            // Select one node
+            // Simulate one child
+            // Update
+        } while (chrono::system_clock::now() < finish);
+
+        // Get child with max score
+
+        return vector<int>({0,0,0,0,0,0});
+    }
 
     bool Board::isMoveLegal(vector<int> move)
     {
@@ -1094,11 +1108,10 @@ namespace PijersiEngine
 
         float score;
 
-        // Stop the recursion if depth is 0 or a winning position is achieved
-        if (_checkWin(newCells) || recursionDepth <= 0)
+        // Stop the recursion if a winning position is achieved
+        if (_checkWin(newCells))
         {
-            score = _evaluate(newCells);
-            return score;
+            return _evaluate(newCells);
         }
 
         vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
@@ -1106,37 +1119,118 @@ namespace PijersiEngine
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
-            if (currentPlayer == 0)
+            if (recursionDepth > 1)
             {
-                float maximum = -FLT_MAX;
-                for (int k = 0; k < moves.size() / 6; k++)
+                if (currentPlayer == 0)
                 {
-                    maximum = max(maximum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
-                    if (maximum > beta)
+                    float maximum = -FLT_MAX;
+                    for (int k = 0; k < moves.size() / 6; k++)
                     {
-                        break;
+                        maximum = max(maximum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        if (maximum > beta)
+                        {
+                            break;
+                        }
+                        alpha = max(alpha, maximum);
                     }
-                    alpha = max(alpha, maximum);
+                    score = maximum;
                 }
-                score = maximum;
+                else
+                {
+                    float minimum = FLT_MAX;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        minimum = min(minimum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        if (minimum < alpha)
+                        {
+                            break;
+                        }
+                        beta = min(beta, minimum);
+                    }
+                    score = minimum;
+                }
             }
             else
             {
-                float minimum = FLT_MAX;
-                for (int k = 0; k < moves.size() / 6; k++)
+                uint8_t cellsBuffer[45];
+                if (currentPlayer == 0)
                 {
-                    minimum = min(minimum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
-                    if (minimum < alpha)
+                    float maximum = -FLT_MAX;
+                    for (int k = 0; k < moves.size() / 6; k++)
                     {
-                        break;
+                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
+                        if (maximum > beta)
+                        {
+                            break;
+                        }
+                        alpha = max(alpha, maximum);
                     }
-                    beta = min(beta, minimum);
+                    score = maximum;
                 }
-                score = minimum;
+                else
+                {
+                    float minimum = FLT_MAX;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
+                        if (minimum < alpha)
+                        {
+                            break;
+                        }
+                        beta = min(beta, minimum);
+                    }
+                    score = minimum;
+                }
             }
         }
 
         return score;
     }
 
+    // Evaluation function for terminal nodes (depth 0)
+    float _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45])
+    {
+        _setState(newCells, cells);
+        _playManual(move, newCells);
+
+        return _evaluate(newCells);
+    }
+
+    float UCB1(int nodeWins, int nodeSimulations, int totalSimulations)
+    {
+        return nodeWins/nodeSimulations + 1.414f * sqrtf(totalSimulations) / nodeSimulations;
+    }
+
+    Node::Node(Node *newParent, vector<int> move)
+    {
+        parent = newParent;
+        if (parent != nullptr)
+        {
+            board = new Board(*parent->board);
+            board->playManual(move);
+        }
+        else
+        {
+            board = new Board();
+            board->init();
+        }
+
+        children = vector<Node>();
+
+    }
+
+    Node::~Node()
+    {
+        delete board;
+    }
+
+    void Node::update(int win)
+    {
+        visits++;
+        score++;
+        if (parent != nullptr)
+        {
+            parent->update(win);
+        }
+    }
 }
