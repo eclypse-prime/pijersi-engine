@@ -73,7 +73,7 @@ namespace PijersiEngine
     {
         Board *board;
         Node *parent;
-        vector<Node> children;
+        vector<Node*> children;
         vector<int> move;
         uint8_t player;
 

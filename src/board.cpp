@@ -108,7 +108,6 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
-        cout << moves.size()/6 << endl;
         if (moves.size() > 0)
         {
             int index = 0;
@@ -1182,9 +1181,9 @@ namespace PijersiEngine
         return _evaluate(newCells);
     }
 
-    float _UCT(int nodeWins, int nodeSimulations, int totalSimulations)
+    float _UCT(float nodeWins, float nodeSimulations, float totalSimulations)
     {
-        return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations)) / nodeSimulations;
+        return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
     Node::Node(Node *newParent, vector<int> newMove, uint8_t rootPlayer)
@@ -1203,7 +1202,7 @@ namespace PijersiEngine
             board->init();
         }
 
-        children = vector<Node>();
+        children = vector<Node*>();
         children.reserve(256);
     }
 
@@ -1259,89 +1258,89 @@ namespace PijersiEngine
                 vector<int>::const_iterator first = moves.begin() + 6 * k;
                 vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
                 vector<int> move(first, last);
-                Node child(this, move, player);
-                children.push_back(child);
+                children.push_back(new Node(this, move, player));
             }
         }
     }
 
     vector<int> Board::ponderMCTS(int seconds)
     {
-        cout << "1" << endl;
         Node root(nullptr, vector<int>(), currentPlayer);
         root.board->setState(getState());
+        root.board->currentPlayer = currentPlayer;
         root.expand();
 
         auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
 
-        cout << "2" << endl;
-
         Node *current = &root;
-        cout << "3" << endl;
         do
         {
-
             if (current->isLeaf())
             {
-                cout << "leaf" << endl;
                 if (current->visits == 0)
                 {
-                    cout << "rollout" << endl;
                     current->rollout();
                     current = &root;
                 }
                 else
                 {
-                    cout << "expand" << endl;
-                    current->expand();
-                    if (current->children.size() > 0) // If node is final AND win, wtf do I do?
+                    if (!current->isWin()){
+                        current->expand();
+                        if (current->children.size() > 0) // If node is final AND win, wtf do I do?
+                        {
+                            current = current->children[0];
+                        }
+                    }
+                    else
                     {
-                        current = &current->children[0];
+                        current->rollout();
+                        current = &root;
                     }
                 }
             }
             else
             {
-                cout << "select uct" << endl;
                 float uctScore = -FLT_MAX;
                 int index = 0;
                 // for (Node child : current->children)
                 for (int k = 0; k < current->children.size(); k++)
                 {
-                    Node child = current->children[k];
-                    if (child.visits == 0)
-                    {
-                        current = &child;
-                        break;
-                    }
-                    float childScore = _UCT(child.score, child.visits, root.visits);
-                    if (childScore > uctScore)
+                    if (current->children[k]->visits == 0)
                     {
                         index = k;
-                        uctScore = childScore;
+                        break;
+                    }
+                    else
+                    {
+                        float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
+                        if (childScore > uctScore)
+                        {
+                            index = k;
+                            uctScore = childScore;
+                        }
                     }
                 }
-                current = &current->children[index];
+                current = current->children[index];
             }
         } while (chrono::system_clock::now() < finish);
 
 
         // Get child with max visits from root
-        int maxVisits = 0;
+        int maxVisits = 0.f;
         int index = 0;
         for (int k = 0; k < root.children.size(); k++)
         {
-            if (root.children[k].visits > maxVisits)
+            if (root.children[k]->visits > maxVisits)
             {
                 index = k;
-                maxVisits = root.children[k].visits;
+                maxVisits = root.children[k]->visits;
             }
         }
-        
-        // delete current, protect root !!!;
-        delete current;
+
         // Copy the vector
-        return root.children[index].move;
+        vector<int> move = root.children[index]->move;
+
+        return move;
 
         // return vector<int>({0,0,0,0,0,0});
     }
@@ -1350,7 +1349,7 @@ namespace PijersiEngine
     vector<int> Board::playMCTS(int seconds)
     {
         // Calculate move
-        vector<int> move = ponderMCTS(1);
+        vector<int> move = ponderMCTS(seconds);
         // Apply move
         playManual(move);
         return move;
