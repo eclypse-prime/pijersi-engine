@@ -108,6 +108,7 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
+        cout << moves.size()/6 << endl;
         if (moves.size() > 0)
         {
             int index = 0;
@@ -172,6 +173,7 @@ namespace PijersiEngine
     {
         // Calculate move
         vector<int> move = ponder(recursionDepth, random);
+        // vector<int> move = ponderMCTS(1);
         // Apply move
         playManual(move);
         return move;
@@ -201,24 +203,6 @@ namespace PijersiEngine
         // Apply move
         playManual(move);
         return move;
-    }
-
-    vector<int> Board::ponderMCTS(int seconds)
-    {
-        Node root(nullptr, vector<int>());
-
-        auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
-
-        do
-        {
-            // Select one node
-            // Simulate one child
-            // Update
-        } while (chrono::system_clock::now() < finish);
-
-        // Get child with max score
-
-        return vector<int>({0,0,0,0,0,0});
     }
 
     bool Board::isMoveLegal(vector<int> move)
@@ -1150,6 +1134,8 @@ namespace PijersiEngine
                     score = minimum;
                 }
             }
+            // Recursion not needed, only applying move and evaluating
+            // This can save us a lot of memory allocations
             else
             {
                 uint8_t cellsBuffer[45];
@@ -1196,14 +1182,16 @@ namespace PijersiEngine
         return _evaluate(newCells);
     }
 
-    float UCB1(int nodeWins, int nodeSimulations, int totalSimulations)
+    float _UCT(int nodeWins, int nodeSimulations, int totalSimulations)
     {
-        return nodeWins/nodeSimulations + 1.414f * sqrtf(totalSimulations) / nodeSimulations;
+        return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations)) / nodeSimulations;
     }
 
-    Node::Node(Node *newParent, vector<int> move)
+    Node::Node(Node *newParent, vector<int> newMove, uint8_t rootPlayer)
     {
         parent = newParent;
+        player = rootPlayer;
+        move = newMove;
         if (parent != nullptr)
         {
             board = new Board(*parent->board);
@@ -1216,21 +1204,157 @@ namespace PijersiEngine
         }
 
         children = vector<Node>();
-
+        children.reserve(256);
     }
 
     Node::~Node()
     {
-        delete board;
+        if (board != nullptr)
+        {
+            delete board;
+        }
     }
 
-    void Node::update(int win)
+    bool Node::isLeaf()
+    {
+        return (children.size() == 0);
+    }
+
+    bool Node::isWin()
+    {
+        return board->checkWin();
+    }
+
+    void Node::update(bool win)
     {
         visits++;
-        score++;
+        if (win)
+        {
+            score++;
+        }
         if (parent != nullptr)
         {
             parent->update(win);
         }
     }
+
+    void Node::rollout()
+    {
+        Board newBoard(*board);
+        while (!newBoard.checkWin())
+        {
+            newBoard.playRandom();
+        }
+        update(((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1)));
+    }
+
+    void Node::expand()
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(board->currentPlayer, board->getState());
+        if (moves.size() > 0)
+        {
+            for (int k = 0; k < moves.size() / 6; k++)
+            {
+                vector<int>::const_iterator first = moves.begin() + 6 * k;
+                vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
+                vector<int> move(first, last);
+                Node child(this, move, player);
+                children.push_back(child);
+            }
+        }
+    }
+
+    vector<int> Board::ponderMCTS(int seconds)
+    {
+        cout << "1" << endl;
+        Node root(nullptr, vector<int>(), currentPlayer);
+        root.board->setState(getState());
+        root.expand();
+
+        auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
+
+        cout << "2" << endl;
+
+        Node *current = &root;
+        cout << "3" << endl;
+        do
+        {
+
+            if (current->isLeaf())
+            {
+                cout << "leaf" << endl;
+                if (current->visits == 0)
+                {
+                    cout << "rollout" << endl;
+                    current->rollout();
+                    current = &root;
+                }
+                else
+                {
+                    cout << "expand" << endl;
+                    current->expand();
+                    if (current->children.size() > 0) // If node is final AND win, wtf do I do?
+                    {
+                        current = &current->children[0];
+                    }
+                }
+            }
+            else
+            {
+                cout << "select uct" << endl;
+                float uctScore = -FLT_MAX;
+                int index = 0;
+                // for (Node child : current->children)
+                for (int k = 0; k < current->children.size(); k++)
+                {
+                    Node child = current->children[k];
+                    if (child.visits == 0)
+                    {
+                        current = &child;
+                        break;
+                    }
+                    float childScore = _UCT(child.score, child.visits, root.visits);
+                    if (childScore > uctScore)
+                    {
+                        index = k;
+                        uctScore = childScore;
+                    }
+                }
+                current = &current->children[index];
+            }
+        } while (chrono::system_clock::now() < finish);
+
+
+        // Get child with max visits from root
+        int maxVisits = 0;
+        int index = 0;
+        for (int k = 0; k < root.children.size(); k++)
+        {
+            if (root.children[k].visits > maxVisits)
+            {
+                index = k;
+                maxVisits = root.children[k].visits;
+            }
+        }
+        
+        // delete current, protect root !!!;
+        delete current;
+        // Copy the vector
+        return root.children[index].move;
+
+        // return vector<int>({0,0,0,0,0,0});
+    }
+
+    // Plays a move and returns it
+    vector<int> Board::playMCTS(int seconds)
+    {
+        // Calculate move
+        vector<int> move = ponderMCTS(1);
+        // Apply move
+        playManual(move);
+        return move;
+    }
+
+
 }

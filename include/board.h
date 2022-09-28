@@ -43,6 +43,7 @@ namespace PijersiEngine
         void playManual(vector<int> move);
         vector<int> ponder(int recursionDepth, bool random);
         vector<int> playAuto(int recursionDepth, bool random = true);
+        vector<int> playMCTS(int seconds);
         vector<int> ponderRandom();
         vector<int> playRandom();
         vector<int> ponderMCTS(int seconds);
@@ -73,17 +74,21 @@ namespace PijersiEngine
         Board *board;
         Node *parent;
         vector<Node> children;
+        vector<int> move;
+        uint8_t player;
 
         int visits = 0;
-        int score;
+        int score = 0;
 
-        Node(Node *parent, vector<int> move);
+        Node(Node *newParent, vector<int> newMove, uint8_t rootPlayer);
         ~Node();
 
         void expand();
-        bool isFinal();
+        bool isLeaf();
+        bool isWin();
+        void rollout();
 
-        void update(int win);
+        void update(bool win);
     };
 
 }
