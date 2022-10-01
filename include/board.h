@@ -17,7 +17,7 @@ namespace PijersiEngine
     void _unstack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
     bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
     bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45]);
-    bool _isStackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
+    bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45]);
     bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
     float _evaluate(uint8_t cells[45]);
     float _evaluateMove(int move[6], int recursionDepth, float alpha, float beta, uint8_t cells[45], int currentPlayer);
@@ -43,10 +43,10 @@ namespace PijersiEngine
         void playManual(vector<int> move);
         vector<int> ponder(int recursionDepth, bool random);
         vector<int> playAuto(int recursionDepth, bool random = true);
-        vector<int> playMCTS(int seconds);
+        vector<int> playMCTS(int seconds, int simulationsPerRollout);
         vector<int> ponderRandom();
         vector<int> playRandom();
-        vector<int> ponderMCTS(int seconds);
+        vector<int> ponderMCTS(int seconds, int simulationsPerRollout);
         bool isMoveLegal(vector<int> move);
         float evaluate();
         void setState(uint8_t newState[45]);
@@ -63,7 +63,7 @@ namespace PijersiEngine
 
     private:
         uint8_t cells[45];
-        float forecast;
+        float forecast = 0;
 
         void addPiece(uint8_t piece, int i, int j);
 
@@ -80,15 +80,15 @@ namespace PijersiEngine
         int visits = 0;
         int score = 0;
 
-        Node(Node *newParent, vector<int> newMove, uint8_t rootPlayer);
+        Node(Node *newParent, const vector<int> &newMove, uint8_t rootPlayer);
         ~Node();
 
         void expand();
         bool isLeaf();
         bool isWin();
-        void rollout();
+        void rollout(int nSimulations);
 
-        void update(bool win);
+        void update(int winCount, int visitCount);
     };
 
 }

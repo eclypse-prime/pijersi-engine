@@ -164,7 +164,7 @@ namespace PijersiEngine
             vector<int> move(first, last);
             return move;
         }
-        return vector<int>({0, 0, 0, 0, 0, 0});
+        return vector<int>({-1, -1, -1, -1, -1, -1});
     }
 
     // Plays a move and returns it
@@ -184,14 +184,18 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
-        uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
+        if (moves.size()>0)
+        {
+            uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
 
-        int index = intDistribution(gen);
+            int index = intDistribution(gen);
 
-        vector<int>::const_iterator first = moves.begin() + 6 * index;
-        vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-        vector<int> move(first, last);
-        return move;
+            vector<int>::const_iterator first = moves.begin() + 6 * index;
+            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int> move(first, last);
+            return move;
+        }
+        return vector<int>({0, 0, 0, 0, 0, 0});
     }
 
     // Plays a random move and returns it
@@ -276,6 +280,10 @@ namespace PijersiEngine
     // Plays the selected move
     void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45])
     {
+        if (iStart < 0)
+        {
+            return;
+        }
         uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
         if (movingPiece != 0)
         {
@@ -383,7 +391,7 @@ namespace PijersiEngine
         cells[coordsToIndex(i, j)] = piece;
     }
 
-    void _setState(uint8_t cells[45], uint8_t newState[45])
+    void _setState(uint8_t cells[45], const uint8_t newState[45])
     {
         for (int k = 0; k < 45; k++)
         {
@@ -559,7 +567,7 @@ namespace PijersiEngine
     }
 
     // Returns true if the board is in a winning position
-    bool _checkWin(uint8_t cells[45])
+    bool _checkWin(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {
@@ -848,7 +856,7 @@ namespace PijersiEngine
         return true;
     }
 
-    bool _isStackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -1089,7 +1097,7 @@ namespace PijersiEngine
         // Set current player to the other colour.
         currentPlayer = 1 - currentPlayer;
 
-        float score;
+        float score = 0.f;
 
         // Stop the recursion if a winning position is achieved
         if (_checkWin(newCells))
@@ -1186,11 +1194,10 @@ namespace PijersiEngine
         return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
-    Node::Node(Node *newParent, vector<int> newMove, uint8_t rootPlayer)
+    Node::Node(Node *newParent, const vector<int> &newMove, uint8_t rootPlayer) : move(newMove)
     {
         parent = newParent;
         player = rootPlayer;
-        move = newMove;
         if (parent != nullptr)
         {
             board = new Board(*parent->board);
@@ -1202,7 +1209,6 @@ namespace PijersiEngine
             board->init();
         }
 
-        children = vector<Node*>();
         children.reserve(256);
     }
 
@@ -1211,6 +1217,13 @@ namespace PijersiEngine
         if (board != nullptr)
         {
             delete board;
+        }
+        for (int k = 0; k < children.size(); k++)
+        {
+            if (children[k] != nullptr)
+            {
+                delete children[k];
+            }
         }
     }
 
@@ -1224,27 +1237,34 @@ namespace PijersiEngine
         return board->checkWin();
     }
 
-    void Node::update(bool win)
+    void Node::update(int winCount, int visitCount)
     {
-        visits++;
-        if (win)
-        {
-            score++;
-        }
+        visits += visitCount;
+        score += winCount;
         if (parent != nullptr)
         {
-            parent->update(win);
+            parent->update(winCount, visitCount);
         }
     }
 
-    void Node::rollout()
+    void Node::rollout(int nSimulations)
     {
         Board newBoard(*board);
-        while (!newBoard.checkWin())
+        int nWins = 0;
+        for (int k = 0; k < nSimulations; k++)
         {
-            newBoard.playRandom();
+            newBoard.setState(board->getState());
+            newBoard.currentPlayer = board->currentPlayer;
+            while (!newBoard.checkWin())
+            {
+                newBoard.playRandom();
+            }
+            if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
+            {
+                nWins++;
+            }
         }
-        update(((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1)));
+        update(nWins, nSimulations);
     }
 
     void Node::expand()
@@ -1257,99 +1277,133 @@ namespace PijersiEngine
             {
                 vector<int>::const_iterator first = moves.begin() + 6 * k;
                 vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
-                vector<int> move(first, last);
-                children.push_back(new Node(this, move, player));
+                vector<int> chosenMove(first, last);
+                children.push_back(new Node(this, chosenMove, player));
             }
         }
     }
 
-    vector<int> Board::ponderMCTS(int seconds)
+    vector<int> Board::ponderMCTS(int seconds, int simulationsPerRollout)
     {
-        Node root(nullptr, vector<int>(), currentPlayer);
-        root.board->setState(getState());
-        root.board->currentPlayer = currentPlayer;
-        root.expand();
+        int nThreads = omp_get_max_threads();
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        int nMoves = moves.size()/6;
 
-        auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
+        vector<int> visitsPerThreads(nMoves*nThreads);
 
-        Node *current = &root;
-        do
+
+        if (nMoves > 0)
         {
-            if (current->isLeaf())
+            #pragma omp parallel for num_threads(nThreads)
+            for (int k = 0; k < nThreads; k++)
             {
-                if (current->visits == 0)
+                Node root(nullptr, vector<int>(), currentPlayer);
+                root.board->setState(getState());
+                root.board->currentPlayer = currentPlayer;
+                root.expand();
+
+                auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
+
+                Node *current = &root;
+                do
                 {
-                    current->rollout();
-                    current = &root;
-                }
-                else
-                {
-                    if (!current->isWin()){
-                        current->expand();
-                        if (current->children.size() > 0) // If node is final AND win, wtf do I do?
+                    if (current->isLeaf())
+                    {
+                        if (current->visits == 0)
                         {
-                            current = current->children[0];
+                            current->rollout(simulationsPerRollout);
+                            current = &root;
+                        }
+                        else
+                        {
+                            if (!current->isWin())
+                            {
+                                current->expand();
+                                if (current->children.size() > 0)
+                                {
+                                    current = current->children[0];
+                                }
+                            }
+                            else
+                            {
+                                current->rollout(simulationsPerRollout);
+                                current = &root;
+                            }
                         }
                     }
                     else
                     {
-                        current->rollout();
-                        current = &root;
-                    }
-                }
-            }
-            else
-            {
-                float uctScore = -FLT_MAX;
-                int index = 0;
-                // for (Node child : current->children)
-                for (int k = 0; k < current->children.size(); k++)
-                {
-                    if (current->children[k]->visits == 0)
-                    {
-                        index = k;
-                        break;
-                    }
-                    else
-                    {
-                        float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
-                        if (childScore > uctScore)
+                        float uctScore = -FLT_MAX;
+                        int index = 0;
+                        for (int k = 0; k < current->children.size(); k++)
                         {
-                            index = k;
-                            uctScore = childScore;
+                            if (current->children[k]->visits == 0)
+                            {
+                                index = k;
+                                break;
+                            }
+                            else
+                            {
+                                float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
+                                if (childScore > uctScore)
+                                {
+                                    index = k;
+                                    uctScore = childScore;
+                                }
+                            }
                         }
+                        current = current->children[index];
                     }
+                } while (chrono::system_clock::now() < finish);
+                for (int n = 0; n < nMoves; n++)
+                {
+                    visitsPerThreads[k*nMoves+n] = root.children[n]->visits;
                 }
-                current = current->children[index];
             }
-        } while (chrono::system_clock::now() < finish);
 
 
-        // Get child with max visits from root
-        int maxVisits = 0.f;
-        int index = 0;
-        for (int k = 0; k < root.children.size(); k++)
-        {
-            if (root.children[k]->visits > maxVisits)
+            vector<int> visitsPerNode(nMoves);
+            for (int k = 0; k < nThreads; k++)
             {
-                index = k;
-                maxVisits = root.children[k]->visits;
+                for (int n = 0; n < nMoves; n++)
+                {
+                    visitsPerNode[n] += visitsPerThreads[k*nMoves+n];
+                }
             }
+
+            for (int k = 0; k < nMoves; k++)
+            {
+                cout << visitsPerNode[k] << ", ";
+            }
+            cout << endl;
+
+            // Get child with max visits from root
+            int maxVisits = 0;
+            int index = 0;
+            for (int k = 0; k < nMoves; k++)
+            {
+                if (visitsPerNode[k] > maxVisits)
+                {
+                    index = k;
+                    maxVisits = visitsPerNode[k];
+                }
+            }
+
+            // Select the corresponding move
+            vector<int>::const_iterator first = moves.begin() + 6 * index;
+            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int> move(first, last);
+
+            return move;
         }
-
-        // Copy the vector
-        vector<int> move = root.children[index]->move;
-
-        return move;
-
-        // return vector<int>({0,0,0,0,0,0});
+        return vector<int>({-1, -1, -1, -1, -1, -1});
     }
 
     // Plays a move and returns it
-    vector<int> Board::playMCTS(int seconds)
+    vector<int> Board::playMCTS(int seconds, int simulationsPerRollout)
     {
         // Calculate move
-        vector<int> move = ponderMCTS(seconds);
+        vector<int> move = ponderMCTS(seconds, simulationsPerRollout);
         // Apply move
         playManual(move);
         return move;
