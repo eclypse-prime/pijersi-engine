@@ -42,8 +42,8 @@ namespace PijersiEngine
 
         void playManual(vector<int> move);
         vector<int> ponderAlphaBeta(int recursionDepth, bool random);
-        vector<int> playAlphaBeta(int recursionDepth, bool random = true);
-        vector<int> playMCTS(int seconds, int simulationsPerRollout);
+        vector<int> playAlphaBeta(int recursionDepth = 3, bool random = true);
+        vector<int> playMCTS(int seconds = 10, int simulationsPerRollout = 3);
         vector<int> ponderRandom();
         vector<int> playRandom();
         vector<int> ponderMCTS(int seconds, int simulationsPerRollout);
