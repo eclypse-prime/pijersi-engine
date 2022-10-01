@@ -102,7 +102,7 @@ namespace PijersiEngine
     }
 
     // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    vector<int> Board::ponder(int recursionDepth, bool random)
+    vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
     {
 
         // Get a vector of all the available moves for the current player
@@ -168,11 +168,10 @@ namespace PijersiEngine
     }
 
     // Plays a move and returns it
-    vector<int> Board::playAuto(int recursionDepth, bool random)
+    vector<int> Board::playAlphaBeta(int recursionDepth, bool random)
     {
         // Calculate move
-        vector<int> move = ponder(recursionDepth, random);
-        // vector<int> move = ponderMCTS(1);
+        vector<int> move = ponderAlphaBeta(recursionDepth, random);
         // Apply move
         playManual(move);
         return move;
