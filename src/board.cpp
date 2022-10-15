@@ -111,10 +111,10 @@ namespace PijersiEngine
         if (moves.size() > 0)
         {
             int index = 0;
-            float *extremums = new float[moves.size() / 6];
+            int16_t *extremums = new int16_t[moves.size() / 6];
 
-            float alpha = -FLT_MAX;
-            float beta = FLT_MAX;
+            int16_t alpha = INT16_MIN;
+            int16_t beta = INT16_MAX;
             
             // Evaluate possible moves
             #pragma omp parallel for schedule(dynamic)
@@ -131,7 +131,7 @@ namespace PijersiEngine
                 {
                     // Add randomness to separate equal moves if parameter active
                     float salt = random ? distribution(gen) : 0.f;
-                    float extremum = salt + extremums[k];
+                    float extremum = salt + (float)extremums[k];
                     if (extremum > maximum)
                     {
                         maximum = extremum;
@@ -146,7 +146,7 @@ namespace PijersiEngine
                 {
                     // Add randomness to separate equal moves if parameter active
                     float salt = random ? distribution(gen) : 0.f;
-                    float extremum = salt + extremums[k];
+                    float extremum = salt + (float)extremums[k];
                     if (extremum < minimum)
                     {
                         minimum = extremum;
@@ -337,19 +337,19 @@ namespace PijersiEngine
     }
 
     // Evaluate piece according to its position, colour and type
-    float _evaluatePiece(uint8_t piece, int i)
+    int16_t _evaluatePiece(uint8_t piece, int i)
     {
 
         float score;
         // If the piece isn't Wise
         if ((piece & 12) != 12)
         {
-            score = 15.f - 12.f * (piece & 2) - i;
+            score = 15 - 12 * (piece & 2) - i;
 
             // If the piece is in a winning position
             if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
             {
-                score *= 10000.f;
+                score *= 100;
             }
         }
         else
@@ -371,7 +371,7 @@ namespace PijersiEngine
     }
 
     // Evaluates the board
-    float _evaluate(uint8_t cells[45])
+    int16_t _evaluate(uint8_t cells[45])
     {
         int score = 0;
         for (int k = 0; k < 45; k++)
@@ -1087,7 +1087,7 @@ namespace PijersiEngine
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    float _evaluateMove(int move[6], int recursionDepth, float alpha, float beta, uint8_t cells[45], int currentPlayer)
+    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], int currentPlayer)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
@@ -1096,7 +1096,7 @@ namespace PijersiEngine
         // Set current player to the other colour.
         currentPlayer = 1 - currentPlayer;
 
-        float score = 0.f;
+        int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
         if (_checkWin(newCells))
@@ -1113,7 +1113,7 @@ namespace PijersiEngine
             {
                 if (currentPlayer == 0)
                 {
-                    float maximum = -FLT_MAX;
+                    int16_t maximum = INT16_MIN;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         maximum = max(maximum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
@@ -1127,7 +1127,7 @@ namespace PijersiEngine
                 }
                 else
                 {
-                    float minimum = FLT_MAX;
+                    int16_t minimum = INT16_MAX;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         minimum = min(minimum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
@@ -1147,7 +1147,7 @@ namespace PijersiEngine
                 uint8_t cellsBuffer[45];
                 if (currentPlayer == 0)
                 {
-                    float maximum = -FLT_MAX;
+                    int16_t maximum = INT16_MIN;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
@@ -1161,7 +1161,7 @@ namespace PijersiEngine
                 }
                 else
                 {
-                    float minimum = FLT_MAX;
+                    int16_t minimum = INT16_MAX;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
@@ -1180,7 +1180,7 @@ namespace PijersiEngine
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    float _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45])
+    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45])
     {
         _setState(newCells, cells);
         _playManual(move, newCells);
@@ -1242,7 +1242,7 @@ namespace PijersiEngine
         score += winCount;
         if (parent != nullptr)
         {
-            parent->update(winCount, visitCount);
+            parent->update(visitCount - winCount, visitCount);
         }
     }
 
@@ -1258,7 +1258,9 @@ namespace PijersiEngine
             {
                 newBoard.playRandom();
             }
-            if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
+            // if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
+            // Invert currentPlayer to count wins ???
+            if ((newBoard.evaluate() > 0 && board->currentPlayer == 1) || (newBoard.evaluate() <= 0 && board->currentPlayer == 0))
             {
                 nWins++;
             }
@@ -1334,11 +1336,11 @@ namespace PijersiEngine
                     {
                         float uctScore = -FLT_MAX;
                         int index = 0;
-                        for (int k = 0; k < current->children.size(); k++)
+                        for (int i = 0; i < current->children.size(); i++)
                         {
                             if (current->children[k]->visits == 0)
                             {
-                                index = k;
+                                index = i;
                                 break;
                             }
                             else
@@ -1346,7 +1348,7 @@ namespace PijersiEngine
                                 float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
                                 if (childScore > uctScore)
                                 {
-                                    index = k;
+                                    index = i;
                                     uctScore = childScore;
                                 }
                             }
@@ -1362,6 +1364,7 @@ namespace PijersiEngine
 
 
             vector<int> visitsPerNode(nMoves);
+            #pragma omp parallel for
             for (int k = 0; k < nThreads; k++)
             {
                 for (int n = 0; n < nMoves; n++)

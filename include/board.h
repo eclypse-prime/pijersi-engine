@@ -19,9 +19,9 @@ namespace PijersiEngine
     bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45]);
     bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45]);
     bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
-    float _evaluate(uint8_t cells[45]);
-    float _evaluateMove(int move[6], int recursionDepth, float alpha, float beta, uint8_t cells[45], int currentPlayer);
-    float _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45]);
+    int16_t _evaluate(uint8_t cells[45]);
+    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], int currentPlayer);
+    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45]);
     void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45]);
     vector<int> _neighbours(int index);
     vector<int> _neighbours2(int index);
