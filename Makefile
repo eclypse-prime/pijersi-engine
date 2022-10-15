@@ -25,6 +25,7 @@ $(CSHARP_DLL): $(OBJ) $(CSHARP_OBJ)
 	@g++ -flto -O3 -fopenmp -shared $(INCLUDE) $(OBJ) $(CSHARP_OBJ) -o $(CSHARP_DLL)
 
 debug: $(SRC) src/debug.cpp
+	@g++ -ggdb -O3 -flto -fopenmp $(INCLUDE) $(SRC) src/debug.cpp -o build/debug.exe
 
 clean:
 	@del /Q /F /S wrap_csharp\*
