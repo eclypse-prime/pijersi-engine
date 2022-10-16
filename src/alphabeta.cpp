@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <cfloat>
 
+#include <omp.h>
+
 #include <alphabeta.hpp>
 #include <logic.hpp>
 #include <rng.hpp>

@@ -13,6 +13,8 @@ namespace PijersiEngine
     void _setState(uint8_t cells[45], const uint8_t newState[45]);
     void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45]);
     void _playManual(int move[6], uint8_t *cells);
+    vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer);
+    vector<int> _playRandom(uint8_t cells[45], uint8_t currentPlayer);
     bool _checkWin(const uint8_t cells[45]);
     vector<int> _availablePieceMoves(int i, int j, uint8_t cells[45]);
     vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45]);

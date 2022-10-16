@@ -54,27 +54,5 @@ namespace PijersiEngine
 
     };
 
-    struct Node
-    {
-        Board *board;
-        Node *parent;
-        vector<Node*> children;
-        vector<int> move;
-        uint8_t player;
-
-        int visits = 0;
-        int score = 0;
-
-        Node(Node *newParent, const vector<int> &newMove, uint8_t rootPlayer);
-        ~Node();
-
-        void expand();
-        bool isLeaf();
-        bool isWin();
-        void rollout(int nSimulations);
-
-        void update(int winCount, int visitCount);
-    };
-
 }
 #endif

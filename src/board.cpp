@@ -5,11 +5,10 @@
 #include <random>
 #include <string>
 
-#include <omp.h>
-
 #include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
+#include <mcts.hpp>
 #include <rng.hpp>
 
 using namespace std;
@@ -83,31 +82,13 @@ namespace PijersiEngine
     // Chooses a random move
     vector<int> Board::ponderRandom()
     {
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-
-        if (moves.size()>0)
-        {
-            uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
-
-            int index = intDistribution(gen);
-
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-            vector<int> move(first, last);
-            return move;
-        }
-        return vector<int>({0, 0, 0, 0, 0, 0});
+        return _ponderRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
     vector<int> Board::playRandom()
     {
-        // Calculate move
-        vector<int> move = ponderRandom();
-        // Apply move
-        playManual(move);
-        return move;
+        return _playRandom(cells, currentPlayer);
     }
 
     bool Board::isMoveLegal(vector<int> move)
@@ -346,217 +327,9 @@ namespace PijersiEngine
         return forecast;
     }
 
-    float _UCT(float nodeWins, float nodeSimulations, float totalSimulations)
-    {
-        return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
-    }
-
-    Node::Node(Node *newParent, const vector<int> &newMove, uint8_t rootPlayer) : move(newMove)
-    {
-        parent = newParent;
-        player = rootPlayer;
-        if (parent != nullptr)
-        {
-            board = new Board(*parent->board);
-            board->playManual(move);
-        }
-        else
-        {
-            board = new Board();
-            board->init();
-        }
-
-        children.reserve(256);
-    }
-
-    Node::~Node()
-    {
-        if (board != nullptr)
-        {
-            delete board;
-        }
-        for (int k = 0; k < children.size(); k++)
-        {
-            if (children[k] != nullptr)
-            {
-                delete children[k];
-            }
-        }
-    }
-
-    bool Node::isLeaf()
-    {
-        return (children.size() == 0);
-    }
-
-    bool Node::isWin()
-    {
-        return board->checkWin();
-    }
-
-    void Node::update(int winCount, int visitCount)
-    {
-        visits += visitCount;
-        score += winCount;
-        if (parent != nullptr)
-        {
-            parent->update(visitCount - winCount, visitCount);
-        }
-    }
-
-    void Node::rollout(int nSimulations)
-    {
-        Board newBoard(*board);
-        int nWins = 0;
-        for (int k = 0; k < nSimulations; k++)
-        {
-            newBoard.setState(board->getState());
-            newBoard.currentPlayer = board->currentPlayer;
-            while (!newBoard.checkWin())
-            {
-                newBoard.playRandom();
-            }
-            // if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
-            // Invert currentPlayer to count wins ???
-            if ((newBoard.evaluate() > 0 && board->currentPlayer == 1) || (newBoard.evaluate() <= 0 && board->currentPlayer == 0))
-            {
-                nWins++;
-            }
-        }
-        update(nWins, nSimulations);
-    }
-
-    void Node::expand()
-    {
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(board->currentPlayer, board->getState());
-        if (moves.size() > 0)
-        {
-            for (int k = 0; k < moves.size() / 6; k++)
-            {
-                vector<int>::const_iterator first = moves.begin() + 6 * k;
-                vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
-                vector<int> chosenMove(first, last);
-                children.push_back(new Node(this, chosenMove, player));
-            }
-        }
-    }
-
     vector<int> Board::ponderMCTS(int seconds, int simulationsPerRollout)
     {
-        int nThreads = omp_get_max_threads();
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-        int nMoves = moves.size()/6;
-
-        vector<int> visitsPerThreads(nMoves*nThreads);
-
-
-        if (nMoves > 0)
-        {
-            #pragma omp parallel for num_threads(nThreads)
-            for (int k = 0; k < nThreads; k++)
-            {
-                Node root(nullptr, vector<int>(), currentPlayer);
-                root.board->setState(getState());
-                root.board->currentPlayer = currentPlayer;
-                root.expand();
-
-                auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
-
-                Node *current = &root;
-                do
-                {
-                    if (current->isLeaf())
-                    {
-                        if (current->visits == 0)
-                        {
-                            current->rollout(simulationsPerRollout);
-                            current = &root;
-                        }
-                        else
-                        {
-                            if (!current->isWin())
-                            {
-                                current->expand();
-                                if (current->children.size() > 0)
-                                {
-                                    current = current->children[0];
-                                }
-                            }
-                            else
-                            {
-                                current->rollout(simulationsPerRollout);
-                                current = &root;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        float uctScore = -FLT_MAX;
-                        int index = 0;
-                        for (int i = 0; i < current->children.size(); i++)
-                        {
-                            if (current->children[k]->visits == 0)
-                            {
-                                index = i;
-                                break;
-                            }
-                            else
-                            {
-                                float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
-                                if (childScore > uctScore)
-                                {
-                                    index = i;
-                                    uctScore = childScore;
-                                }
-                            }
-                        }
-                        current = current->children[index];
-                    }
-                } while (chrono::system_clock::now() < finish);
-                for (int n = 0; n < nMoves; n++)
-                {
-                    visitsPerThreads[k*nMoves+n] = root.children[n]->visits;
-                }
-            }
-
-
-            vector<int> visitsPerNode(nMoves);
-            #pragma omp parallel for
-            for (int k = 0; k < nThreads; k++)
-            {
-                for (int n = 0; n < nMoves; n++)
-                {
-                    visitsPerNode[n] += visitsPerThreads[k*nMoves+n];
-                }
-            }
-
-            for (int k = 0; k < nMoves; k++)
-            {
-                cout << visitsPerNode[k] << ", ";
-            }
-            cout << endl;
-
-            // Get child with max visits from root
-            int maxVisits = 0;
-            int index = 0;
-            for (int k = 0; k < nMoves; k++)
-            {
-                if (visitsPerNode[k] > maxVisits)
-                {
-                    index = k;
-                    maxVisits = visitsPerNode[k];
-                }
-            }
-
-            // Select the corresponding move
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-            vector<int> move(first, last);
-
-            return move;
-        }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return _ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
     }
 
     // Plays a move and returns it

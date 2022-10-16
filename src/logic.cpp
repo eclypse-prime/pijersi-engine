@@ -1,4 +1,5 @@
 #include <logic.hpp>
+#include <rng.hpp>
 
 using namespace std;
 
@@ -96,6 +97,33 @@ namespace PijersiEngine
     void _playManual(int move[6], uint8_t cells[45])
     {
         _play(move[0], move[1], move[2], move[3], move[4], move[5], cells);
+    }
+
+    vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+
+        if (moves.size()>0)
+        {
+            uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
+
+            int index = intDistribution(gen);
+
+            vector<int>::const_iterator first = moves.begin() + 6 * index;
+            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int> move(first, last);
+            return move;
+        }
+        return vector<int>({-1, -1, -1, -1, -1, -1});
+    }
+
+    vector<int> _playRandom(uint8_t cells[45], uint8_t currentPlayer)
+    {
+        vector<int> move = _ponderRandom(cells, currentPlayer);
+        // Apply move
+        _playManual(move.data(), cells);
+        return move;
     }
 
     // Returns true if the board is in a winning position
