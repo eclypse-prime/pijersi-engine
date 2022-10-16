@@ -41,5 +41,6 @@ debug: $(SRC) src/debug.cpp
 
 clean:
 	@del /Q /F /S wrap_csharp\*
-	@del /Q /F /S "src\wrap\*.cpp"
+	@del /Q /F /S "src\wrap\*"
 	@del /Q /F /S "src\*.o"
+	@del /Q /F /S "build\*"
