@@ -1,6 +1,6 @@
 INCLUDE=-Iinclude -Itensorflow/include
 LIB=-Ltensorflow/lib
-HEADERS=include/board.h include/piece.h
+HEADERS=include/board.hpp include/piece.hpp
 FLAGS=-flto -O3 -fopenmp
 SRC=src/board.cpp
 OBJ=src/board.o

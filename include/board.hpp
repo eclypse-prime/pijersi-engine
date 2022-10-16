@@ -9,22 +9,7 @@ using namespace std;
 
 namespace PijersiEngine
 {
-    void _playManual(int move[6], uint8_t *cells);
-    vector<int> _availablePieceMoves(int i, int j, uint8_t cells[45]);
-    vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45]);
-    void _move(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
-    void _stack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
-    void _unstack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45]);
-    bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
-    bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45]);
-    bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45]);
-    bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
-    int16_t _evaluate(uint8_t cells[45]);
-    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], int currentPlayer);
-    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45]);
-    void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45]);
-    vector<int> _neighbours(int index);
-    vector<int> _neighbours2(int index);
+
 
     enum Algorithm
     {
@@ -48,7 +33,7 @@ namespace PijersiEngine
         vector<int> playRandom();
         vector<int> ponderMCTS(int seconds, int simulationsPerRollout);
         bool isMoveLegal(vector<int> move);
-        float evaluate();
+        int16_t evaluate();
         void setState(uint8_t newState[45]);
         uint8_t *getState();
         void init();
