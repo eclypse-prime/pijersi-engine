@@ -1,5 +1,5 @@
-#ifndef LOGIC_H
-#define LOGIC_H
+#ifndef LOGIC_HPP
+#define LOGIC_HPP
 #include <vector>
 #include <cstdint>
 
