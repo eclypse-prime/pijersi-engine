@@ -123,6 +123,7 @@ namespace PijersiEngine
         vector<int> move = _ponderRandom(cells, currentPlayer);
         // Apply move
         _playManual(move.data(), cells);
+
         return move;
     }
 

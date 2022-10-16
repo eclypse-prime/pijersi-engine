@@ -203,7 +203,7 @@ namespace PijersiEngine
 
     // Converts a piece to char format
     // Used for debug purposes
-    char pieceToChar(uint8_t piece)
+    char _pieceToChar(uint8_t piece)
     {
         char res = ' ';
         // If the piece is White
@@ -277,11 +277,11 @@ namespace PijersiEngine
                     uint8_t piece = cells[coordsToIndex(i, j)];
                     if (piece != 0)
                     {
-                        char1 = pieceToChar(piece);
+                        char1 = _pieceToChar(piece);
                         // If the piece is a stack
                         if (piece >= 16)
                         {
-                            char2 = pieceToChar(piece >> 4);
+                            char2 = _pieceToChar(piece >> 4);
                         }
                     }
                     output += char1;
@@ -298,11 +298,11 @@ namespace PijersiEngine
                     uint8_t piece = cells[coordsToIndex(i, j)];
                     if (piece != 0)
                     {
-                        char1 = pieceToChar(piece);
+                        char1 = _pieceToChar(piece);
                         // If the piece is a stack
                         if (piece >= 16)
                         {
-                            char2 = pieceToChar(piece >> 4);
+                            char2 = _pieceToChar(piece >> 4);
                         }
                     }
                     output += char1;

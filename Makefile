@@ -39,8 +39,10 @@ src/mcts.o: src/mcts.cpp $(HEADERS)
 src/rng.o: src/rng.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/rng.cpp -o src/rng.o
 
-debug: $(SRC) src/debug.cpp
-	@g++ -ggdb $(FLAGS) $(INCLUDE) $(SRC) src/debug.cpp -o build/debug.exe
+debug: build/debug.exe
+
+build/debug.exe: $(OBJ) src/debug.cpp
+	@g++ -ggdb $(FLAGS) $(INCLUDE) $(OBJ) src/debug.cpp -o build/debug.exe
 
 clean:
 	@del /Q /F /S wrap_csharp\*

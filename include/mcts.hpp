@@ -13,16 +13,15 @@ namespace PijersiEngine
     struct Node
     {
         uint8_t cells[45];
-        uint8_t currentPlayer;
+        uint8_t player;
         Node *parent;
         vector<Node*> children;
         vector<int> move;
-        uint8_t rootPlayer;
 
         int visits = 0;
         int score = 0;
 
-        Node(Node *newParent, const vector<int> &newMove, uint8_t newCurrentPlayer);
+        Node(Node *newParent, const vector<int> &newMove, uint8_t newPlayer);
         ~Node();
 
         void expand();

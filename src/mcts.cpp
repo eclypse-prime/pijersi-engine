@@ -2,12 +2,16 @@
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
+#include <ctime>
 
 #include <omp.h>
 
 #include <alphabeta.hpp>
 #include <logic.hpp>
 #include <mcts.hpp>
+
+using namespace std;
 
 namespace PijersiEngine
 {
@@ -16,7 +20,7 @@ namespace PijersiEngine
         return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
-    vector<int> _ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[450], uint8_t currentPlayer)
+    vector<int> _ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
     {
         int nThreads = omp_get_max_threads();
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
@@ -29,12 +33,13 @@ namespace PijersiEngine
         {
             #pragma omp parallel for num_threads(nThreads)
             for (int k = 0; k < nThreads; k++)
+            // for (int k = 0; k < 1; k++)
             {
                 Node root(nullptr, vector<int>(), currentPlayer);
                 _setState(root.cells, cells);
                 root.expand();
 
-                auto finish = chrono::system_clock::now() + chrono::seconds(seconds);
+                auto finish = chrono::steady_clock::now() + chrono::seconds(seconds);
 
                 Node *current = &root;
                 do
@@ -69,14 +74,15 @@ namespace PijersiEngine
                         int index = 0;
                         for (int i = 0; i < current->children.size(); i++)
                         {
-                            if (current->children[k]->visits == 0)
+                            if (current->children[i]->visits == 0)
                             {
                                 index = i;
                                 break;
                             }
                             else
                             {
-                                float childScore = _UCT(current->children[k]->score, current->children[k]->visits, root.visits);
+                                float childScore = _UCT(current->children[i]->score, current->children[i]->visits, root.visits);
+                                // cout << childScore << endl;
                                 if (childScore > uctScore)
                                 {
                                     index = i;
@@ -86,7 +92,7 @@ namespace PijersiEngine
                         }
                         current = current->children[index];
                     }
-                } while (chrono::system_clock::now() < finish);
+                } while (chrono::steady_clock::now() <= finish);
                 for (int n = 0; n < nMoves; n++)
                 {
                     visitsPerThreads[k*nMoves+n] = root.children[n]->visits;
@@ -104,11 +110,11 @@ namespace PijersiEngine
                 }
             }
 
-            // for (int k = 0; k < nMoves; k++)
-            // {
-            //     cout << visitsPerNode[k] << ", ";
-            // }
-            // cout << endl;
+            for (int k = 0; k < nMoves; k++)
+            {
+                cout << visitsPerNode[k] << ", ";
+            }
+            cout << endl;
 
             // Get child with max visits from root
             int maxVisits = 0;
@@ -132,10 +138,10 @@ namespace PijersiEngine
         return vector<int>({-1, -1, -1, -1, -1, -1});
     }
 
-    Node::Node(Node *newParent, const vector<int> &newMove, uint8_t newCurrentPlayer) : move(newMove)
+    Node::Node(Node *newParent, const vector<int> &newMove, uint8_t newPlayer) : move(newMove)
     {
         parent = newParent;
-        currentPlayer = newCurrentPlayer;
+        player = newPlayer;
         if (parent != nullptr)
         {
             _setState(cells, parent->cells);
@@ -183,16 +189,19 @@ namespace PijersiEngine
         for (int k = 0; k < nSimulations; k++)
         {
             _setState(newCells, cells);
-            while (_checkWin(newCells))
+            uint8_t currentPlayer = player;
+            while (!_checkWin(newCells))
             {
-                _playRandom(cells, currentPlayer);
+                _playRandom(newCells, currentPlayer);
+                currentPlayer = (uint8_t)1 - currentPlayer;
             }
             // if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
             // Invert currentPlayer to count wins ???
-            int16_t positionEval = _evaluatePosition(cells);
-            if ((positionEval > 0 && currentPlayer == 1) || (positionEval <= 0 && currentPlayer == 0))
+            // cout << (int)currentPlayer << " " << (int)player << endl;
+            if (currentPlayer != player)
             {
                 nWins++;
+                // cout << "win" << endl;
             }
         }
         update(nWins, nSimulations);
@@ -201,7 +210,7 @@ namespace PijersiEngine
     void Node::expand()
     {
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<int> moves = _availablePlayerMoves(player, cells);
         if (moves.size() > 0)
         {
             for (int k = 0; k < moves.size() / 6; k++)
@@ -209,7 +218,7 @@ namespace PijersiEngine
                 vector<int>::const_iterator first = moves.begin() + 6 * k;
                 vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
                 vector<int> chosenMove(first, last);
-                children.push_back(new Node(this, chosenMove, 1-currentPlayer));
+                children.push_back(new Node(this, chosenMove, 1-player));
             }
         }
     }
