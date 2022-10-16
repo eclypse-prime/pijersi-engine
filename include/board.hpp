@@ -1,6 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
-#include <piece.h>
+#include <piece.hpp>
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -43,12 +43,12 @@ namespace PijersiEngine
         string toString();
 
         bool checkWin();
-        float getForecast();
+        int16_t getForecast();
         uint8_t currentPlayer = 0;
 
     private:
         uint8_t cells[45];
-        float forecast = 0;
+        int16_t forecast = 0;
 
         void addPiece(uint8_t piece, int i, int j);
 

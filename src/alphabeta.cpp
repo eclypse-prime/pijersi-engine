@@ -1,10 +1,79 @@
 #include <vector>
 #include <cstdint>
-#include <evaluation.h>
-#include <logic.h>
+#include <cfloat>
+
+#include <alphabeta.hpp>
+#include <logic.hpp>
+#include <rng.hpp>
 
 namespace PijersiEngine
 {
+
+
+    // Calculates a move using alphabeta minimax algorithm of chosen depth.
+    vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    {
+
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+
+        if (moves.size() > 0)
+        {
+            int index = 0;
+            int16_t *extremums = new int16_t[moves.size() / 6];
+
+            int16_t alpha = INT16_MIN;
+            int16_t beta = INT16_MAX;
+            
+            // Evaluate possible moves
+            #pragma omp parallel for schedule(dynamic)
+            for (int k = 0; k < moves.size() / 6; k++)
+            {
+                extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+            }
+
+            // Find best move
+            if (currentPlayer == 0)
+            {
+                float maximum = -FLT_MAX;
+                for (int k = 0; k < moves.size() / 6; k++)
+                {
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? distribution(gen) : 0.f;
+                    float extremum = salt + (float)extremums[k];
+                    if (extremum > maximum)
+                    {
+                        maximum = extremum;
+                        index = k;
+                    }
+                }
+            }
+            else
+            {
+                float minimum = FLT_MAX;
+                for (int k = 0; k < moves.size() / 6; k++)
+                {
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? distribution(gen) : 0.f;
+                    float extremum = salt + (float)extremums[k];
+                    if (extremum < minimum)
+                    {
+                        minimum = extremum;
+                        index = k;
+                    }
+                }
+            }
+
+            delete extremums;
+
+            vector<int>::const_iterator first = moves.begin() + 6 * index;
+            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int> move(first, last);
+            return move;
+        }
+        return vector<int>({-1, -1, -1, -1, -1, -1});
+    }
+
     // Evaluate piece according to its position, colour and type
     int16_t _evaluatePiece(uint8_t piece, int i)
     {
@@ -49,7 +118,7 @@ namespace PijersiEngine
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], int currentPlayer)
+    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];

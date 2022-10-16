@@ -1,21 +1,23 @@
-#include <board.h>
-#include <iostream>
-#include <string>
-#include <cstdint>
-#include <omp.h>
-#include <algorithm>
-#include <random>
 #include <cfloat>
+#include <cstdint>
 #include <chrono>
+#include <iostream>
+#include <random>
+#include <string>
+
+#include <omp.h>
+
+#include <alphabeta.hpp>
+#include <board.hpp>
+#include <logic.hpp>
+#include <rng.hpp>
 
 using namespace std;
 
 
 namespace PijersiEngine
 {
-    random_device rd; // Obtaining random number from hardware
-    mt19937 gen(rd()); // Seeding generator
-    uniform_real_distribution<float> distribution(-0.25f, 0.25f); // Defining uniform distribution
+
 
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
@@ -63,72 +65,6 @@ namespace PijersiEngine
         currentPlayer = board.currentPlayer;
     }
 
-    // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
-    {
-
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-
-        if (moves.size() > 0)
-        {
-            int index = 0;
-            int16_t *extremums = new int16_t[moves.size() / 6];
-
-            int16_t alpha = INT16_MIN;
-            int16_t beta = INT16_MAX;
-            
-            // Evaluate possible moves
-            #pragma omp parallel for schedule(dynamic)
-            for (int k = 0; k < moves.size() / 6; k++)
-            {
-                extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
-            }
-
-            // Find best move
-            if (currentPlayer == 0)
-            {
-                float maximum = -FLT_MAX;
-                for (int k = 0; k < moves.size() / 6; k++)
-                {
-                    // Add randomness to separate equal moves if parameter active
-                    float salt = random ? distribution(gen) : 0.f;
-                    float extremum = salt + (float)extremums[k];
-                    if (extremum > maximum)
-                    {
-                        maximum = extremum;
-                        index = k;
-                    }
-                }
-            }
-            else
-            {
-                float minimum = FLT_MAX;
-                for (int k = 0; k < moves.size() / 6; k++)
-                {
-                    // Add randomness to separate equal moves if parameter active
-                    float salt = random ? distribution(gen) : 0.f;
-                    float extremum = salt + (float)extremums[k];
-                    if (extremum < minimum)
-                    {
-                        minimum = extremum;
-                        index = k;
-                    }
-                }
-            }
-
-            forecast = extremums[index];
-
-            delete extremums;
-
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-            vector<int> move(first, last);
-            return move;
-        }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
-    }
-
     // Plays a move and returns it
     vector<int> Board::playAlphaBeta(int recursionDepth, bool random)
     {
@@ -137,6 +73,11 @@ namespace PijersiEngine
         // Apply move
         playManual(move);
         return move;
+    }
+
+    vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
+    {
+        return _ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
     }
 
     // Chooses a random move
@@ -216,7 +157,7 @@ namespace PijersiEngine
 
     int16_t Board::evaluate()
     {
-        return _evaluate(cells);
+        return _evaluatePosition(cells);
     }
 
     // Adds a piece to the designated coordinates
@@ -400,17 +341,10 @@ namespace PijersiEngine
         return _checkWin(cells);
     }
 
-    float Board::getForecast()
+    int16_t Board::getForecast()
     {
         return forecast;
     }
-
-
-
-
-
-
-
 
     float _UCT(float nodeWins, float nodeSimulations, float totalSimulations)
     {

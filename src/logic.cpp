@@ -1,4 +1,4 @@
-#include <logic.h>
+#include <logic.hpp>
 
 using namespace std;
 
