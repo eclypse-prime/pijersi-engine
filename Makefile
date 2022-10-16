@@ -1,9 +1,9 @@
 INCLUDE=-Iinclude -Itensorflow/include
 LIB=-Ltensorflow/lib
-HEADERS=include/board.hpp include/piece.hpp
+HEADERS=include/alphabeta.hpp include/board.hpp include/logic.hpp include/mcts.hpp include/nn.hpp include/piece.hpp include/rng.hpp
 FLAGS=-flto -O3 -fopenmp
 SRC=src/alphabeta.cpp src/board.cpp src/logic.cpp src/rng.cpp
-OBJ=src/board.o
+OBJ=src/alphabeta.o src/board.o src/logic.o src/rng.o
 CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
 CSHARP_OBJ=src/wrap/pijersi_engine_csharp.o
 CSHARP_DLL=wrap_csharp/PijersiCore.dll
@@ -24,8 +24,17 @@ $(CSHARP_DLL): $(OBJ) $(CSHARP_OBJ)
 	@if not exist "wrap_csharp" mkdir wrap_csharp
 	@g++ $(FLAGS) -shared $(INCLUDE) $(OBJ) $(CSHARP_OBJ) -o $(CSHARP_DLL)
 
+src/alphabeta.o: src/alphabeta.cpp $(HEADERS)
+	@g++ $(FLAGS) -c $(INCLUDE) src/alphabeta.cpp -o src/alphabeta.o
+
 src/board.o: src/board.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/board.cpp -o src/board.o
+
+src/logic.o: src/logic.cpp $(HEADERS)
+	@g++ $(FLAGS) -c $(INCLUDE) src/logic.cpp -o src/logic.o
+
+src/rng.o: src/rng.cpp $(HEADERS)
+	@g++ $(FLAGS) -c $(INCLUDE) src/rng.cpp -o src/rng.o
 
 debug: $(SRC) src/debug.cpp
 	@g++ -ggdb $(FLAGS) $(INCLUDE) $(SRC) src/debug.cpp -o build/debug.exe

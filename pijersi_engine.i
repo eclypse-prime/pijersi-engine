@@ -1,8 +1,8 @@
 %module PijersiCore
 
 %{
-    #include <board.h>
-    #include <piece.h>
+    #include <board.hpp>
+    #include <piece.hpp>
     using namespace PijersiEngine;
 %}
 
@@ -16,5 +16,5 @@ namespace std {
 }
 %include "std_string.i"
 
-%include <board.h>
-%include <piece.h>
+%include <board.hpp>
+%include <piece.hpp>
