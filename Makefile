@@ -12,9 +12,9 @@ all: csharp
 
 csharp: $(CSHARP_DLL)
 
-wrap_csharp/*.cs $(CSHARP_SRC): pijersi_engine.i $(HEADERS)
+$(CSHARP_SRC): pijersi_engine.i $(HEADERS)
 	@if not exist "wrap_csharp" mkdir wrap_csharp
-	@if not exist "src/wrap" mkdir src/wrap
+	@if not exist "src\wrap" mkdir src\wrap
 	@swig -csharp -c++ $(INCLUDE) -namespace PijersiEngine -outdir wrap_csharp -o $(CSHARP_SRC) pijersi_engine.i
 
 $(CSHARP_OBJ): $(CSHARP_SRC) $(HEADERS)
@@ -42,10 +42,11 @@ src/rng.o: src/rng.cpp $(HEADERS)
 debug: build/debug.exe
 
 build/debug.exe: $(SRC) src/debug.cpp
+	@if not exist "build" mkdir build
 	@g++ -ggdb $(FLAGS) $(INCLUDE) $(SRC) src/debug.cpp -o build/debug.exe
 
 clean:
 	@del /Q /F /S wrap_csharp\*
-	@del /Q /F /S "src\wrap\*"
+	@if exist "src\wrap" rmdir /Q /s "src\wrap"
 	@del /Q /F /S "src\*.o"
-	@del /Q /F /S "build\*"
+	@if exist "build" rmdir /Q /s "build"
