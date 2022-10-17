@@ -31,9 +31,9 @@ namespace PijersiEngine
 
         if (nMoves > 0)
         {
-            #pragma omp parallel for num_threads(nThreads)
-            for (int k = 0; k < nThreads; k++)
-            // for (int k = 0; k < 1; k++)
+            // #pragma omp parallel for num_threads(nThreads)
+            // for (int k = 0; k < nThreads; k++)
+            for (int k = 0; k < 1; k++)
             {
                 Node root(nullptr, vector<int>(), currentPlayer);
                 _setState(root.cells, cells);
@@ -195,13 +195,9 @@ namespace PijersiEngine
                 _playRandom(newCells, currentPlayer);
                 currentPlayer = 1 - currentPlayer;
             }
-            // if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
-            // Invert currentPlayer to count wins ???
-            // cout << (int)currentPlayer << " " << (int)player << endl;
-            if (currentPlayer != player)
+            if (currentPlayer == player)
             {
                 nWins++;
-                // cout << "win" << endl;
             }
         }
         update(nWins, nSimulations);
