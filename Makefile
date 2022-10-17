@@ -2,7 +2,7 @@ INCLUDE=-Iinclude -Itensorflow/include
 LIB=-Ltensorflow/lib
 HEADERS=include/alphabeta.hpp include/board.hpp include/logic.hpp include/mcts.hpp include/nn.hpp include/piece.hpp include/rng.hpp
 FLAGS=-flto -O3 -fopenmp
-SRC=src/alphabeta.cpp src/board.cpp src/logic.cpp src/mcts.o src/rng.cpp
+SRC=src/alphabeta.cpp src/board.cpp src/logic.cpp src/mcts.cpp src/rng.cpp
 OBJ=src/alphabeta.o src/board.o src/logic.o src/mcts.o src/rng.o
 CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
 CSHARP_OBJ=src/wrap/pijersi_engine_csharp.o
@@ -41,8 +41,8 @@ src/rng.o: src/rng.cpp $(HEADERS)
 
 debug: build/debug.exe
 
-build/debug.exe: $(OBJ) src/debug.cpp
-	@g++ -ggdb $(FLAGS) $(INCLUDE) $(OBJ) src/debug.cpp -o build/debug.exe
+build/debug.exe: $(SRC) src/debug.cpp
+	@g++ -ggdb $(FLAGS) $(INCLUDE) $(SRC) src/debug.cpp -o build/debug.exe
 
 clean:
 	@del /Q /F /S wrap_csharp\*

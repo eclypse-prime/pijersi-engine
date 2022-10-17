@@ -104,9 +104,9 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
-        if (moves.size()>0)
+        if (moves.size() > 0)
         {
-            uniform_int_distribution<int> intDistribution(0, moves.size()/6 - 1);
+            uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
 
             int index = intDistribution(gen);
 
@@ -180,7 +180,7 @@ namespace PijersiEngine
                     // stack, 2-range move
                     for (int indexEnd : _neighbours2(indexMid))
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd)/2) && _isMoveValid(movingPiece, indexEnd, cells)))
+                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && _isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             int iEnd, jEnd;
                             indexToCoords(indexEnd, &iEnd, &jEnd);
@@ -201,7 +201,6 @@ namespace PijersiEngine
 
                     // stack only
                     moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
-
                 }
                 // 1-range move
                 if (_isMoveValid(movingPiece, indexMid, cells))
@@ -256,7 +255,6 @@ namespace PijersiEngine
                     int iMid, jMid;
                     indexToCoords(indexMid, &iMid, &jMid);
 
-
                     // 1-range move, stack or unstack
                     for (int indexEnd : _neighbours(indexMid))
                     {
@@ -275,7 +273,6 @@ namespace PijersiEngine
                             indexToCoords(indexEnd, &iEnd, &jEnd);
                             moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
                         }
-
                     }
                     // 1-range move, unstack on starting position
                     moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iStart, jStart});
@@ -477,7 +474,6 @@ namespace PijersiEngine
         return true;
     }
 
-
     // Returns the 2-range neighbours of the designated cell
     vector<int> _neighbours(int index)
     {
@@ -677,6 +673,5 @@ namespace PijersiEngine
             return vector<int>();
         }
     }
-
 
 }

@@ -193,7 +193,7 @@ namespace PijersiEngine
             while (!_checkWin(newCells))
             {
                 _playRandom(newCells, currentPlayer);
-                currentPlayer = (uint8_t)1 - currentPlayer;
+                currentPlayer = 1 - currentPlayer;
             }
             // if ((newBoard.evaluate() > 0 && player == 0) || (newBoard.evaluate() <= 0 && player == 1))
             // Invert currentPlayer to count wins ???
