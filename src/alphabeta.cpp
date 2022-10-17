@@ -790,7 +790,7 @@ namespace PijersiEngine
         int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
-        if (_checkWin(newCells))
+        if (_checkWin(newCells) || recursionDepth == 0)
         {
             return _evaluatePosition(newCells);
         }
