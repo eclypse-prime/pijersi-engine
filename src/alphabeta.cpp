@@ -12,7 +12,6 @@
 namespace PijersiEngine
 {
 
-
     // Calculates a move using alphabeta minimax algorithm of chosen depth.
     vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
     {
@@ -27,9 +26,9 @@ namespace PijersiEngine
 
             int16_t alpha = INT16_MIN;
             int16_t beta = INT16_MAX;
-            
-            // Evaluate possible moves
-            #pragma omp parallel for schedule(dynamic)
+
+// Evaluate possible moves
+#pragma omp parallel for schedule(dynamic)
             for (int k = 0; k < moves.size() / 6; k++)
             {
                 extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
@@ -79,533 +78,623 @@ namespace PijersiEngine
 
     int16_t _evaluatePiece(uint8_t piece, int i)
     {
-        switch (i)
+        switch (piece)
         {
-        case 0:
-            switch (piece)
+        case 17:
+            switch (i)
             {
-            case 17:
+            case 0:
                 return 3003;
-            case 21:
-                return 3003;
-            case 25:
-                return 3003;
-            case 81:
-                return 3003;
-            case 85:
-                return 3003;
-            case 89:
-                return 3003;
-            case 145:
-                return 3003;
-            case 149:
-                return 3003;
-            case 153:
-                return 3003;
-            case 209:
-                return 3003;
-            case 213:
-                return 3003;
-            case 217:
-                return 3003;
-            case 221:
-                return 19;
             case 1:
-                return 1500;
-            case 5:
-                return 1500;
-            case 9:
-                return 1500;
-            case 13:
-                return 8;
-            case 51:
-                return -21;
-            case 55:
-                return -21;
-            case 59:
-                return -21;
-            case 115:
-                return -21;
-            case 119:
-                return -21;
-            case 123:
-                return -21;
-            case 179:
-                return -21;
-            case 183:
-                return -21;
-            case 187:
-                return -21;
-            case 243:
-                return -21;
-            case 247:
-                return -21;
-            case 251:
-                return -21;
-            case 255:
-                return -19;
+                return 31;
+            case 2:
+                return 29;
             case 3:
-                return -9;
-            case 7:
-                return -9;
-            case 11:
-                return -9;
-            case 15:
-                return -8;
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
             default:
                 return 0;
             }
+        case 21:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 25:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 81:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 85:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 89:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 145:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 149:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 153:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 209:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 213:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 217:
+            switch (i)
+            {
+            case 0:
+                return 3003;
+            case 1:
+                return 31;
+            case 2:
+                return 29;
+            case 3:
+                return 27;
+            case 4:
+                return 25;
+            case 5:
+                return 23;
+            case 6:
+                return 21;
+            default:
+                return 0;
+            }
+        case 221:
+            return 19;
         case 1:
-            switch (piece)
+            switch (i)
             {
-            case 17:
-                return 31;
-            case 21:
-                return 31;
-            case 25:
-                return 31;
-            case 81:
-                return 31;
-            case 85:
-                return 31;
-            case 89:
-                return 31;
-            case 145:
-                return 31;
-            case 149:
-                return 31;
-            case 153:
-                return 31;
-            case 209:
-                return 31;
-            case 213:
-                return 31;
-            case 217:
-                return 31;
-            case 221:
-                return 19;
+            case 0:
+                return 1500;
             case 1:
                 return 14;
-            case 5:
-                return 14;
-            case 9:
-                return 14;
-            case 13:
-                return 8;
-            case 51:
-                return -23;
-            case 55:
-                return -23;
-            case 59:
-                return -23;
-            case 115:
-                return -23;
-            case 119:
-                return -23;
-            case 123:
-                return -23;
-            case 179:
-                return -23;
-            case 183:
-                return -23;
-            case 187:
-                return -23;
-            case 243:
-                return -23;
-            case 247:
-                return -23;
-            case 251:
-                return -23;
-            case 255:
-                return -19;
-            case 3:
-                return -10;
-            case 7:
-                return -10;
-            case 11:
-                return -10;
-            case 15:
-                return -8;
-            default:
-                return 0;
-            }
-        case 2:
-            switch (piece)
-            {
-            case 17:
-                return 29;
-            case 21:
-                return 29;
-            case 25:
-                return 29;
-            case 81:
-                return 29;
-            case 85:
-                return 29;
-            case 89:
-                return 29;
-            case 145:
-                return 29;
-            case 149:
-                return 29;
-            case 153:
-                return 29;
-            case 209:
-                return 29;
-            case 213:
-                return 29;
-            case 217:
-                return 29;
-            case 221:
-                return 19;
-            case 1:
+            case 2:
                 return 13;
-            case 5:
-                return 13;
-            case 9:
-                return 13;
-            case 13:
-                return 8;
-            case 51:
-                return -25;
-            case 55:
-                return -25;
-            case 59:
-                return -25;
-            case 115:
-                return -25;
-            case 119:
-                return -25;
-            case 123:
-                return -25;
-            case 179:
-                return -25;
-            case 183:
-                return -25;
-            case 187:
-                return -25;
-            case 243:
-                return -25;
-            case 247:
-                return -25;
-            case 251:
-                return -25;
-            case 255:
-                return -19;
             case 3:
-                return -11;
-            case 7:
-                return -11;
-            case 11:
-                return -11;
-            case 15:
-                return -8;
-            default:
-                return 0;
-            }
-        case 3:
-            switch (piece)
-            {
-            case 17:
-                return 27;
-            case 21:
-                return 27;
-            case 25:
-                return 27;
-            case 81:
-                return 27;
-            case 85:
-                return 27;
-            case 89:
-                return 27;
-            case 145:
-                return 27;
-            case 149:
-                return 27;
-            case 153:
-                return 27;
-            case 209:
-                return 27;
-            case 213:
-                return 27;
-            case 217:
-                return 27;
-            case 221:
-                return 19;
-            case 1:
                 return 12;
-            case 5:
-                return 12;
-            case 9:
-                return 12;
-            case 13:
-                return 8;
-            case 51:
-                return -27;
-            case 55:
-                return -27;
-            case 59:
-                return -27;
-            case 115:
-                return -27;
-            case 119:
-                return -27;
-            case 123:
-                return -27;
-            case 179:
-                return -27;
-            case 183:
-                return -27;
-            case 187:
-                return -27;
-            case 243:
-                return -27;
-            case 247:
-                return -27;
-            case 251:
-                return -27;
-            case 255:
-                return -19;
-            case 3:
-                return -12;
-            case 7:
-                return -12;
-            case 11:
-                return -12;
-            case 15:
-                return -8;
-            default:
-                return 0;
-            }
-        case 4:
-            switch (piece)
-            {
-            case 17:
-                return 25;
-            case 21:
-                return 25;
-            case 25:
-                return 25;
-            case 81:
-                return 25;
-            case 85:
-                return 25;
-            case 89:
-                return 25;
-            case 145:
-                return 25;
-            case 149:
-                return 25;
-            case 153:
-                return 25;
-            case 209:
-                return 25;
-            case 213:
-                return 25;
-            case 217:
-                return 25;
-            case 221:
-                return 19;
-            case 1:
+            case 4:
                 return 11;
             case 5:
-                return 11;
-            case 9:
-                return 11;
-            case 13:
-                return 8;
-            case 51:
-                return -29;
-            case 55:
-                return -29;
-            case 59:
-                return -29;
-            case 115:
-                return -29;
-            case 119:
-                return -29;
-            case 123:
-                return -29;
-            case 179:
-                return -29;
-            case 183:
-                return -29;
-            case 187:
-                return -29;
-            case 243:
-                return -29;
-            case 247:
-                return -29;
-            case 251:
-                return -29;
-            case 255:
-                return -19;
-            case 3:
-                return -13;
-            case 7:
-                return -13;
-            case 11:
-                return -13;
-            case 15:
-                return -8;
+                return 10;
+            case 6:
+                return 9;
             default:
                 return 0;
             }
         case 5:
-            switch (piece)
+            switch (i)
             {
-            case 17:
-                return 23;
-            case 21:
-                return 23;
-            case 25:
-                return 23;
-            case 81:
-                return 23;
-            case 85:
-                return 23;
-            case 89:
-                return 23;
-            case 145:
-                return 23;
-            case 149:
-                return 23;
-            case 153:
-                return 23;
-            case 209:
-                return 23;
-            case 213:
-                return 23;
-            case 217:
-                return 23;
-            case 221:
-                return 19;
+            case 0:
+                return 1500;
             case 1:
-                return 10;
+                return 14;
+            case 2:
+                return 13;
+            case 3:
+                return 12;
+            case 4:
+                return 11;
             case 5:
                 return 10;
-            case 9:
-                return 10;
-            case 13:
-                return 8;
-            case 51:
-                return -31;
-            case 55:
-                return -31;
-            case 59:
-                return -31;
-            case 115:
-                return -31;
-            case 119:
-                return -31;
-            case 123:
-                return -31;
-            case 179:
-                return -31;
-            case 183:
-                return -31;
-            case 187:
-                return -31;
-            case 243:
-                return -31;
-            case 247:
-                return -31;
-            case 251:
-                return -31;
-            case 255:
-                return -19;
-            case 3:
-                return -14;
-            case 7:
-                return -14;
-            case 11:
-                return -14;
-            case 15:
-                return -8;
+            case 6:
+                return 9;
             default:
                 return 0;
             }
-        case 6:
-            switch (piece)
+        case 9:
+            switch (i)
             {
-            case 17:
-                return 21;
-            case 21:
-                return 21;
-            case 25:
-                return 21;
-            case 81:
-                return 21;
-            case 85:
-                return 21;
-            case 89:
-                return 21;
-            case 145:
-                return 21;
-            case 149:
-                return 21;
-            case 153:
-                return 21;
-            case 209:
-                return 21;
-            case 213:
-                return 21;
-            case 217:
-                return 21;
-            case 221:
-                return 19;
+            case 0:
+                return 1500;
             case 1:
-                return 9;
-            case 5:
-                return 9;
-            case 9:
-                return 9;
-            case 13:
-                return 8;
-            case 51:
-                return -3003;
-            case 55:
-                return -3003;
-            case 59:
-                return -3003;
-            case 115:
-                return -3003;
-            case 119:
-                return -3003;
-            case 123:
-                return -3003;
-            case 179:
-                return -3003;
-            case 183:
-                return -3003;
-            case 187:
-                return -3003;
-            case 243:
-                return -3003;
-            case 247:
-                return -3003;
-            case 251:
-                return -3003;
-            case 255:
-                return -19;
+                return 14;
+            case 2:
+                return 13;
             case 3:
-                return -1500;
-            case 7:
-                return -1500;
-            case 11:
-                return -1500;
-            case 15:
-                return -8;
+                return 12;
+            case 4:
+                return 11;
+            case 5:
+                return 10;
+            case 6:
+                return 9;
             default:
                 return 0;
             }
+        case 13:
+            return 8;
+        case 51:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 55:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 59:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 115:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 119:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 123:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 179:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 183:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 187:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 243:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 247:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 251:
+            switch (i)
+            {
+            case 0:
+                return -21;
+            case 1:
+                return -23;
+            case 2:
+                return -25;
+            case 3:
+                return -27;
+            case 4:
+                return -29;
+            case 5:
+                return -31;
+            case 6:
+                return -3003;
+            default:
+                return 0;
+            }
+        case 255:
+            return -19;
+        case 3:
+            switch (i)
+            {
+            case 0:
+                return -9;
+            case 1:
+                return -10;
+            case 2:
+                return -11;
+            case 3:
+                return -12;
+            case 4:
+                return -13;
+            case 5:
+                return -14;
+            case 6:
+                return -1500;
+            default:
+                return 0;
+            }
+        case 7:
+            switch (i)
+            {
+            case 0:
+                return -9;
+            case 1:
+                return -10;
+            case 2:
+                return -11;
+            case 3:
+                return -12;
+            case 4:
+                return -13;
+            case 5:
+                return -14;
+            case 6:
+                return -1500;
+            default:
+                return 0;
+            }
+        case 11:
+            switch (i)
+            {
+            case 0:
+                return -9;
+            case 1:
+                return -10;
+            case 2:
+                return -11;
+            case 3:
+                return -12;
+            case 4:
+                return -13;
+            case 5:
+                return -14;
+            case 6:
+                return -1500;
+            default:
+                return 0;
+            }
+        case 15:
+            return -8;
         default:
             return 0;
         }
     }
 
     // // Evaluate piece according to its position, colour and type
-    // int16_t _evaluatePieceLegacy(uint8_t piece, int i)
+    // int16_t _evaluatePiece(uint8_t piece, int i)
     // {
 
     //     int16_t score;
@@ -617,7 +706,7 @@ namespace PijersiEngine
     //         // If the piece is in a winning position
     //         if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
     //         {
-    //             score *= 100;
+    //             score *= 128;
     //         }
     //     }
     //     else

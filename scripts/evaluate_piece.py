@@ -53,14 +53,30 @@ for top in ['s', 'p', 'r', 'w']:
 pieces += ['s', 'p', 'r', 'w']
 
 
-print("        switch (i)")
+# print("        switch (i)")
+# print("        {")
+# for i in range(7):
+#     print(f"        case {i}:")
+#     print(f"            switch (piece)")
+#     print("            {")
+#     for piece in pieces:
+#         print(f"            case {piece_to_int(piece)}:")
+#         print(f"                return {evaluate_piece(piece, i)};")
+#     print(f"            default:")
+#     print(f"                return 0;")
+#     print("            }")
+# print(f"        default:")
+# print(f"            return 0;")
+# print("        }")
+
+print(f"        switch (piece)")
 print("        {")
-for i in range(7):
-    print(f"        case {i}:")
-    print(f"            switch (piece)")
+for piece in pieces:
+    print(f"            case {piece_to_int(piece)}:")
+    print("            switch (i)")
     print("            {")
-    for piece in pieces:
-        print(f"            case {piece_to_int(piece)}:")
+    for i in range(7):
+        print(f"            case {i}:")
         print(f"                return {evaluate_piece(piece, i)};")
     print(f"            default:")
     print(f"                return 0;")
