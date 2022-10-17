@@ -27,8 +27,8 @@ namespace PijersiEngine
             int16_t alpha = INT16_MIN;
             int16_t beta = INT16_MAX;
 
-// Evaluate possible moves
-#pragma omp parallel for schedule(dynamic)
+            // Evaluate possible moves
+            #pragma omp parallel for schedule(dynamic)
             for (int k = 0; k < moves.size() / 6; k++)
             {
                 extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
@@ -736,6 +736,34 @@ namespace PijersiEngine
         return score;
     }
 
+    int16_t _updatePieceEval(uint8_t previousPiece, uint8_t piece, int i)
+    {
+        if (previousPiece == 0)
+        {
+            return _evaluatePiece(piece, i);
+        }
+        else if (piece == 0)
+        {
+            return -_evaluatePiece(previousPiece, i);
+        }
+        else
+        {
+            return _evaluatePiece(piece, i) - _evaluatePiece(previousPiece, i);
+        }
+    }
+
+    int16_t _updatePositionEval(int16_t previousScore, uint8_t previousCells[45], uint8_t cells[45])
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += _updatePieceEval(previousCells[k], cells[k], indexToLine(k));
+            }
+        }
+        return previousScore;
+    }
+
     // Evaluates a move by calculating the possible subsequent moves recursively
     int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
     {
@@ -749,7 +777,7 @@ namespace PijersiEngine
         int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
-        if (_checkWin(newCells))
+        if (_checkWin(newCells) || recursionDepth == 0)
         {
             return _evaluatePosition(newCells);
         }
@@ -795,12 +823,13 @@ namespace PijersiEngine
             else
             {
                 uint8_t cellsBuffer[45];
+                int16_t currentScore = _evaluatePosition(newCells);
                 if (currentPlayer == 0)
                 {
                     int16_t maximum = INT16_MIN;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
-                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
+                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore));
                         if (maximum > beta)
                         {
                             break;
@@ -814,7 +843,7 @@ namespace PijersiEngine
                     int16_t minimum = INT16_MAX;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
-                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer));
+                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore));
                         if (minimum < alpha)
                         {
                             break;
@@ -830,11 +859,11 @@ namespace PijersiEngine
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45])
+    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore)
     {
         _setState(newCells, cells);
         _playManual(move, newCells);
 
-        return _evaluatePosition(newCells);
+        return _updatePositionEval(previousScore, cells, newCells);
     }
 }
