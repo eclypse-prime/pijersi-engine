@@ -80,7 +80,7 @@ namespace PijersiEngine
             }
             else
             {
-                int16_t extremum = 0;
+                float extremum = 0.f;
                 int index = 0;
                 uint8_t cellsBuffer[45];
                 int16_t currentPieceScores[45] = {0};
@@ -89,28 +89,34 @@ namespace PijersiEngine
 
                 if (currentPlayer == 0)
                 {
-                    extremum = INT16_MIN;
+                    extremum = -FLT_MAX;
                     int16_t score;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        if (score > extremum)
+                        // Add randomness to separate equal moves if parameter active
+                        float salt = random ? distribution(gen) : 0.f;
+                        float salted_score = salt + (float)score;
+                        if (salted_score > extremum)
                         {
-                            extremum = score;
+                            extremum = salted_score;
                             index = k;
                         }
                     }
                 }
                 else
                 {
-                    extremum = INT16_MAX;
+                    extremum = FLT_MAX;
                     int16_t score;
                     for (int k = 0; k < moves.size() / 6; k++)
                     {
                         score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        if (score < extremum)
+                        // Add randomness to separate equal moves if parameter active
+                        float salt = random ? distribution(gen) : 0.f;
+                        float salted_score = salt + (float)score;
+                        if (salted_score < extremum)
                         {
-                            extremum = score;
+                            extremum = salted_score;
                             index = k;
                         }
                     }
