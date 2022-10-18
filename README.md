@@ -2,7 +2,8 @@
 
 This project is a C++ implementation of a Pijersi game engine aimed to be used in C#/Unity.
 
-To learn more about Pijersi: [official repo](https://github.com/LucasBorboleta/pijersi).
+To learn more about Pijersi: [GitHub](https://github.com/LucasBorboleta/pijersi).
+The Unity project can be found here: [GitHub](https://github.com/arthur-liu-lsh/pijersi-unity)
 
 The project contains: 
 * The actual C++ engine
