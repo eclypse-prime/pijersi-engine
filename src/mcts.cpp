@@ -192,7 +192,8 @@ namespace PijersiEngine
             uint8_t currentPlayer = player;
             while (!_checkWin(newCells))
             {
-                _playRandom(newCells, currentPlayer);
+                // _playRandom(newCells, currentPlayer);
+                _playManual(_ponderAlphaBeta(0, true, newCells, currentPlayer).data(), newCells);
                 currentPlayer = 1 - currentPlayer;
             }
             if (currentPlayer == player)
