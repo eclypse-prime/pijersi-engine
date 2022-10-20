@@ -27,7 +27,7 @@ namespace PijersiEngine
             {
 
                 int index = 0;
-                int16_t *extremums = new int16_t[moves.size() / 6];
+                int16_t *scores = new int16_t[moves.size() / 6];
 
                 int16_t alpha = INT16_MIN;
                 int16_t beta = INT16_MAX;
@@ -36,7 +36,7 @@ namespace PijersiEngine
                 #pragma omp parallel for schedule(dynamic)
                 for (int k = 0; k < moves.size() / 6; k++)
                 {
-                    extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+                    scores[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
                 }
 
                 // Find best move
@@ -47,13 +47,14 @@ namespace PijersiEngine
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)extremums[k];
+                        float extremum = salt + (float)scores[k];
                         if (extremum > maximum)
                         {
                             maximum = extremum;
                             index = k;
                         }
                     }
+                    cout << maximum << endl;
                 }
                 else
                 {
@@ -62,7 +63,7 @@ namespace PijersiEngine
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)extremums[k];
+                        float extremum = salt + (float)scores[k];
                         if (extremum < minimum)
                         {
                             minimum = extremum;
@@ -71,7 +72,7 @@ namespace PijersiEngine
                     }
                 }
 
-                delete extremums;
+                delete scores;
 
                 vector<int>::const_iterator first = moves.begin() + 6 * index;
                 vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
@@ -761,7 +762,7 @@ namespace PijersiEngine
             // If the piece is in a winning position
             if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
             {
-                score *= 128;
+                score *= 16;
             }
         }
         else
@@ -804,6 +805,102 @@ namespace PijersiEngine
             }
         }
         return totalScore;
+    }
+
+    int16_t _evaluateFuturePosition(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+
+        if (moves.size() > 0)
+        {
+            if (recursionDepth > 0)
+            {
+
+                int16_t *scores = new int16_t[moves.size() / 6];
+
+                int16_t alpha = INT16_MIN;
+                int16_t beta = INT16_MAX;
+
+                // Evaluate possible moves
+                #pragma omp parallel for schedule(dynamic)
+                for (int k = 0; k < moves.size() / 6; k++)
+                {
+                    scores[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+                }
+
+                // Find best move
+                if (currentPlayer == 0)
+                {
+                    int16_t maximum = INT16_MIN;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        // Add randomness to separate equal moves if parameter active
+                        if (scores[k] > maximum)
+                        {
+                            maximum = scores[k];
+                        }
+                    }
+                    delete scores;
+                    return maximum;
+                }
+                else
+                {
+                    int16_t minimum = INT16_MAX;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        // Add randomness to separate equal moves if parameter active
+                        if (scores[k] < minimum)
+                        {
+                            minimum = scores[k];;
+                        }
+                    }
+                    delete scores;
+                    return minimum;
+                }
+
+            }
+            else
+            {
+                int index = 0;
+                uint8_t cellsBuffer[45];
+                int16_t currentPieceScores[45] = {0};
+
+                int16_t currentScore = _evaluatePosition(cells, currentPieceScores);
+
+                if (currentPlayer == 0)
+                {
+                    int16_t maximum = INT16_MIN;
+                    int16_t score;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
+                        if (score > maximum)
+                        {
+                            maximum = score;
+                            index = k;
+                        }
+                    }
+                    return maximum;
+                }
+                else
+                {
+                    int16_t minimum = INT16_MAX;
+                    int16_t score;
+                    for (int k = 0; k < moves.size() / 6; k++)
+                    {
+                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
+                        if (score < minimum)
+                        {
+                            minimum = score;
+                            index = k;
+                        }
+                    }
+                    return minimum;
+                }
+            }
+        }
+        return 0;
     }
 
     int16_t _updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)

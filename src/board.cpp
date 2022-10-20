@@ -88,7 +88,11 @@ namespace PijersiEngine
     // Plays a random move and returns it
     vector<int> Board::playRandom()
     {
-        return _playRandom(cells, currentPlayer);
+        vector<int> move = ponderRandom();
+
+        playManual(move);
+        return move;
+
     }
 
     bool Board::isMoveLegal(vector<int> move)
