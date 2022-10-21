@@ -54,7 +54,6 @@ namespace PijersiEngine
                             index = k;
                         }
                     }
-                    cout << maximum << endl;
                 }
                 else
                 {
@@ -752,12 +751,17 @@ namespace PijersiEngine
     // Evaluate piece according to its position, colour and type
     int16_t _evaluatePiece(uint8_t piece, int i)
     {
-
+        // The following score modifiers apply in this order
+        // A piece' base score is 8
+        // A piece's score increases by one for each row it advances to (except for wise pieces)
+        // A winning piece has its score multiplied by 16
+        // A stack has the score of the top piece multiplied by 2 and with 3 points added on top of that
+        // Black pieces's score are negative
         int16_t score;
         // If the piece isn't Wise
         if ((piece & 12) != 12)
         {
-            score = 15 - 12 * (piece & 2) - i;
+            score = 14 - 11 * (piece & 2) - i;
 
             // If the piece is in a winning position
             if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))

@@ -8,84 +8,60 @@ using namespace PijersiEngine;
 
 int main(int argc, char **argv)
 {
-    int niter = 1000;
-    int batch_size = 1;
-    float learning_rate = 0.1f;
+    int nIter = 1000;
+    int batchSize = 1;
+    float learningRate = 0.1f;
     if (argc < 4)
     {
         cout << "Use train.exe [iterations] [batch size] [learning rate]" << endl;
     }
     else
     {
-        niter = stoi(argv[1]);
-        batch_size = stoi(argv[2]);
-        learning_rate = stof(argv[3]);
+        nIter = stoi(argv[1]);
+        batchSize = stoi(argv[2]);
+        learningRate = stof(argv[3]);
     }
 
     cout << "Training : " << endl;
-    cout << "Iterations: " << niter << endl;
-    cout << "Batch size: " << batch_size << endl;
-    cout << "Learning rate: " << learning_rate << endl;
+    cout << "Iterations: " << nIter << endl;
+    cout << "Batch size: " << batchSize << endl;
+    cout << "Learning rate: " << learningRate << endl;
 
     Board board;
     board.init();
 
-    Trainer trainer(batch_size);
-    uint8_t cells[45] = {1};
-    int16_t expected;
+    Trainer trainer(batchSize);
 
-    for (int i = 0; i < niter; i++)
+    for (int n = 0; n < nIter; n++)
     {
-        for (int j = 0; j < batch_size; j++)
+        cout << "Iter " << n << endl;
+        // for (int batchIndex = 0; batchIndex < batchSize/2; batchIndex++)
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            if (board.checkWin())
+            float target = board.evaluate();
+            trainer.setInput(board.getState(), 0, target, batchIndex*2);
+            // target = -board.evaluate();
+            // trainer.setInput(board.getState(), 1, target, batchIndex*2+1);
+            if (!board.checkWin())
+            {
+                board.playRandom();
+            }
+            else
             {
                 board.init();
             }
-
-            // expected = (board.currentPlayer == 0) ? _evaluateFuturePosition(0, board.getState(), board.currentPlayer) : -_evaluateFuturePosition(0, board.getState(), board.currentPlayer);
-            expected = (board.currentPlayer == 0) ? board.evaluate() : -board.evaluate();
-            // expected = 0;
-            trainer.forward(board.getState(), board.currentPlayer, expected, j);
-            
-            board.playRandom();
         }
-        cout << "Iter " << i << endl;
+        trainer.forward();
         cout << "Loss: " << trainer.loss() << endl;
-        trainer.back(learning_rate/(float)(i+1));
-        // trainer.back(learning_rate);
+        trainer.back(learningRate);
 
-        // expected = _evaluateFuturePosition(2, board.getState(), board.currentPlayer);
-        // trainer.forward(board.getState(), board.currentPlayer, expected, 0);
-        // trainer.back(learning_rate);
-        // cout << "Loss: " << trainer.loss() << endl;
-
-        // expected = _evaluateFuturePosition(2, board.getState(), 1);
-        // network.set_input(board.getState(), 1);
-        // network.forward();
-        // network.back(expected, learning_rate);
-        // cout << "Output: " << network.output << " Expected: " << expected << endl;
-        // cout << "Loss: " << network.loss(expected) << endl;
+        float target = (board.currentPlayer == 0) ? board.evaluate() : -board.evaluate();
+        trainer.network.setInput(board.getState(), board.currentPlayer);
+        cout << "Target: " << target << " " << "Prediction: " << trainer.network.forward() << endl;
+        // for (int i = 0; i < 32; i++)
+        // {
+        //     cout << trainer.network.layer4.weights[i] << " ";
+        // }
+        // cout << endl;
     }
-    for (int i = 0; i < 16; i++)
-    {
-        if (board.checkWin())
-        {
-            board.init();
-        }
-
-        // expected = (board.currentPlayer == 0) ? _evaluateFuturePosition(0, board.getState(), board.currentPlayer) : -_evaluateFuturePosition(0, board.getState(), board.currentPlayer);
-        expected = (board.currentPlayer == 0) ? board.evaluate() : -board.evaluate();
-        trainer.forward(board.getState(), board.currentPlayer, expected, i);
-        cout << "Output: " << trainer.outputFinal[i] << " Expected: " << trainer.expected[i] << endl;
-        
-        cout << endl;
-        board.playRandom();
-    }
-
-    for (int i = 0; i < 720; i++)
-    {
-        cout << trainer.layer1[0].weights[i] << " ";
-    }
-    cout << endl;
 }

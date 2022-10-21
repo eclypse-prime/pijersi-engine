@@ -4,86 +4,92 @@
 #include <vector>
 #include <array>
 
-#define INPUT_TENSOR_SIZE 45*16
-#define BATCH_SIZE 16
-
 using namespace std;
 
 namespace PijersiEngine
 {
-    void cellsToTensor(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[INPUT_TENSOR_SIZE]);
+    void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720]);
     float _leakyRelu(float input);
 
-    struct Dense720
+    struct Layer
     {
-        float weights[INPUT_TENSOR_SIZE];
-        float bias;
+        float *weights = nullptr;
+        float *biases = nullptr;
+        int inputSize = 0;
+        int outputSize = 0;
+        bool activation = false;
 
-        void init();
-        float forward(array<uint8_t, INPUT_TENSOR_SIZE> input);
-        void back();
-        void update(float learning_rate, float biasError, float batchError[INPUT_TENSOR_SIZE]);
+        Layer(int newInputSize, int newOutputSize, bool newUseActivation);
+        void load();
+        void forward(float *input, float *output);
+        void update(float learningRate, float* weightError, float* biasError);
+        ~Layer();
     };
 
-    struct Dense32
+    struct Dense720x256 : Layer
     {
-        float weights[32];
-        float bias;
-
-        void init();
-        float forward(array<float, 32> input);
-        void update(float learning_rate, float biasError, float batchError[32]);
+        Dense720x256();
+        void forwardInput(uint8_t *input, float *output);
     };
 
-    struct Dense32L
+    struct Dense256x32 : Layer
     {
-        float weights[32];
-        float bias;
+        Dense256x32();
+    };
 
-        void init();
-        float forward(array<float, 32> input);
-        void update(float learning_rate, float biasError, float batchError[32]);
+    struct Dense32x32 : Layer
+    {
+        Dense32x32();
+    };
+
+    struct Dense32x1 : Layer
+    {
+        Dense32x1();
     };
 
     struct Network
     {
-        Dense720 layer1[32];
-        Dense32 layer2[32];
-        Dense32 layer3[32];
-        Dense32L final;
+        uint8_t input[720];
+        float output1[256];
+        float output2[32];
+        float output3[32];
+        float output4[1];
 
-        void init();
-        void load();
-        float forward(array<uint8_t, INPUT_TENSOR_SIZE> input);
+        Dense720x256 layer1;
+        Dense256x32 layer2;
+        Dense32x32 layer3;
+        Dense32x1 layer4;
+
+        // TODO: Implement incremental updates when possible
+        void setInput(uint8_t cells[45], uint8_t currentPlayer);
+        float forward();
+        float forward(uint8_t externalInput[720]);
     };
 
     struct Trainer
     {
+        Network network;
         int batchSize = 1;
 
-        Dense720 layer1[32];
-        Dense32 layer2[32];
-        Dense32 layer3[32];
-        Dense32L final;
+        uint8_t *inputs;
+        float *outputs1;
+        float *outputs2;
+        float *outputs3;
+        float *outputs4;
 
-        vector<array<uint8_t, INPUT_TENSOR_SIZE>> input;
-        vector<array<float, 32>> output1;
-        vector<array<float, 32>> output2;
-        vector<array<float, 32>> output3;
-        vector<float> outputFinal;
+        float *targets;
 
-        vector<float> expected;
-
-        vector<array<float, 32>> error1;
-        vector<array<float, 32>> error2;
-        vector<array<float, 32>> error3;
-        vector<float> errorFinal;
+        float *errors1;
+        float *errors2;
+        float *errors3;
+        float *errors4;
 
         Trainer(int newBatchSize);
-        void init(int newBatchSize);
-        void forward(uint8_t cells[45], uint8_t currentPlayer, float expectedOutput, int i);
+        void setInput(uint8_t cells[45], uint8_t currentPlayer, float target, int batchIndex);
+        void forward();
         float loss();
-        void back(float learning_rate);
+        void back(float learningRate);
+        ~Trainer();
     };
 }
 

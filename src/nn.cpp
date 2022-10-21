@@ -10,11 +10,9 @@
 
 using namespace std;
 
-uniform_real_distribution<float> uniform(-1.f, 1.f);
-
 namespace PijersiEngine
 {
-    void cellsToTensor(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720])
+    void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720])
     {
         if (currentPlayer == 0)
         {
@@ -86,9 +84,9 @@ namespace PijersiEngine
         {
             for (int k = 0; k < 45; k++)
             {
-                if (cells[44-k] != 0)
+                if (cells[44 - k] != 0)
                 {
-                    switch (cells[44-k] & 14)
+                    switch (cells[44 - k] & 14)
                     {
                     case 2:
                         input[k * 16] = 1;
@@ -115,7 +113,7 @@ namespace PijersiEngine
                         input[k * 16 + 7] = 1;
                         break;
                     }
-                    if (cells[44-k] >= 16)
+                    if (cells[44 - k] >= 16)
                     {
                         switch (cells[k] & 224)
                         {
@@ -152,8 +150,8 @@ namespace PijersiEngine
 
     inline float _leakyRelu(float input)
     {
-        // return max(0.f, input);
-        return max(0.01f*input, input);
+        return max(0.f, input);
+        // return max(0.01f * input, input);
     }
 
     // inline float _dLeakyRelu(float input)
@@ -161,310 +159,329 @@ namespace PijersiEngine
     //     return (input > 0) ? input : 0.1f*input;
     // }
 
-    void Dense720::init()
+    void Layer::load()
     {
-        for (int k = 0; k < INPUT_TENSOR_SIZE; k++)
-        {
-            weights[k] = uniform(gen);
-        }
-        bias = uniform(gen);
     }
 
-    float Dense720::forward(array<uint8_t, INPUT_TENSOR_SIZE> input)
+    void Layer::forward(float *input, float *output)
     {
-        float sum = 0;
-        for (int k = 0; k < INPUT_TENSOR_SIZE; k++)
+        #pragma omp parallel for
+        for (int i = 0; i < outputSize; i++)
         {
-            sum += weights[k] * input[k];
-        }
-        sum += bias;
-        return _leakyRelu(sum);
-    }
-
-    void Dense720::update(float learning_rate, float biasError, float weightError[INPUT_TENSOR_SIZE])
-    {
-        for (int k = 0; k < INPUT_TENSOR_SIZE; k++)
-        {
-            weights[k] -= learning_rate * weightError[k];
-        }
-        bias -= learning_rate * biasError;
-    }
-
-    void Dense32::init()
-    {
-        for (int k = 0; k < 32; k++)
-        {
-            weights[k] = uniform(gen);
-        }
-        bias = uniform(gen);
-    }
-
-    float Dense32::forward(array<float, 32> input)
-    {
-        float sum = 0;
-        for (int k = 0; k < 32; k++)
-        {
-            sum += weights[k] * input[k];
-        }
-        sum += bias;
-        return _leakyRelu(sum);
-    }
-
-    void Dense32::update(float learning_rate, float biasError, float weightError[32])
-    {
-        for (int k = 0; k < 32; k++)
-        {
-            weights[k] -= learning_rate * weightError[k];
-        }
-        bias -= learning_rate * biasError;
-    }
-
-    void Dense32L::init()
-    {
-        for (int k = 0; k < 32; k++)
-        {
-            weights[k] = uniform(gen);
-        }
-        bias = uniform(gen);
-    }
-
-    float Dense32L::forward(array<float, 32> input)
-    {
-        float sum = 0;
-        for (int k = 0; k < 32; k++)
-        {
-            sum += weights[k] * input[k];
-        }
-        sum += bias;
-        return sum;
-    }
-
-    void Dense32L::update(float learning_rate, float biasError, float weightError[32])
-    {
-        for (int k = 0; k < 32; k++)
-        {
-            weights[k] -= learning_rate * weightError[k];
-            // cout << "weight: "<< weights[k] << endl;
-        }
-        bias -= learning_rate * biasError;
-        // cout << "bias: "<< bias << endl;
-    }
-
-    void Network::init()
-    {
-        for (int k = 0; k < 32; k++)
-        {
-            layer1[k].init();
-            layer2[k].init();
-            layer3[k].init();
-            final.init();
+            float sum = 0;
+            for (int j = 0; j < inputSize; j++)
+            {
+                sum += weights[i * inputSize + j] * input[j];
+            }
+            if (activation)
+            {
+                output[i] = _leakyRelu(sum + biases[i]);
+            }
+            else
+            {
+                output[i] = sum + biases[i];
+            }
         }
     }
 
-    void Network::load()
+    void Layer::update(float learningRate, float *weightError, float *biasError)
     {
-
+        for (int i = 0; i < inputSize * outputSize; i++)
+        {
+            weights[i] -= learningRate * weightError[i];
+        }
+        for (int i = 0; i < outputSize; i++)
+        {
+            biases[i] -= learningRate * biasError[i];
+        }
     }
 
-    float Network::forward(array<uint8_t, INPUT_TENSOR_SIZE> input)
+    Layer::Layer(int newInputSize, int newOutputSize, bool newUseActivation)
     {
-        array<float, 32> output1;
-        array<float, 32> output2;
-        array<float, 32> output3;
-        for (int k = 0; k < 32; k++)
+        inputSize = newInputSize;
+        outputSize = newOutputSize;
+        activation = newUseActivation;
+
+        if (inputSize != 0 && outputSize != 0)
         {
-            output1[k] = layer1[k].forward(input);
+            weights = new float[inputSize * outputSize];
+            biases = new float[outputSize];
         }
-        for (int k = 0; k < 32; k++)
+
+        for (int i = 0; i < inputSize * outputSize; i++)
         {
-        
-            output2[k] = layer2[k].forward(output1);
+            weights[i] = distribution(gen);
         }
-        for (int k = 0; k < 32; k++)
+        for (int i = 0; i < outputSize; i++)
         {
-            output3[k] = layer3[k].forward(output2);
+            biases[i] = distribution(gen);
         }
-        return final.forward(output3);
+    }
+
+    Layer::~Layer()
+    {
+        delete weights;
+        delete biases;
+    }
+
+    Dense720x256::Dense720x256() : Layer(720, 256, true)
+    {
+    }
+
+    Dense256x32::Dense256x32() : Layer(256, 32, true)
+    {
+    }
+
+    Dense32x32::Dense32x32() : Layer(32, 32, true)
+    {
+    }
+
+    Dense32x1::Dense32x1() : Layer(32, 1, false)
+    {
+    }
+
+    void Dense720x256::forwardInput(uint8_t *input, float *output)
+    {
+        #pragma omp parallel for
+        for (int i = 0; i < outputSize; i++)
+        {
+            float sum = 0;
+            for (int j = 0; j < inputSize; j++)
+            {
+                sum += weights[i * inputSize + j] * input[j];
+            }
+            output[i] = _leakyRelu(sum + biases[i]);
+        }
+    }
+
+    void Network::setInput(uint8_t cells[45], uint8_t currentPlayer)
+    {
+        // TODO: change this when implementing incremental updates
+        for (int i = 0; i < 720; i++)
+        {
+            input[i] = 0;
+        }
+        cellsToInput(cells, currentPlayer, input);
+    }
+
+    float Network::forward()
+    {
+
+        // -> uint8_t[720];
+        layer1.forwardInput(input, output1);
+        // -> float[256];
+        layer2.forward(output1, output2);
+        // -> float[32];
+        layer3.forward(output2, output3);
+        // -> float[32];
+        layer4.forward(output3, output4);
+        // -> float[1];
+        return *output4;
+    }
+
+    float Network::forward(uint8_t externalInput[720])
+    {
+        // -> uint8_t[720];
+        layer1.forwardInput(externalInput, output1);
+        // -> float[256];
+        layer2.forward(output1, output2);
+        // -> float[32];
+        layer3.forward(output2, output3);
+        // -> float[32];
+        layer4.forward(output3, output4);
+        // -> float[1];
+        return *output4;
     }
 
     Trainer::Trainer(int newBatchSize)
     {
-        init(newBatchSize);
-    }
-
-    void Trainer::init(int newBatchSize)
-    {
         batchSize = newBatchSize;
 
-        input.resize(batchSize);
-        output1.resize(batchSize);
-        output2.resize(batchSize);
-        output3.resize(batchSize);
-        outputFinal.resize(batchSize);
+        inputs = new uint8_t[720 * batchSize];
+        outputs1 = new float[256 * batchSize];
+        outputs2 = new float[32 * batchSize];
+        outputs3 = new float[32 * batchSize];
+        outputs4 = new float[batchSize];
 
-        expected.resize(batchSize);
+        targets = new float[batchSize];
 
-        error1.resize(batchSize);
-        error2.resize(batchSize);
-        error3.resize(batchSize);
-        errorFinal.resize(batchSize);
-        
-        for (int k = 0; k < 32; k++)
-        {
-            layer1[k].init();
-            layer2[k].init();
-            layer3[k].init();
-            final.init();
-        }
+        errors1 = new float[256 * batchSize];
+        errors2 = new float[32 * batchSize];
+        errors3 = new float[32 * batchSize];
+        errors4 = new float[batchSize];
     }
 
-    void Trainer::forward(uint8_t cells[45], uint8_t currentPlayer, float expectedOutput, int i)
+    void Trainer::setInput(uint8_t cells[45], uint8_t currentPlayer, float target, int batchIndex)
     {
-        for (int j = 0; j < INPUT_TENSOR_SIZE; j++)
+        for (int i = 0; i < 720; i++)
         {
-            input[i][j] = 0;
+            inputs[batchIndex * 720 + i] = 0;
         }
-        cellsToTensor(cells, currentPlayer, input[i].data());
+        cellsToInput(cells, currentPlayer, inputs + batchIndex * 720);
+        targets[batchIndex] = target;
+    }
 
-        for (int k = 0; k < 32; k++)
+    void Trainer::forward()
+    {
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            output1[i][k] = layer1[k].forward(input[i]);
+            // Inference
+            // TODO: make thread safe
+            network.forward(inputs + batchIndex * 720);
+
+            // Store outputs
+            for (int i = 0; i < 256; i++)
+            {
+                outputs1[256 * batchIndex + i] = network.output1[i];
+            }
+            for (int i = 0; i < 32; i++)
+            {
+                outputs2[32 * batchIndex + i] = network.output2[i];
+            }
+            for (int i = 0; i < 32; i++)
+            {
+                outputs3[32 * batchIndex + i] = network.output3[i];
+            }
+            outputs4[batchIndex] = *network.output4;
         }
-        for (int k = 0; k < 32; k++)
-        {
-        
-            output2[i][k] = layer2[k].forward(output1[i]);
-        }
-        for (int k = 0; k < 32; k++)
-        {
-            output3[i][k] = layer3[k].forward(output2[i]);
-        }
-        outputFinal[i] = final.forward(output3[i]);
-        expected[i] = expectedOutput;
     }
 
     float Trainer::loss()
     {
         float sum = 0.f;
-        for (int k = 0; k < batchSize; k++)
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            sum += (outputFinal[k] - expected[k]) * (outputFinal[k] - expected[k]);
+            sum += (targets[batchIndex] - outputs4[batchIndex]) * (targets[batchIndex] - outputs4[batchIndex]);
         }
-        return sum * 0.01f / batchSize;
+        return sum / batchSize;
     }
 
-    void Trainer::back(float learning_rate)
+    void Trainer::back(float learningRate)
     {
+        // TODO: Streamline and put redundant code into separate functions
+        // Where to multiply error by 2/batchSize ?
         #pragma omp parallel for
-        for (int batch = 0; batch < batchSize; batch++)
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            // Final layer error
-            errorFinal[batch] = (outputFinal[batch] - expected[batch]) * (2.f/(float)batchSize) * 0.01f;
-            // cout << "errorFinal[" << i << "] = " << errorFinal[i] << endl;
+            errors4[batchIndex] = (outputs4[batchIndex] - targets[batchIndex]);
 
-            // Layer 3 error
             for (int i = 0; i < 32; i++)
             {
-                error3[batch][i] = _leakyRelu(final.weights[i] * errorFinal[batch]) * (2.f/(float)batchSize);
-                // cout << "error3[" << i << "][" << j << "] = " << error3[i][j] << endl;
+                errors3[32 * batchIndex + i] = _leakyRelu(network.layer4.weights[i] * errors4[batchIndex]);
             }
-            
-            // Layer 2 error
+
             for (int i = 0; i < 32; i++)
             {
-                error2[batch][i] = 0.f;
+                float sum = 0.f;
                 for (int j = 0; j < 32; j++)
                 {
-                    error2[batch][i] += _leakyRelu(layer3[j].weights[i] * error3[batch][j]) * (2.f/(float)batchSize);
+                    sum += _leakyRelu(network.layer3.weights[j * 32 + i] * errors3[batchIndex * 32 + j]);
                 }
-                // cout << "error2[" << i << "][" << j << "] = " << error2[i][j] << endl;
+                errors2[batchIndex * 32 + i] = sum;
             }
-            
-            // Layer 1 error
-            for (int i = 0; i < 32; i++)
+
+            for (int i = 0; i < 256; i++)
             {
-                error1[batch][i] = 0.f;
+                float sum = 0.f;
                 for (int j = 0; j < 32; j++)
                 {
-                    error1[batch][i] += _leakyRelu(layer2[j].weights[i] * error2[batch][j]) * (2.f/(float)batchSize);
+                    sum += _leakyRelu(network.layer2.weights[j * 256 + i] * errors2[batchIndex * 32 + j]);
                 }
-                // cout << "error1[" << i << "][" << j << "] = " << error1[i][j] << endl;
+                errors1[batchIndex * 256 + i] = sum;
             }
         }
 
-        float biasError1[32] = {0};
-        float biasError2[32] = {0};
-        float biasError3[32] = {0};
-        float biasErrorFinal = 0;
+        float biasError1[256] = {0.f};
+        float biasError2[32] = {0.f};
+        float biasError3[32] = {0.f};
+        float biasError4[1] = {0.f};
 
-        // Calculating bias error for all filters
-        for (int batch = 0; batch < batchSize; batch++)
+        // TODO: cache optimisation
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            biasErrorFinal += errorFinal[batch];
+            *biasError4 += errors4[batchIndex] * (2.f / (float)batchSize);
             for (int i = 0; i < 32; i++)
             {
-                biasError3[i] += error3[batch][i];
-                biasError2[i] += error2[batch][i];
-                biasError1[i] += error1[batch][i];
+                biasError3[i] += errors3[batchIndex * 32 + i] * (2.f / (float)batchSize);
+                biasError2[i] += errors2[batchIndex * 32 + i] * (2.f / (float)batchSize);
             }
-        }
-
-        biasErrorFinal *= (2.f/(float)batchSize);
-        for (int i = 0; i < 32; i++)
-        {
-            biasError3[i] *= (2.f/(float)batchSize);
-            biasError2[i] *= (2.f/(float)batchSize);
-            biasError1[i] *= (2.f/(float)batchSize);
-        }
-
-
-
-        float weightError1[INPUT_TENSOR_SIZE*32] = {0};
-        float weightError2[32*32] = {0};
-        float weightError3[32*32] = {0};
-        float weightErrorFinal[32] = {0};
-
-        // Final Layer update
-        for (int i = 0; i < 32; i++)
-        {
-            for (int batch = 0; batch < batchSize; batch++)
+            for (int i = 0; i < 256; i++)
             {
-                weightErrorFinal[i] += errorFinal[batch] * output3[batch][i];
+                biasError1[i] += errors1[batchIndex * 256 + i] * (2.f / (float)batchSize);
             }
-            weightErrorFinal[i] *= (2.f/(float)batchSize);
         }
 
-        // Hidden Layers update
+        float weightError1[720 * 256] = {0};
+        float weightError2[256 * 32] = {0};
+        float weightError3[32 * 32] = {0};
+        float weightError4[32] = {0};
+
+        for (int i = 0; i < 256; i++)
+        {
+            for (int j = 0; j < 720; j++)
+            {
+                float sum = 0.f;
+                for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
+                {
+                    sum += errors1[batchIndex * 256 + i] * inputs[batchIndex * 720 + j];
+                }
+                weightError1[i * 720 + j] = sum * (2.f / (float)batchSize);
+            }
+        }
+
+        for (int i = 0; i < 32; i++)
+        {
+            for (int j = 0; j < 256; j++)
+            {
+                float sum = 0.f;
+                for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
+                {
+                    sum += errors2[batchIndex * 32 + i] * outputs1[batchIndex * 256 + j];
+                }
+                weightError2[i * 256 + j] = sum * (2.f / (float)batchSize);
+            }
+        }
+
         for (int i = 0; i < 32; i++)
         {
             for (int j = 0; j < 32; j++)
             {
-                for (int batch = 0; batch < batchSize; batch++)
+                float sum = 0.f;
+                for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
                 {
-                    weightError3[i*32+j] += error3[batch][i] * output2[batch][j];
-                    weightError2[i*32+j] += error2[batch][i] * output1[batch][j];
+                    sum += errors3[batchIndex * 32 + i] * outputs2[batchIndex * 32 + j];
                 }
-                weightError3[i*32+j] *= (2.f/(float)batchSize);
-                weightError2[i*32+j] *= (2.f/(float)batchSize);
-
-            }
-            for (int j = 0; j < INPUT_TENSOR_SIZE; j++)
-            {
-                for (int batch = 0; batch < batchSize; batch++)
-                {
-                    weightError1[i*INPUT_TENSOR_SIZE+j] += error1[batch][i] * input[batch][j];
-                }
-                weightError1[i*INPUT_TENSOR_SIZE+j] *= (2.f/(float)batchSize);
+                weightError3[i * 32 + j] = sum * (2.f / (float)batchSize);
             }
         }
 
-        final.update(learning_rate, biasErrorFinal, weightErrorFinal);
-
-        for (int k  = 0; k < 32; k++)
+        for (int i = 0; i < 32; i++)
         {
-            layer3[k].update(learning_rate, biasError3[k], weightError3 + 32*k);
-            layer2[k].update(learning_rate, biasError2[k], weightError2 + 32*k);
-            layer1[k].update(learning_rate, biasError1[k], weightError1 + INPUT_TENSOR_SIZE*k);
+            float sum = 0.f;
+            for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
+            {
+                sum += errors4[batchIndex] * outputs3[batchIndex * 32 + i];
+            }
+            weightError4[i] = sum * (2.f / (float)batchSize);
         }
+
+        network.layer1.update(learningRate, weightError1, biasError1);
+        network.layer2.update(learningRate, weightError2, biasError2);
+        network.layer3.update(learningRate, weightError3, biasError3);
+        network.layer4.update(learningRate, weightError4, biasError4);
+    }
+
+    Trainer::~Trainer()
+    {
+        delete inputs;
+        delete outputs1;
+        delete outputs2;
+        delete outputs3;
+        delete outputs4;
+        delete targets;
+        delete errors1;
+        delete errors2;
+        delete errors3;
+        delete errors4;
     }
 }

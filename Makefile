@@ -54,7 +54,7 @@ src/train.o: $(SRC) src/train.cpp $(HEADERS)
 
 build/train.exe: $(OBJ) src/train.o
 	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/train.o -o build/train.exe
+	@g++ -ggdb $(FLAGS) $(INCLUDE) $(OBJ) src/train.o -o build/train.exe
 
 clean:
 	@del /Q /F /S wrap_csharp\*
