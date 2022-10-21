@@ -9,7 +9,10 @@ using namespace std;
 namespace PijersiEngine
 {
     void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720]);
+    float _sigmoid(float input);
+    float _dSigmoid(float input);
     float _leakyRelu(float input);
+    float _dLeakyRelu(float input);
 
     struct Layer
     {
@@ -21,7 +24,8 @@ namespace PijersiEngine
 
         Layer(int newInputSize, int newOutputSize, bool newUseActivation);
         void load();
-        void forward(float *input, float *output);
+        template <typename T>
+        void forward(T *input, float *output);
         void update(float learningRate, float* weightError, float* biasError);
         ~Layer();
     };
@@ -29,7 +33,6 @@ namespace PijersiEngine
     struct Dense720x256 : Layer
     {
         Dense720x256();
-        void forwardInput(uint8_t *input, float *output);
     };
 
     struct Dense256x32 : Layer
@@ -63,7 +66,6 @@ namespace PijersiEngine
         // TODO: Implement incremental updates when possible
         void setInput(uint8_t cells[45], uint8_t currentPlayer);
         float forward();
-        float forward(uint8_t externalInput[720]);
     };
 
     struct Trainer

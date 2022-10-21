@@ -10,6 +10,8 @@
 
 using namespace std;
 
+uniform_real_distribution<float> uniform(-1.f, 1.f);
+
 namespace PijersiEngine
 {
     void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720])
@@ -148,24 +150,35 @@ namespace PijersiEngine
         }
     }
 
-    inline float _leakyRelu(float input)
+    float _sigmoid(float input)
     {
-        return max(0.f, input);
-        // return max(0.01f * input, input);
+        return 1.f/(1.f + exp(-input));
     }
 
-    // inline float _dLeakyRelu(float input)
-    // {
-    //     return (input > 0) ? input : 0.1f*input;
-    // }
+    float _dSigmoid(float input)
+    {
+        return input * (1 - input);
+    }
+
+    float _leakyRelu(float input)
+    {
+        // return max(0.f, input);
+        return max(0.01f * input, input);
+    }
+
+    float _dLeakyRelu(float input)
+    {
+        return (input > 0) ? 1 : 0.01f;
+        // return (input > 0) ? 1 : 0.f;
+    }
 
     void Layer::load()
     {
     }
 
-    void Layer::forward(float *input, float *output)
+    template <typename T>
+    void Layer::forward(T *input, float *output)
     {
-        #pragma omp parallel for
         for (int i = 0; i < outputSize; i++)
         {
             float sum = 0;
@@ -175,11 +188,11 @@ namespace PijersiEngine
             }
             if (activation)
             {
-                output[i] = _leakyRelu(sum + biases[i]);
+                output[i] = _sigmoid(sum + biases[i]);
             }
             else
             {
-                output[i] = sum + biases[i];
+                output[i] = _sigmoid(sum + biases[i]) - 0.5f;
             }
         }
     }
@@ -210,11 +223,11 @@ namespace PijersiEngine
 
         for (int i = 0; i < inputSize * outputSize; i++)
         {
-            weights[i] = distribution(gen);
+            weights[i] = uniform(gen);
         }
         for (int i = 0; i < outputSize; i++)
         {
-            biases[i] = distribution(gen);
+            biases[i] = uniform(gen);
         }
     }
 
@@ -240,20 +253,6 @@ namespace PijersiEngine
     {
     }
 
-    void Dense720x256::forwardInput(uint8_t *input, float *output)
-    {
-        #pragma omp parallel for
-        for (int i = 0; i < outputSize; i++)
-        {
-            float sum = 0;
-            for (int j = 0; j < inputSize; j++)
-            {
-                sum += weights[i * inputSize + j] * input[j];
-            }
-            output[i] = _leakyRelu(sum + biases[i]);
-        }
-    }
-
     void Network::setInput(uint8_t cells[45], uint8_t currentPlayer)
     {
         // TODO: change this when implementing incremental updates
@@ -268,21 +267,7 @@ namespace PijersiEngine
     {
 
         // -> uint8_t[720];
-        layer1.forwardInput(input, output1);
-        // -> float[256];
-        layer2.forward(output1, output2);
-        // -> float[32];
-        layer3.forward(output2, output3);
-        // -> float[32];
-        layer4.forward(output3, output4);
-        // -> float[1];
-        return *output4;
-    }
-
-    float Network::forward(uint8_t externalInput[720])
-    {
-        // -> uint8_t[720];
-        layer1.forwardInput(externalInput, output1);
+        layer1.forward(input, output1);
         // -> float[256];
         layer2.forward(output1, output2);
         // -> float[32];
@@ -323,26 +308,15 @@ namespace PijersiEngine
 
     void Trainer::forward()
     {
+#pragma omp parallel for
         for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
             // Inference
             // TODO: make thread safe
-            network.forward(inputs + batchIndex * 720);
-
-            // Store outputs
-            for (int i = 0; i < 256; i++)
-            {
-                outputs1[256 * batchIndex + i] = network.output1[i];
-            }
-            for (int i = 0; i < 32; i++)
-            {
-                outputs2[32 * batchIndex + i] = network.output2[i];
-            }
-            for (int i = 0; i < 32; i++)
-            {
-                outputs3[32 * batchIndex + i] = network.output3[i];
-            }
-            outputs4[batchIndex] = *network.output4;
+            network.layer1.forward(inputs + 720 * batchIndex, outputs1 + 256 * batchIndex);
+            network.layer2.forward(outputs1 + 256 * batchIndex, outputs2 + 32 * batchIndex);
+            network.layer3.forward(outputs2 + 32 * batchIndex, outputs3 + 32 * batchIndex);
+            network.layer4.forward(outputs3 + 32 * batchIndex, outputs4 + batchIndex);
         }
     }
 
@@ -353,21 +327,21 @@ namespace PijersiEngine
         {
             sum += (targets[batchIndex] - outputs4[batchIndex]) * (targets[batchIndex] - outputs4[batchIndex]);
         }
-        return sum / batchSize;
+        return 10.f * sum / batchSize;
     }
 
     void Trainer::back(float learningRate)
     {
         // TODO: Streamline and put redundant code into separate functions
-        // Where to multiply error by 2/batchSize ?
-        #pragma omp parallel for
+#pragma omp parallel for
         for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            errors4[batchIndex] = (outputs4[batchIndex] - targets[batchIndex]);
+            errors4[batchIndex] = outputs4[batchIndex] - targets[batchIndex] * _dSigmoid(outputs4[batchIndex]);
+            // errors4[batchIndex] = outputs4[batchIndex] - targets[batchIndex];
 
             for (int i = 0; i < 32; i++)
             {
-                errors3[32 * batchIndex + i] = _leakyRelu(network.layer4.weights[i] * errors4[batchIndex]);
+                errors3[32 * batchIndex + i] = network.layer4.weights[i] * errors4[batchIndex] * _dSigmoid(outputs3[32 * batchIndex + i]);
             }
 
             for (int i = 0; i < 32; i++)
@@ -375,7 +349,7 @@ namespace PijersiEngine
                 float sum = 0.f;
                 for (int j = 0; j < 32; j++)
                 {
-                    sum += _leakyRelu(network.layer3.weights[j * 32 + i] * errors3[batchIndex * 32 + j]);
+                    sum += network.layer3.weights[j * 32 + i] * errors3[batchIndex * 32 + j] * _dSigmoid(outputs2[32 * batchIndex + i]);
                 }
                 errors2[batchIndex * 32 + i] = sum;
             }
@@ -385,11 +359,16 @@ namespace PijersiEngine
                 float sum = 0.f;
                 for (int j = 0; j < 32; j++)
                 {
-                    sum += _leakyRelu(network.layer2.weights[j * 256 + i] * errors2[batchIndex * 32 + j]);
+                    sum += network.layer2.weights[j * 256 + i] * errors2[batchIndex * 32 + j] * _dSigmoid(outputs1[256 * batchIndex + i]);
                 }
                 errors1[batchIndex * 256 + i] = sum;
             }
         }
+
+        // for (int i = 0; i < batchSize; i++)
+        // {
+            cout << "Target: " << targets[0] << " Prediction: " << outputs4[0] << " Error: " << errors4[0] << endl;
+        // }
 
         float biasError1[256] = {0.f};
         float biasError2[32] = {0.f};
@@ -399,15 +378,18 @@ namespace PijersiEngine
         // TODO: cache optimisation
         for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
         {
-            *biasError4 += errors4[batchIndex] * (2.f / (float)batchSize);
+            *biasError4 += errors4[batchIndex];
+        }
+        for (int batchIndex = 0; batchIndex < batchSize; batchIndex++)
+        {
             for (int i = 0; i < 32; i++)
             {
-                biasError3[i] += errors3[batchIndex * 32 + i] * (2.f / (float)batchSize);
-                biasError2[i] += errors2[batchIndex * 32 + i] * (2.f / (float)batchSize);
+                biasError3[i] += errors3[batchIndex * 32 + i];
+                biasError2[i] += errors2[batchIndex * 32 + i];
             }
             for (int i = 0; i < 256; i++)
             {
-                biasError1[i] += errors1[batchIndex * 256 + i] * (2.f / (float)batchSize);
+                biasError1[i] += errors1[batchIndex * 256 + i];
             }
         }
 
@@ -425,7 +407,7 @@ namespace PijersiEngine
                 {
                     sum += errors1[batchIndex * 256 + i] * inputs[batchIndex * 720 + j];
                 }
-                weightError1[i * 720 + j] = sum * (2.f / (float)batchSize);
+                weightError1[i * 720 + j] = sum * 2.f / (float)batchSize;
             }
         }
 
@@ -438,7 +420,7 @@ namespace PijersiEngine
                 {
                     sum += errors2[batchIndex * 32 + i] * outputs1[batchIndex * 256 + j];
                 }
-                weightError2[i * 256 + j] = sum * (2.f / (float)batchSize);
+                weightError2[i * 256 + j] = sum * 2.f / (float)batchSize;
             }
         }
 
@@ -451,7 +433,7 @@ namespace PijersiEngine
                 {
                     sum += errors3[batchIndex * 32 + i] * outputs2[batchIndex * 32 + j];
                 }
-                weightError3[i * 32 + j] = sum * (2.f / (float)batchSize);
+                weightError3[i * 32 + j] = sum * 2.f / (float)batchSize;
             }
         }
 
@@ -462,8 +444,10 @@ namespace PijersiEngine
             {
                 sum += errors4[batchIndex] * outputs3[batchIndex * 32 + i];
             }
-            weightError4[i] = sum * (2.f / (float)batchSize);
+            // weightError4[i] = sum * 2.f / (float)batchSize;
+            // cout << sum << " ";
         }
+        // cout << endl;
 
         network.layer1.update(learningRate, weightError1, biasError1);
         network.layer2.update(learningRate, weightError2, biasError2);
