@@ -93,21 +93,21 @@ namespace PijersiEngine
 
     bool Board::isMoveLegal(vector<int> move)
     {
-        if (cells[coordsToIndex(move[0], move[1])] == 0)
+        if (cells[move[0]] == 0)
         {
             return false;
         }
-        if ((cells[coordsToIndex(move[0], move[1])] & 2) != currentPlayer << 1)
+        if ((cells[move[0]] & 2) != currentPlayer << 1)
         {
             return false;
         }
-        vector<int> moves = _availablePieceMoves(move[0], move[1], cells);
-        for (int k = 0; k < moves.size()/6; k++)
+        vector<int> moves = _availablePieceMoves(move[0], cells);
+        for (int k = 0; k < moves.size()/3; k++)
         {
             bool legal = true;
-            for (int m = 0; m < 6; m++)
+            for (int m = 0; m < 3; m++)
             {
-                if (moves[k*6+m] != move[m])
+                if (moves[k*3+m] != move[m])
                 {
                     legal = false;
                 }
@@ -126,7 +126,7 @@ namespace PijersiEngine
 
     void Board::playManual(vector<int> move)
     {
-        _play(move[0], move[1], move[2], move[3], move[4], move[5], cells);
+        _play(move[0], move[1], move[2], cells);
         // Set current player to the other colour.
         currentPlayer = 1 - currentPlayer;
     }

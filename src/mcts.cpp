@@ -24,7 +24,7 @@ namespace PijersiEngine
     {
         int nThreads = omp_get_max_threads();
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-        int nMoves = moves.size()/6;
+        int nMoves = moves.size()/3;
 
         vector<int> visitsPerThreads(nMoves*nThreads);
 
@@ -129,8 +129,8 @@ namespace PijersiEngine
             }
 
             // Select the corresponding move
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+            vector<int>::const_iterator first = moves.begin() + 3 * index;
+            vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
             vector<int> move(first, last);
 
             return move;
@@ -210,10 +210,10 @@ namespace PijersiEngine
         vector<int> moves = _availablePlayerMoves(player, cells);
         if (moves.size() > 0)
         {
-            for (int k = 0; k < moves.size() / 6; k++)
+            for (int k = 0; k < moves.size() / 3; k++)
             {
-                vector<int>::const_iterator first = moves.begin() + 6 * k;
-                vector<int>::const_iterator last = moves.begin() + 6 * (k + 1);
+                vector<int>::const_iterator first = moves.begin() + 3 * k;
+                vector<int>::const_iterator last = moves.begin() + 3 * (k + 1);
                 vector<int> chosenMove(first, last);
                 children.push_back(new Node(this, chosenMove, 1-player));
             }

@@ -21,29 +21,31 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
+        cout << "Available moves: " << moves.size()/3 << endl;
+
         if (moves.size() > 0)
         {
             if (recursionDepth > 0)
             {
 
                 int index = 0;
-                int16_t *extremums = new int16_t[moves.size() / 6];
+                int16_t *extremums = new int16_t[moves.size() / 3];
 
                 int16_t alpha = INT16_MIN;
                 int16_t beta = INT16_MAX;
 
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic)
-                for (int k = 0; k < moves.size() / 6; k++)
+                for (int k = 0; k < moves.size() / 3; k++)
                 {
-                    extremums[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+                    extremums[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth, alpha, beta, cells, currentPlayer);
                 }
 
                 // Find best move
                 if (currentPlayer == 0)
                 {
                     float maximum = -FLT_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
@@ -58,7 +60,7 @@ namespace PijersiEngine
                 else
                 {
                     float minimum = FLT_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
@@ -73,8 +75,8 @@ namespace PijersiEngine
 
                 delete extremums;
 
-                vector<int>::const_iterator first = moves.begin() + 6 * index;
-                vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+                vector<int>::const_iterator first = moves.begin() + 3 * index;
+                vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
                 vector<int> move(first, last);
                 return move;
             }
@@ -91,9 +93,9 @@ namespace PijersiEngine
                 {
                     extremum = -FLT_MAX;
                     int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
+                        score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
                         float salted_score = salt + (float)score;
@@ -108,9 +110,9 @@ namespace PijersiEngine
                 {
                     extremum = FLT_MAX;
                     int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
+                        score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
                         float salted_score = salt + (float)score;
@@ -122,13 +124,13 @@ namespace PijersiEngine
                     }
                 }
                 
-                vector<int>::const_iterator first = moves.begin() + 6 * index;
-                vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
+                vector<int>::const_iterator first = moves.begin() + 3 * index;
+                vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
                 vector<int> move(first, last);
                 return move;
             }
         }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return vector<int>({-1, -1, -1});
     }
 
     // int16_t _evaluatePiece(uint8_t piece, int i)
@@ -858,9 +860,9 @@ namespace PijersiEngine
                 if (currentPlayer == 0)
                 {
                     int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        maximum = max(maximum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        maximum = max(maximum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
                         if (maximum > beta)
                         {
                             break;
@@ -872,9 +874,9 @@ namespace PijersiEngine
                 else
                 {
                     int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        minimum = min(minimum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        minimum = min(minimum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
                         if (minimum < alpha)
                         {
                             break;
@@ -896,9 +898,9 @@ namespace PijersiEngine
                 if (currentPlayer == 0)
                 {
                     int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
+                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
                         if (maximum > beta)
                         {
                             break;
@@ -910,9 +912,9 @@ namespace PijersiEngine
                 else
                 {
                     int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    for (int k = 0; k < moves.size() / 3; k++)
                     {
-                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
+                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
                         if (minimum < alpha)
                         {
                             break;
@@ -928,7 +930,7 @@ namespace PijersiEngine
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    int16_t _evaluateMoveTerminal(int move[3], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
     {
         _setState(newCells, cells);
         _playManual(move, newCells);
