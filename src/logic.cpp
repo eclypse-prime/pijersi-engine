@@ -99,6 +99,7 @@ namespace PijersiEngine
         _play(move[0], move[1], move[2], cells);
     }
 
+    // Generates a random move
     vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
@@ -118,6 +119,7 @@ namespace PijersiEngine
         return vector<int>({-1, -1, -1, -1, -1, -1});
     }
 
+    // Plays a random move
     vector<int> _playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         vector<int> move = _ponderRandom(cells, currentPlayer);
@@ -293,6 +295,7 @@ namespace PijersiEngine
         return moves;
     }
 
+    // Returns the list of possible moves for a player
     vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45])
     {
         vector<int> moves = vector<int>();
@@ -314,6 +317,7 @@ namespace PijersiEngine
         return moves;
     }
 
+    // Returns whether a source piece can capture a target piece
     bool _canTake(uint8_t source, uint8_t target)
     {
         uint8_t sourceType = source & 12;
@@ -366,6 +370,7 @@ namespace PijersiEngine
         cells[indexEnd] = (movingPiece & 15);
     }
 
+    // Returns whether a certain 1-range move is possible
     bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
@@ -383,6 +388,7 @@ namespace PijersiEngine
         return true;
     }
 
+    // Returns whether a certain 2-range move is possible
     bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
@@ -405,6 +411,7 @@ namespace PijersiEngine
         return true;
     }
 
+    // Returns whether a certain stack action is possible
     bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
@@ -422,6 +429,7 @@ namespace PijersiEngine
         return false;
     }
 
+    // Returns whether a certain unstack action is possible
     bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)

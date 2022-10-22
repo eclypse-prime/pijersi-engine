@@ -833,7 +833,7 @@ namespace PijersiEngine
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
+    int16_t _evaluateMove(int move[3], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
