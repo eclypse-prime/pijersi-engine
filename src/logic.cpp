@@ -43,11 +43,67 @@ namespace PijersiEngine
         return i;
     }
 
-    void _setState(uint8_t cells[45], const uint8_t newState[45])
+    // Subroutine of the perft debug function that is ran by the main perft() function
+    uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+
+        if (recursionDepth == 0)
+        {
+            // uint8_t newCells[45];
+            // for (int k = 0; k < moves.size() / 3; k++)
+            // {
+            //     _setState(newCells, cells);
+            //     _playManual(moves.data() + 3 * k, newCells);
+            //     sum += 1;
+            // }
+            return moves.size() / 3;
+            // return sum;
+        }
+
+        uint64_t sum = 0ULL;
+
+        uint8_t newCells[45];
+        for (int k = 0; k < moves.size() / 3; k++)
+        {
+            _setState(newCells, cells);
+            _playManual(moves.data() + 3 * k, newCells);
+            sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+        }
+        return sum;
+    }
+
+    // Perft debug function to measure the number of leaf nodes (possible moves) at a given depth
+    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        if (recursionDepth == 0)
+        {
+            return _perftIter(0, cells, currentPlayer);
+        }
+        else
+        {
+            // Get a vector of all the available moves for the current player
+            vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+            
+            uint64_t sum = 0ULL;
+            #pragma omp parallel for schedule(dynamic) reduction(+:sum)
+            for (int k = 0; k < moves.size() / 3; k++)
+            {
+                uint8_t newCells[45];
+                _setState(newCells, cells);
+                _playManual(moves.data() + 3 * k, newCells);
+                sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+            }
+            return sum;
+        }
+    }
+
+    void _setState(uint8_t target[45], const uint8_t origin[45])
     {
         for (int k = 0; k < 45; k++)
         {
-            cells[k] = newState[k];
+            target[k] = origin[k];
         }
     }
 

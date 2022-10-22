@@ -20,3 +20,15 @@ This project has been built on Windows, but could be replicated on Linux by adju
 
 After installing the requirements, simply run the makefile ```mingw32-make```. This will generate the C++/C# sources, compile them and link them into a DLL library. C# files will also be generated to make the use of the compiled library easier.
 The DLL and the C# files will be found in ```/wrap_csharp```. Simply copy and paste them in the C#/Unity project and they are ready to use.
+
+## Useful data
+
+### Perft results
+
+| Depth | Leaf nodes      |
+|-------|-----------------|
+| 0     | 186             |
+| 1     | 34 054          |
+| 2     | 6 410 472       |
+| 3     | 1 181 614 492   |
+| 4     | 220 645 877 908 |
