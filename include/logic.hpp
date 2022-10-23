@@ -10,7 +10,8 @@ namespace PijersiEngine
     int coordsToIndex(int i, int j);
     void indexToCoords(int index, int *i, int *j);
     int indexToLine(int index);
-    void _setState(uint8_t cells[45], const uint8_t newState[45]);
+    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
+    void _setState(uint8_t target[45], const uint8_t origin[45]);
     void _play(int indexStart, int indexMid, int indexEnd, uint8_t cells[45]);
     void _playManual(int move[3], uint8_t *cells);
     vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer);
