@@ -28,20 +28,12 @@ pieces += ['s', 'p', 'r', 'w']
 
 n = 0
 
-# print(f"        switch (piece)")
-# print("        {")
+print(f"        switch (piece)")
+print("        {")
 for piece in pieces:
-    # print(f"            case {piece_to_int(piece)}:")
-    # print("            switch (i)")
-    # print("            {")
+    print(f"        case {piece_to_int(piece)}:")
+    print(f"            return hashKeys[{n*45}+index];")
     n += 1
-    # for i in range(7):
-        # print(f"            case {i}:")
-#     print(f"            default:")
-#     print(f"                return 0;")
-#     print("            }")
-# print(f"        default:")
-# print(f"            return 0;")
-# print("        }")
-
-print(n)
+print(f"        default:")
+print(f"            return 0;")
+print("        }")
