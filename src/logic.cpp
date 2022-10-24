@@ -2,9 +2,10 @@
 #include <rng.hpp>
 
 #include <iostream>
+#include <string>
+#include <utility>
 
 using namespace std;
-
 
 namespace PijersiEngine
 {
@@ -54,8 +55,7 @@ namespace PijersiEngine
         vector<int>({34, 35, 40, 42}),
         vector<int>({35, 36, 41, 43}),
         vector<int>({36, 37, 42, 44}),
-        vector<int>({37, 38, 43})
-    };
+        vector<int>({37, 38, 43})};
 
     // A vector associating a cell index to the indices of its 2-range neighbours
     vector<int> neighbours2[45] = {
@@ -103,8 +103,10 @@ namespace PijersiEngine
         vector<int>({27, 29, 39, 43}),
         vector<int>({28, 30, 40, 44}),
         vector<int>({29, 31, 41}),
-        vector<int>({30, 42})
-    };
+        vector<int>({30, 42})};
+
+    string rowLetters = "gfedcba";
+
     // Converts a (i, j) coordinate set to an index
     int coordsToIndex(int i, int j)
     {
@@ -121,15 +123,16 @@ namespace PijersiEngine
     }
 
     // Converts an index to a (i, j) coordinate set
-    void indexToCoords(int index, int *i, int *j)
+    Coords indexToCoords(int index)
     {
-        *i = 2 * (index / 13);
-        *j = index % 13;
-        if (*j > 5)
+        int i = 2 * (index / 13);
+        int j = index % 13;
+        if (j > 5)
         {
-            *j -= 6;
-            *i += 1;
+            j -= 6;
+            i += 1;
         }
+        return Coords(i, j);
     }
 
     // Converts an index to a line number
@@ -141,6 +144,59 @@ namespace PijersiEngine
             i += 1;
         }
         return i;
+    }
+
+    string indexToString(int index)
+    {
+        Coords coords = indexToCoords(index);
+        string cellString = rowLetters[coords.first] + to_string(coords.second + 1);
+        return cellString;
+    }
+
+    string moveToString(int move[3], uint8_t cells[45])
+    {
+        int indexStart = move[0];
+        int indexMid = move[1];
+        int indexEnd = move[2];
+
+        if (indexStart < 0)
+        {
+            return string("");
+        }
+
+        string moveString = indexToString(indexStart);
+
+        if (indexMid >= 0)
+        {
+            if (indexMid == indexStart)
+            {
+                moveString += "-" + indexToString(indexEnd);
+            }
+            else if (cells[indexStart] >= 16)
+            {
+                moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+            }
+            else
+            {
+                moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+            }
+        }
+        else
+        {
+            if (cells[indexStart] >= 16)
+            {
+                moveString += "=" + indexToString(indexEnd);
+            }
+            else
+            {
+                moveString += "-" + indexToString(indexEnd);
+            }
+        }
+        // if (moveString == "f1-f1")
+        // {
+        //     cout << indexStart << " " << indexMid << " " << indexEnd << endl;
+        // }
+        return moveString;
     }
 
     // Subroutine of the perft debug function that is ran by the main perft() function
@@ -181,9 +237,9 @@ namespace PijersiEngine
         {
             // Get a vector of all the available moves for the current player
             vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-            
+
             uint64_t sum = 0ULL;
-            #pragma omp parallel for schedule(dynamic) reduction(+:sum)
+            #pragma omp parallel for schedule(dynamic) reduction(+ : sum)
             for (int k = 0; k < moves.size() / 3; k++)
             {
                 uint8_t newCells[45];
@@ -193,6 +249,42 @@ namespace PijersiEngine
             }
             return sum;
         }
+    }
+
+    vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        vector<string> results;
+        if (recursionDepth == 0)
+        {
+            return results;
+        }
+
+        results.reserve(256);
+
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        
+        for (int k = 0; k < moves.size() / 3; k++)
+        {
+            results.push_back(moveToString(moves.data() + 3 * k, cells));
+        }
+        if (recursionDepth == 1)
+        {
+            return results;
+        }
+        else
+        {
+            // Get a vector of all the available moves for the current player
+
+            #pragma omp parallel for schedule(dynamic)
+            for (int k = 0; k < moves.size() / 3; k++)
+            {
+                uint8_t newCells[45];
+                _setState(newCells, cells);
+                _playManual(moves.data() + 3 * k, newCells);
+                results[k] += ": " + to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
+            }
+        }
+        return results;
     }
 
     void _setState(uint8_t target[45], const uint8_t origin[45])

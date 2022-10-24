@@ -1,16 +1,23 @@
 #ifndef LOGIC_HPP
 #define LOGIC_HPP
-#include <vector>
 #include <cstdint>
+#include <vector>
+#include <string>
+#include <utility>
 
 using namespace std;
 
 namespace PijersiEngine
 {
+    using Coords = pair<int,int>;
+
     int coordsToIndex(int i, int j);
-    void indexToCoords(int index, int *i, int *j);
+    Coords indexToCoords(int index);
     int indexToLine(int index);
+    string indexToString(int index);
+    string moveToString(int move[3], uint8_t cells[45]);
     uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
+    vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     void _setState(uint8_t target[45], const uint8_t origin[45]);
     void _play(int indexStart, int indexMid, int indexEnd, uint8_t cells[45]);
     void _playManual(int move[3], uint8_t *cells);
