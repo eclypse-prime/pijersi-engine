@@ -1,7 +1,6 @@
 #include <vector>
 #include <cstdint>
 #include <cfloat>
-#include <iostream>
 
 #include <omp.h>
 
@@ -20,8 +19,6 @@ namespace PijersiEngine
 
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-
-        cout << "Available moves: " << moves.size()/3 << endl;
 
         if (moves.size() > 0)
         {
@@ -132,6 +129,11 @@ namespace PijersiEngine
         }
         return vector<int>({-1, -1, -1});
     }
+
+    // vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    // {
+    //     return vector<int>({-1, -1, -1});
+    // }
 
     // int16_t _evaluatePiece(uint8_t piece, int i)
     // {
