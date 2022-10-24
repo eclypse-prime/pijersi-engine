@@ -38,15 +38,16 @@ def find_neighbours(i: int, j: int) -> List[int]:
 
 def print_case(i: int, j: int):
     index = coords_index(i, j)
-    print(f"case {index}:")
-    line = "    return vector<int>({"
+    line = "        vector<int>({"
     neighbours = find_neighbours(i, j)
     n = len(find_neighbours(i, j))
     for k in range(n):
         line += str(neighbours[k])
         if k < n-1:
-            line += ","
-    line += "});"
+            line += ", "
+    line += "})"
+    if (i,j) != (6,5):
+        line += (",")
     print(line)
 
 

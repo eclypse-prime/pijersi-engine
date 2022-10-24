@@ -27,8 +27,6 @@ namespace PijersiEngine
     bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45]);
     bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45]);
     bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45]);
-    vector<int> _neighbours(int index);
-    vector<int> _neighbours2(int index);
 }
 
 #endif

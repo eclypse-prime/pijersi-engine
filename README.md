@@ -25,13 +25,13 @@ The DLL and the C# files will be found in ```/wrap_csharp```. Simply copy and pa
 
 ### Perft results
 
-Averaged over 5 runs (except for depth 5).
+Time averaged over 5 runs.
 
-| Depth | Leaf nodes   | Time (ms) |
-|-------|--------------|-----------|
-| 0     | 1            | 0.26      |
-| 1     | 186          | 0.24      |
-| 2     | 34054        | 2.33      |
-| 3     | 6410472      | 25.49     |
-| 4     | 1181614492   | 4974.4    |
-| 5     | 220645877908 | 815135    |
+| Depth | Leaf nodes      | Time (ms) |
+|-------|-----------------|-----------|
+| 0     | 1               | 0         |
+| 1     | 186             | 0.0084    |
+| 2     | 34,054          | 1.736     |
+| 3     | 6,410,472       | 7.456     |
+| 4     | 1,181,614,492   | 1,096.778 |
+| 5     | 220,645,877,908 | 218,181.2 |
