@@ -26,7 +26,7 @@ namespace PijersiEngine
             {
 
                 int index = 0;
-                int16_t *extremums = new int16_t[moves.size() / 3];
+                int16_t *scores = new int16_t[moves.size() / 3];
 
                 int16_t alpha = INT16_MIN;
                 int16_t beta = INT16_MAX;
@@ -35,7 +35,7 @@ namespace PijersiEngine
                 #pragma omp parallel for schedule(dynamic)
                 for (int k = 0; k < moves.size() / 3; k++)
                 {
-                    extremums[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+                    scores[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth, alpha, beta, cells, 1 - currentPlayer);
                 }
 
                 // Find best move
@@ -46,10 +46,10 @@ namespace PijersiEngine
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)extremums[k];
-                        if (extremum > maximum)
+                        float saltedScore = salt + (float)scores[k];
+                        if (saltedScore > maximum)
                         {
-                            maximum = extremum;
+                            maximum = saltedScore;
                             index = k;
                         }
                     }
@@ -61,16 +61,16 @@ namespace PijersiEngine
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)extremums[k];
-                        if (extremum < minimum)
+                        float saltedScore = salt + (float)scores[k];
+                        if (saltedScore < minimum)
                         {
-                            minimum = extremum;
+                            minimum = saltedScore;
                             index = k;
                         }
                     }
                 }
 
-                delete extremums;
+                delete scores;
 
                 vector<int>::const_iterator first = moves.begin() + 3 * index;
                 vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
@@ -130,10 +130,18 @@ namespace PijersiEngine
         return vector<int>({-1, -1, -1});
     }
 
-    // vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
-    // {
-    //     return vector<int>({-1, -1, -1});
-    // }
+    vector<int> _ponderAlphaBetaIterative(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        
+        if (moves.size() > 0)
+        {
+            
+        }
+
+        return vector<int>({-1, -1, -1});
+    }
 
     // int16_t _evaluatePiece(uint8_t piece, int i)
     // {
@@ -841,8 +849,6 @@ namespace PijersiEngine
         uint8_t newCells[45];
         _setState(newCells, cells);
         _playManual(move, newCells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
 
         int16_t score = 0;
 
