@@ -32,104 +32,39 @@ namespace PijersiEngine
                 size_t index = 0;
                 int16_t *scores = new int16_t[nMoves];
 
-                int16_t alpha = INT16_MIN;
+                int16_t alpha = INT16_MIN + 1;
                 int16_t beta = INT16_MAX;
 
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic)
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    scores[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, cells, 1 - currentPlayer);
+                    scores[k] = -_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
                 }
 
-                // Find best move
-                if (currentPlayer == 0)
+                for (int k = 0; k < nMoves; k++)
                 {
-                    float maximum = -FLT_MAX;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float saltedScore = salt + (float)scores[k];
-                        if (saltedScore > maximum)
-                        {
-                            maximum = saltedScore;
-                            index = k;
-                        }
-                    }
-                    cout << maximum << endl;
-                    cout << scores[index] << endl;
+                    cout << scores[k] << " ";
                 }
-                else
+                cout << endl;
+
+                // Find best move
+                float maximum = -FLT_MAX;
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    float minimum = FLT_MAX;
-                    for (size_t k = 0; k < nMoves; k++)
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? distribution(gen) : 0.f;
+                    float saltedScore = salt + (float) scores[k];
+                    if (saltedScore > maximum)
                     {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float saltedScore = salt + (float)scores[k];
-                        if (saltedScore < minimum)
-                        {
-                            minimum = saltedScore;
-                            index = k;
-                        }
+                        maximum = saltedScore;
+                        index = k;
                     }
-                    cout << minimum << endl;
-                    cout << scores[index] << endl;
                 }
 
                 delete scores;
 
 
-                vector<int>::const_iterator first = moves.begin() + 3 * index;
-                vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
-                vector<int> move(first, last);
-                return move;
-            }
-            else
-            {
-                float extremum = 0.f;
-                size_t index = 0;
-                uint8_t cellsBuffer[45];
-                int16_t currentPieceScores[45] = {0};
-
-                int16_t currentScore = _evaluatePosition(cells, currentPieceScores);
-
-                if (currentPlayer == 0)
-                {
-                    extremum = -FLT_MAX;
-                    int16_t score;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float salted_score = salt + (float)score;
-                        if (salted_score > extremum)
-                        {
-                            extremum = salted_score;
-                            index = k;
-                        }
-                    }
-                }
-                else
-                {
-                    extremum = FLT_MAX;
-                    int16_t score;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float salted_score = salt + (float)score;
-                        if (salted_score < extremum)
-                        {
-                            extremum = salted_score;
-                            index = k;
-                        }
-                    }
-                }
-                
                 vector<int>::const_iterator first = moves.begin() + 3 * index;
                 vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
                 vector<int> move(first, last);
@@ -297,9 +232,9 @@ namespace PijersiEngine
         int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
-        if (_isWin(newCells))
+        if (_isWin(newCells) || recursionDepth == 0)
         {
-            return _evaluatePosition(newCells);
+            return (currentPlayer == 0) ? _evaluatePosition(newCells) : -_evaluatePosition(newCells);
         }
 
         vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
@@ -308,75 +243,17 @@ namespace PijersiEngine
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
-            if (recursionDepth > 1)
+            int16_t maximum = INT16_MIN;
+            for (size_t k = 0; k < nMoves; k++)
             {
-                if (currentPlayer == 0)
+                maximum = max(maximum, (int16_t)-_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
+                if (maximum > beta)
                 {
-                    int16_t maximum = INT16_MIN;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        maximum = max(maximum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, 1 - currentPlayer));
-                        if (maximum > beta)
-                        {
-                            break;
-                        }
-                        alpha = max(alpha, maximum);
-                    }
-                    score = maximum;
+                    break;
                 }
-                else
-                {
-                    int16_t minimum = INT16_MAX;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        minimum = min(minimum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, 1 - currentPlayer));
-                        if (minimum < alpha)
-                        {
-                            break;
-                        }
-                        beta = min(beta, minimum);
-                    }
-                    score = minimum;
-                }
+                alpha = max(alpha, maximum);
             }
-            // Recursion not needed, only applying move and evaluating
-            // This can save us a lot of memory allocations
-            else
-            {
-                uint8_t cellsBuffer[45];
-                int16_t currentPieceScores[45] = {0};
-
-                int16_t currentScore = _evaluatePosition(newCells, currentPieceScores);
-
-                if (currentPlayer == 0)
-                {
-                    int16_t maximum = INT16_MIN;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
-                        if (maximum > beta)
-                        {
-                            break;
-                        }
-                        alpha = max(alpha, maximum);
-                    }
-                    score = maximum;
-                }
-                else
-                {
-                    int16_t minimum = INT16_MAX;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
-                        if (minimum < alpha)
-                        {
-                            break;
-                        }
-                        beta = min(beta, minimum);
-                    }
-                    score = minimum;
-                }
-            }
+            score = maximum;
         }
 
         return score;
@@ -388,6 +265,7 @@ namespace PijersiEngine
         _setState(newCells, cells);
         _playManual(move, newCells);
 
-        return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        return _evaluatePosition(cells);
+        // return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
     }
 }
