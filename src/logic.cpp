@@ -202,22 +202,22 @@ namespace PijersiEngine
     // Subroutine of the perft debug function that is ran by the main perft() function
     uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-
         if (_isWin(cells))
         {
             return 0ULL;
         }
-        else if (recursionDepth == 1)
+        // Get a vector of all the available moves for the current player
+        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size() / 3;
+        if (recursionDepth == 1)
         {
-            return moves.size() / 3;
+            return nMoves;
         }
 
         uint64_t sum = 0ULL;
 
         uint8_t newCells[45];
-        for (int k = 0; k < moves.size() / 3; k++)
+        for (size_t k = 0; k < nMoves; k++)
         {
             _setState(newCells, cells);
             _playManual(moves.data() + 3 * k, newCells);
@@ -245,10 +245,11 @@ namespace PijersiEngine
         {
             // Get a vector of all the available moves for the current player
             vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+            size_t nMoves = moves.size() / 3;
 
             uint64_t sum = 0ULL;
             #pragma omp parallel for schedule(dynamic) reduction(+ : sum)
-            for (int k = 0; k < moves.size() / 3; k++)
+            for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
                 _setState(newCells, cells);
@@ -270,8 +271,9 @@ namespace PijersiEngine
         results.reserve(256);
 
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-        
-        for (int k = 0; k < moves.size() / 3; k++)
+        size_t nMoves = moves.size() / 3;
+
+        for (size_t k = 0; k < nMoves; k++)
         {
             results.push_back(moveToString(moves.data() + 3 * k, cells));
         }
@@ -284,7 +286,7 @@ namespace PijersiEngine
             // Get a vector of all the available moves for the current player
 
             #pragma omp parallel for schedule(dynamic)
-            for (int k = 0; k < moves.size() / 3; k++)
+            for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
                 _setState(newCells, cells);
@@ -575,7 +577,7 @@ namespace PijersiEngine
         uint8_t sourceType = source & 12;
         uint8_t targetType = target & 12;
         // Scissors > Paper, Paper > Rock, Rock > Scissors
-        if (sourceType == 0 && targetType == 4 || sourceType == 4 && targetType == 8 || sourceType == 8 && targetType == 0)
+        if ((sourceType == 0 && targetType == 4) || (sourceType == 4 && targetType == 8) || (sourceType == 8 && targetType == 0))
         {
             return true;
         }
