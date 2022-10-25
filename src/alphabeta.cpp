@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cfloat>
+#include <iostream>
 #include <numeric>
 #include <vector>
 
@@ -21,30 +22,31 @@ namespace PijersiEngine
 
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size() / 3;
 
         if (moves.size() > 0)
         {
             if (recursionDepth > 0)
             {
 
-                int index = 0;
-                int16_t *scores = new int16_t[moves.size() / 3];
+                size_t index = 0;
+                int16_t *scores = new int16_t[nMoves];
 
                 int16_t alpha = INT16_MIN;
                 int16_t beta = INT16_MAX;
 
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic)
-                for (int k = 0; k < moves.size() / 3; k++)
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    scores[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth, alpha, beta, cells, 1 - currentPlayer);
+                    scores[k] = _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, cells, 1 - currentPlayer);
                 }
 
                 // Find best move
                 if (currentPlayer == 0)
                 {
                     float maximum = -FLT_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
@@ -55,11 +57,13 @@ namespace PijersiEngine
                             index = k;
                         }
                     }
+                    cout << maximum << endl;
+                    cout << scores[index] << endl;
                 }
                 else
                 {
                     float minimum = FLT_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         // Add randomness to separate equal moves if parameter active
                         float salt = random ? distribution(gen) : 0.f;
@@ -70,9 +74,12 @@ namespace PijersiEngine
                             index = k;
                         }
                     }
+                    cout << minimum << endl;
+                    cout << scores[index] << endl;
                 }
 
                 delete scores;
+
 
                 vector<int>::const_iterator first = moves.begin() + 3 * index;
                 vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
@@ -82,7 +89,7 @@ namespace PijersiEngine
             else
             {
                 float extremum = 0.f;
-                int index = 0;
+                size_t index = 0;
                 uint8_t cellsBuffer[45];
                 int16_t currentPieceScores[45] = {0};
 
@@ -92,7 +99,7 @@ namespace PijersiEngine
                 {
                     extremum = -FLT_MAX;
                     int16_t score;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
                         // Add randomness to separate equal moves if parameter active
@@ -109,7 +116,7 @@ namespace PijersiEngine
                 {
                     extremum = FLT_MAX;
                     int16_t score;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         score = _evaluateMoveTerminal(moves.data() + 3 * k, cells, cellsBuffer, currentScore, currentPieceScores);
                         // Add randomness to separate equal moves if parameter active
@@ -132,686 +139,69 @@ namespace PijersiEngine
         return vector<int>({-1, -1, -1});
     }
 
-    vector<int> _ponderAlphaBetaIterative(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
-    {
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-        
-        int nMoves = moves.size() / 3;
-
-        if (moves.size() > 0)
-        {
-            int16_t *scores = new int16_t[nMoves];
-            uint8_t newCells[45];
-            int16_t previousPieceScores[45];
-            int16_t previousScore = _evaluatePosition(cells, previousPieceScores);
-
-            for (int k = 0; k < nMoves; k++)
-            {
-                scores[k] = _evaluateMoveTerminal(moves.data() + 3*k, cells, newCells, previousScore, previousPieceScores);
-            }
-
-            vector<int> indices(nMoves);
-            iota(indices.begin(), indices.end(), 0);
-
-            stable_sort(indices.begin(), indices.end(), [&scores](int i, int j) {return scores[i] < scores[j];});
-
-            int16_t alpha = INT16_MIN;
-            int16_t beta = INT16_MAX;
-
-            int index = 0;
-
-            if (currentPlayer == 0)
-                {
-                    float maximum = -FLT_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float saltedScore = salt + (float)scores[k];
-                        if (saltedScore > maximum)
-                        {
-                            maximum = saltedScore;
-                            index = k;
-                        }
-                    }
-                }
-                else
-                {
-                    float minimum = FLT_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float saltedScore = salt + (float)scores[k];
-                        if (saltedScore < minimum)
-                        {
-                            minimum = saltedScore;
-                            index = k;
-                        }
-                    }
-                }
-                delete scores;
-        }
-
-        return vector<int>({-1, -1, -1});
-    }
-
-    // int16_t _evaluatePiece(uint8_t piece, int i)
+    // vector<int> _ponderAlphaBetaIterative(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
     // {
-    //     switch (piece)
+    //     // Get a vector of all the available moves for the current player
+    //     vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        
+    //     int nMoves = moves.size() / 3;
+
+    //     if (moves.size() > 0)
     //     {
-    //     case 17:
-    //         switch (i)
+    //         int16_t *scores = new int16_t[nMoves];
+    //         uint8_t newCells[45];
+    //         int16_t previousPieceScores[45];
+    //         int16_t previousScore = _evaluatePosition(cells, previousPieceScores);
+
+    //         for (size_t k = 0; k < nMoves; k++)
     //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
+    //             scores[k] = _evaluateMoveTerminal(moves.data() + 3*k, cells, newCells, previousScore, previousPieceScores);
     //         }
-    //     case 21:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 25:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 81:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 85:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 89:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 145:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 149:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 153:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 209:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 213:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 217:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 221:
-    //         return 19;
-    //     case 1:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 5:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 9:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 13:
-    //         return 8;
-    //     case 51:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 55:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 59:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 115:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 119:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 123:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 179:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 183:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 187:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 243:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 247:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 251:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 255:
-    //         return -19;
-    //     case 3:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 7:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 11:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 15:
-    //         return -8;
-    //     default:
-    //         return 0;
+
+    //         vector<int> indices(nMoves);
+    //         iota(indices.begin(), indices.end(), 0);
+
+    //         stable_sort(indices.begin(), indices.end(), [&scores](int i, int j) {return scores[i] < scores[j];});
+
+    //         int16_t alpha = INT16_MIN;
+    //         int16_t beta = INT16_MAX;
+
+    //         size_t index = 0;
+
+    //         if (currentPlayer == 0)
+    //             {
+    //                 float maximum = -FLT_MAX;
+    //                 for (size_t k = 0; k < nMoves; k++)
+    //                 {
+    //                     // Add randomness to separate equal moves if parameter active
+    //                     float salt = random ? distribution(gen) : 0.f;
+    //                     float saltedScore = salt + (float)scores[k];
+    //                     if (saltedScore > maximum)
+    //                     {
+    //                         maximum = saltedScore;
+    //                         index = k;
+    //                     }
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 float minimum = FLT_MAX;
+    //                 for (size_t k = 0; k < nMoves; k++)
+    //                 {
+    //                     // Add randomness to separate equal moves if parameter active
+    //                     float salt = random ? distribution(gen) : 0.f;
+    //                     float saltedScore = salt + (float)scores[k];
+    //                     if (saltedScore < minimum)
+    //                     {
+    //                         minimum = saltedScore;
+    //                         index = k;
+    //                     }
+    //                 }
+    //             }
+    //             delete scores;
     //     }
+
+    //     return vector<int>({-1, -1, -1});
     // }
 
     // Evaluate piece according to its position, colour and type
@@ -913,6 +303,7 @@ namespace PijersiEngine
         }
 
         vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size() / 3;
 
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
@@ -922,9 +313,9 @@ namespace PijersiEngine
                 if (currentPlayer == 0)
                 {
                     int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
-                        maximum = max(maximum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        maximum = max(maximum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, 1 - currentPlayer));
                         if (maximum > beta)
                         {
                             break;
@@ -936,9 +327,9 @@ namespace PijersiEngine
                 else
                 {
                     int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
-                        minimum = min(minimum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
+                        minimum = min(minimum, _evaluateMove(moves.data() + 3 * k, recursionDepth - 1, alpha, beta, newCells, 1 - currentPlayer));
                         if (minimum < alpha)
                         {
                             break;
@@ -960,7 +351,7 @@ namespace PijersiEngine
                 if (currentPlayer == 0)
                 {
                     int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
                         if (maximum > beta)
@@ -974,7 +365,7 @@ namespace PijersiEngine
                 else
                 {
                     int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 3; k++)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
                         minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
                         if (minimum < alpha)

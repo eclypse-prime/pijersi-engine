@@ -71,8 +71,8 @@ namespace PijersiEngine
                     else
                     {
                         float uctScore = -FLT_MAX;
-                        int index = 0;
-                        for (int i = 0; i < current->children.size(); i++)
+                        size_t index = 0;
+                        for (size_t i = 0; i < current->children.size(); i++)
                         {
                             if (current->children[i]->visits == 0)
                             {
@@ -117,7 +117,7 @@ namespace PijersiEngine
 
             // Get child with max visits from root
             int maxVisits = 0;
-            int index = 0;
+            size_t index = 0;
             for (int k = 0; k < nMoves; k++)
             {
                 if (visitsPerNode[k] > maxVisits)
@@ -152,7 +152,7 @@ namespace PijersiEngine
 
     Node::~Node()
     {
-        for (int k = 0; k < children.size(); k++)
+        for (size_t k = 0; k < children.size(); k++)
         {
             if (children[k] != nullptr)
             {
@@ -209,7 +209,8 @@ namespace PijersiEngine
         vector<int> moves = _availablePlayerMoves(player, cells);
         if (moves.size() > 0)
         {
-            for (int k = 0; k < moves.size() / 3; k++)
+            size_t nMoves = moves.size() / 3;
+            for (size_t k = 0; k < nMoves; k++)
             {
                 vector<int>::const_iterator first = moves.begin() + 3 * k;
                 vector<int>::const_iterator last = moves.begin() + 3 * (k + 1);

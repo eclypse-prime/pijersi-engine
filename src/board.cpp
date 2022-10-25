@@ -102,7 +102,8 @@ namespace PijersiEngine
             return false;
         }
         vector<int> moves = _availablePieceMoves(move[0], cells);
-        for (int k = 0; k < moves.size()/3; k++)
+        size_t nMoves = moves.size()/3;
+        for (size_t k = 0; k < nMoves; k++)
         {
             bool legal = true;
             for (int m = 0; m < 3; m++)

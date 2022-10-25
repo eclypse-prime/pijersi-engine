@@ -1,7 +1,7 @@
 INCLUDE=-Iinclude -Itensorflow/include
 LIB=-Ltensorflow/lib
 HEADERS=include/alphabeta.hpp include/board.hpp include/hash.hpp include/logic.hpp include/mcts.hpp include/nn.hpp include/piece.hpp include/rng.hpp
-FLAGS=-flto -O3 -fopenmp
+FLAGS=-Wall -flto -O3 -fopenmp
 SRC=src/alphabeta.cpp src/board.cpp src/hash.cpp src/logic.cpp src/mcts.cpp src/rng.cpp
 OBJ=src/alphabeta.o src/board.o src/hash.o src/logic.o src/mcts.o src/rng.o
 CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
