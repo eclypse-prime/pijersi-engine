@@ -319,7 +319,7 @@ namespace PijersiEngine
     // Returns true if the board is in a winning position
     bool Board::checkWin()
     {
-        return _checkWin(cells);
+        return _isWin(cells);
     }
 
     int16_t Board::getForecast()

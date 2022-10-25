@@ -1,6 +1,8 @@
-#include <vector>
+#include <algorithm>
 #include <cstdint>
 #include <cfloat>
+#include <numeric>
+#include <vector>
 
 #include <omp.h>
 
@@ -135,9 +137,61 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
         
+        int nMoves = moves.size() / 3;
+
         if (moves.size() > 0)
         {
-            
+            int16_t *scores = new int16_t[nMoves];
+            uint8_t newCells[45];
+            int16_t previousPieceScores[45];
+            int16_t previousScore = _evaluatePosition(cells, previousPieceScores);
+
+            for (int k = 0; k < nMoves; k++)
+            {
+                scores[k] = _evaluateMoveTerminal(moves.data() + 3*k, cells, newCells, previousScore, previousPieceScores);
+            }
+
+            vector<int> indices(nMoves);
+            iota(indices.begin(), indices.end(), 0);
+
+            stable_sort(indices.begin(), indices.end(), [&scores](int i, int j) {return scores[i] < scores[j];});
+
+            int16_t alpha = INT16_MIN;
+            int16_t beta = INT16_MAX;
+
+            int index = 0;
+
+            if (currentPlayer == 0)
+                {
+                    float maximum = -FLT_MAX;
+                    for (int k = 0; k < moves.size() / 3; k++)
+                    {
+                        // Add randomness to separate equal moves if parameter active
+                        float salt = random ? distribution(gen) : 0.f;
+                        float saltedScore = salt + (float)scores[k];
+                        if (saltedScore > maximum)
+                        {
+                            maximum = saltedScore;
+                            index = k;
+                        }
+                    }
+                }
+                else
+                {
+                    float minimum = FLT_MAX;
+                    for (int k = 0; k < moves.size() / 3; k++)
+                    {
+                        // Add randomness to separate equal moves if parameter active
+                        float salt = random ? distribution(gen) : 0.f;
+                        float saltedScore = salt + (float)scores[k];
+                        if (saltedScore < minimum)
+                        {
+                            minimum = saltedScore;
+                            index = k;
+                        }
+                    }
+                }
+                delete scores;
         }
 
         return vector<int>({-1, -1, -1});
@@ -853,7 +907,7 @@ namespace PijersiEngine
         int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
-        if (_checkWin(newCells))
+        if (_isWin(newCells))
         {
             return _evaluatePosition(newCells);
         }

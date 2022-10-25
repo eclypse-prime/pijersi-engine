@@ -205,7 +205,11 @@ namespace PijersiEngine
         // Get a vector of all the available moves for the current player
         vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
 
-        if (recursionDepth == 1)
+        if (_isWin(cells))
+        {
+            return 0ULL;
+        }
+        else if (recursionDepth == 1)
         {
             return moves.size() / 3;
         }
@@ -227,7 +231,11 @@ namespace PijersiEngine
     {
         if (recursionDepth == 0)
         {
-            return 1;
+            return 1ULL;
+        }
+        else if (_isWin(cells))
+        {
+            return 0ULL;
         }
         else if (recursionDepth == 1)
         {
@@ -254,7 +262,7 @@ namespace PijersiEngine
     vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
         vector<string> results;
-        if (recursionDepth == 0)
+        if (recursionDepth == 0 || _isWin(cells))
         {
             return results;
         }
@@ -374,7 +382,7 @@ namespace PijersiEngine
     }
 
     // Returns true if the board is in a winning position
-    bool _checkWin(const uint8_t cells[45])
+    bool _isWin(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {

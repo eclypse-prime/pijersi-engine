@@ -112,9 +112,8 @@ namespace PijersiEngine
 
             for (int k = 0; k < nMoves; k++)
             {
-                cout << visitsPerNode[k] << ", ";
+                cout << moveToString(moves.data() + 3*k, cells) << ":" << visitsPerNode[k] << endl;
             }
-            cout << endl;
 
             // Get child with max visits from root
             int maxVisits = 0;
@@ -169,7 +168,7 @@ namespace PijersiEngine
 
     bool Node::isWin()
     {
-        return _checkWin(cells);
+        return _isWin(cells);
     }
 
     void Node::update(int winCount, int visitCount)
@@ -190,7 +189,7 @@ namespace PijersiEngine
         {
             _setState(newCells, cells);
             uint8_t currentPlayer = player;
-            while (!_checkWin(newCells))
+            while (!_isWin(newCells))
             {
                 // _playRandom(newCells, currentPlayer);
                 _playManual(_ponderAlphaBeta(0, true, newCells, currentPlayer).data(), newCells);
