@@ -4,11 +4,9 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::MCTS
 {
-    float _UCT(float nodeWins, float nodeSimulations, float totalSimulations);
-
-    vector<int> _ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
+    vector<int> ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
 
     struct Node
     {

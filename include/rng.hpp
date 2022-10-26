@@ -5,7 +5,7 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::RNG
 {
     extern random_device rd; // Obtaining random number from hardware
     extern mt19937 gen; // Seeding generator

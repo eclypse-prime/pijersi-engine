@@ -13,15 +13,15 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::AlphaBeta
 {
 
     // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    vector<int> ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
     {
 
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<int> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size() / 3;
 
         if (moves.size() > 0)
@@ -51,7 +51,7 @@ namespace PijersiEngine
                     {
                         continue;
                     }
-                    scores[k] = -_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
+                    scores[k] = -evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
                     if (scores[k] > beta)
                     {
                         cut = true;
@@ -63,7 +63,7 @@ namespace PijersiEngine
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     // Add randomness to separate equal moves if parameter active
-                    float salt = random ? distribution(gen) : 0.f;
+                    float salt = random ? RNG::distribution(RNG::gen) : 0.f;
                     float saltedScore = salt + (float) scores[k];
                     if (saltedScore > maximum)
                     {
@@ -96,11 +96,11 @@ namespace PijersiEngine
     //         int16_t *scores = new int16_t[nMoves];
     //         uint8_t newCells[45];
     //         int16_t previousPieceScores[45];
-    //         int16_t previousScore = _evaluatePosition(cells, previousPieceScores);
+    //         int16_t previousScore = evaluatePosition(cells, previousPieceScores);
 
     //         for (size_t k = 0; k < nMoves; k++)
     //         {
-    //             scores[k] = _evaluateMoveTerminal(moves.data() + 3*k, cells, newCells, previousScore, previousPieceScores);
+    //             scores[k] = evaluateMoveTerminal(moves.data() + 3*k, cells, newCells, previousScore, previousPieceScores);
     //         }
 
     //         vector<int> indices(nMoves);
@@ -150,7 +150,7 @@ namespace PijersiEngine
     // }
 
     // Evaluate piece according to its position, colour and type
-    int16_t _evaluatePiece(uint8_t piece, int i)
+    int16_t evaluatePiece(uint8_t piece, int i)
     {
 
         int16_t score;
@@ -179,27 +179,27 @@ namespace PijersiEngine
     }
 
     // Evaluates the board
-    int16_t _evaluatePosition(uint8_t cells[45])
+    int16_t evaluatePosition(uint8_t cells[45])
     {
         int16_t score = 0;
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != 0)
             {
-                score += _evaluatePiece(cells[k], indexToLine(k));
+                score += evaluatePiece(cells[k], Logic::indexToLine(k));
             }
         }
         return score;
     }
 
-    int16_t _evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
+    int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
     {
         int16_t totalScore = 0;
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != 0)
             {
-                int score = _evaluatePiece(cells[k], indexToLine(k));
+                int score = evaluatePiece(cells[k], Logic::indexToLine(k));
                 pieceScores[k] = score;
                 totalScore += score;
             }
@@ -207,7 +207,7 @@ namespace PijersiEngine
         return totalScore;
     }
 
-    int16_t _updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
+    int16_t updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
     {
         if (piece == 0)
         {
@@ -215,38 +215,38 @@ namespace PijersiEngine
         }
         else
         {
-            return _evaluatePiece(piece, i) - previousPieceScore;
+            return evaluatePiece(piece, i) - previousPieceScore;
         }
     }
 
-    int16_t _updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
+    int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != previousCells[k])
             {
-                previousScore += _updatePieceEval(previousPieceScores[k], cells[k], indexToLine(k));
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], Logic::indexToLine(k));
             }
         }
         return previousScore;
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t _evaluateMove(int move[3], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
+    int16_t evaluateMove(int move[3], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
-        _setState(newCells, cells);
-        _playManual(move, newCells);
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
 
 
         // Stop the recursion if a winning position is achieved
-        if (_isWin(newCells) || recursionDepth == 0)
+        if (Logic::isWin(newCells) || recursionDepth == 0)
         {
-            return (currentPlayer == 0) ? _evaluatePosition(newCells) : -_evaluatePosition(newCells);
+            return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
+        vector<int> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size() / 3;
         int16_t score = INT16_MIN;
 
@@ -257,7 +257,7 @@ namespace PijersiEngine
             {
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
+                    score = max(score, (int16_t)-evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -269,10 +269,10 @@ namespace PijersiEngine
             {
                 uint8_t cellsBuffer[45];
                 int16_t previousPieceScores[45] = {0};
-                int16_t previousScore = _evaluatePosition(newCells, previousPieceScores);
+                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t evaluation = _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, previousScore, previousPieceScores);
+                    int16_t evaluation = evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, previousScore, previousPieceScores);
                     if (currentPlayer == 1)
                     {
                         evaluation = -evaluation;
@@ -291,11 +291,11 @@ namespace PijersiEngine
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    int16_t _evaluateMoveTerminal(int move[3], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    int16_t evaluateMoveTerminal(int move[3], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
     {
-        _setState(newCells, cells);
-        _playManual(move, newCells);
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
 
-        return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        return updatePositionEval(previousScore, previousPieceScores, cells, newCells);
     }
 }

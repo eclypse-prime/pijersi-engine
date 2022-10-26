@@ -76,19 +76,19 @@ namespace PijersiEngine
 
     vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
     {
-        return _ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
+        return AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
     }
 
     // Chooses a random move
     vector<int> Board::ponderRandom()
     {
-        return _ponderRandom(cells, currentPlayer);
+        return Logic::ponderRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
     vector<int> Board::playRandom()
     {
-        return _playRandom(cells, currentPlayer);
+        return Logic::playRandom(cells, currentPlayer);
     }
 
     bool Board::isMoveLegal(vector<int> move)
@@ -101,7 +101,7 @@ namespace PijersiEngine
         {
             return false;
         }
-        vector<int> moves = _availablePieceMoves(move[0], cells);
+        vector<int> moves = Logic::availablePieceMoves(move[0], cells);
         size_t nMoves = moves.size()/3;
         for (size_t k = 0; k < nMoves; k++)
         {
@@ -127,31 +127,31 @@ namespace PijersiEngine
 
     void Board::playManual(vector<int> move)
     {
-        _play(move[0], move[1], move[2], cells);
+        Logic::play(move[0], move[1], move[2], cells);
         // Set current player to the other colour.
         currentPlayer = 1 - currentPlayer;
     }
 
     uint8_t Board::at(int i, int j)
     {
-        return cells[coordsToIndex(i, j)];
+        return cells[Logic::coordsToIndex(i, j)];
     }
 
     int16_t Board::evaluate()
     {
-        return _evaluatePosition(cells);
+        return AlphaBeta::evaluatePosition(cells);
     }
 
     // Adds a piece to the designated coordinates
     void Board::addPiece(uint8_t piece, int i, int j)
     {
-        cells[coordsToIndex(i, j)] = piece;
+        cells[Logic::coordsToIndex(i, j)] = piece;
     }
 
     // Sets the board to a chosen state
     void Board::setState(uint8_t newState[45])
     {
-        _setState(cells, newState);
+        Logic::setState(cells, newState);
     }
 
     uint8_t *Board::getState()
@@ -275,7 +275,7 @@ namespace PijersiEngine
                 {
                     char char1 = '.';
                     char char2 = ' ';
-                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    uint8_t piece = cells[Logic::coordsToIndex(i, j)];
                     if (piece != 0)
                     {
                         char1 = _pieceToChar(piece);
@@ -296,7 +296,7 @@ namespace PijersiEngine
                 {
                     char char1 = '.';
                     char char2 = ' ';
-                    uint8_t piece = cells[coordsToIndex(i, j)];
+                    uint8_t piece = cells[Logic::coordsToIndex(i, j)];
                     if (piece != 0)
                     {
                         char1 = _pieceToChar(piece);
@@ -320,7 +320,7 @@ namespace PijersiEngine
     // Returns true if the board is in a winning position
     bool Board::checkWin()
     {
-        return _isWin(cells);
+        return Logic::isWin(cells);
     }
 
     int16_t Board::getForecast()
@@ -330,7 +330,7 @@ namespace PijersiEngine
 
     vector<int> Board::ponderMCTS(int seconds, int simulationsPerRollout)
     {
-        return _ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
+        return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
     }
 
     // Plays a move and returns it

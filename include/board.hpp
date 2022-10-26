@@ -9,15 +9,6 @@ using namespace std;
 
 namespace PijersiEngine
 {
-
-
-    enum Algorithm
-    {
-        Minimax,
-        MCTS,
-        Random
-    };
-
     class Board
     {
     public:

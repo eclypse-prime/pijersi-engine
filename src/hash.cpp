@@ -13,7 +13,7 @@ namespace PijersiEngine::Hash
     {
         for (int index = 0; index < 1530; index++)
         {
-            hashKeys[index] = uint64rng(gen);
+            hashKeys[index] = uint64rng(RNG::gen);
         }
     }
 

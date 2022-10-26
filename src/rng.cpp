@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::RNG
 {
     random_device rd; // Obtaining random number from hardware
     mt19937 gen(rd()); // Seeding generator

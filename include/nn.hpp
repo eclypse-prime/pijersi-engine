@@ -4,7 +4,7 @@
 
 #define INPUT_TENSOR_SIZE 45*16
 
-namespace PijersiEngine
+namespace PijersiEngine::NN
 {
     int8_t *cellsToTensor(uint8_t cells[45]);
     int8_t _relu(int8_t input);

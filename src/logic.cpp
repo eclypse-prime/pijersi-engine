@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::Logic
 {
     // A vector associating a cell index to the indices of its 1-range neighbours
     vector<int> neighbours[45] = {
@@ -202,12 +202,12 @@ namespace PijersiEngine
     // Subroutine of the perft debug function that is ran by the main perft() function
     uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
-        if (_isWin(cells))
+        if (isWin(cells))
         {
             return 0ULL;
         }
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size() / 3;
         if (recursionDepth == 1)
         {
@@ -219,8 +219,8 @@ namespace PijersiEngine
         uint8_t newCells[45];
         for (size_t k = 0; k < nMoves; k++)
         {
-            _setState(newCells, cells);
-            _playManual(moves.data() + 3 * k, newCells);
+            setState(newCells, cells);
+            playManual(moves.data() + 3 * k, newCells);
             sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
         }
         return sum;
@@ -233,7 +233,7 @@ namespace PijersiEngine
         {
             return 1ULL;
         }
-        else if (_isWin(cells))
+        else if (isWin(cells))
         {
             return 0ULL;
         }
@@ -244,7 +244,7 @@ namespace PijersiEngine
         else
         {
             // Get a vector of all the available moves for the current player
-            vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+            vector<int> moves = availablePlayerMoves(currentPlayer, cells);
             size_t nMoves = moves.size() / 3;
 
             uint64_t sum = 0ULL;
@@ -252,8 +252,8 @@ namespace PijersiEngine
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
-                _setState(newCells, cells);
-                _playManual(moves.data() + 3 * k, newCells);
+                setState(newCells, cells);
+                playManual(moves.data() + 3 * k, newCells);
                 sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
             }
             return sum;
@@ -263,14 +263,14 @@ namespace PijersiEngine
     vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
         vector<string> results;
-        if (recursionDepth == 0 || _isWin(cells))
+        if (recursionDepth == 0 || isWin(cells))
         {
             return results;
         }
 
         results.reserve(256);
 
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size() / 3;
 
         for (size_t k = 0; k < nMoves; k++)
@@ -289,15 +289,15 @@ namespace PijersiEngine
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
-                _setState(newCells, cells);
-                _playManual(moves.data() + 3 * k, newCells);
+                setState(newCells, cells);
+                playManual(moves.data() + 3 * k, newCells);
                 results[k] += ": " + to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
             }
         }
         return results;
     }
 
-    void _setState(uint8_t target[45], const uint8_t origin[45])
+    void setState(uint8_t target[45], const uint8_t origin[45])
     {
         for (int k = 0; k < 45; k++)
         {
@@ -306,7 +306,7 @@ namespace PijersiEngine
     }
 
     // Plays the selected move
-    void _play(int indexStart, int indexMid, int indexEnd, uint8_t cells[45])
+    void play(int indexStart, int indexMid, int indexEnd, uint8_t cells[45])
     {
         if (indexStart < 0)
         {
@@ -319,7 +319,7 @@ namespace PijersiEngine
             if (indexMid < 0)
             {
                 // Simple move
-                _move(indexStart, indexEnd, cells);
+                move(indexStart, indexEnd, cells);
             }
             // There is an intermediate move
             else
@@ -329,41 +329,41 @@ namespace PijersiEngine
                 // The piece at the mid coordinates is an ally : stack and move
                 if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (indexMid != indexStart))
                 {
-                    _stack(indexStart, indexMid, cells);
-                    _move(indexMid, indexEnd, cells);
+                    stack(indexStart, indexMid, cells);
+                    move(indexMid, indexEnd, cells);
                 }
                 // The piece at the end coordinates is an ally : move and stack
                 else if (endPiece != 0 && (endPiece & 2) == (movingPiece & 2))
                 {
-                    _move(indexStart, indexMid, cells);
-                    _stack(indexMid, indexEnd, cells);
+                    move(indexStart, indexMid, cells);
+                    stack(indexMid, indexEnd, cells);
                 }
                 // The end coordinates contain an enemy or no piece : move and unstack
                 else
                 {
-                    _move(indexStart, indexMid, cells);
-                    _unstack(indexMid, indexEnd, cells);
+                    move(indexStart, indexMid, cells);
+                    unstack(indexMid, indexEnd, cells);
                 }
             }
         }
     }
 
-    void _playManual(int move[3], uint8_t cells[45])
+    void playManual(int move[3], uint8_t cells[45])
     {
-        _play(move[0], move[1], move[2], cells);
+        play(move[0], move[1], move[2], cells);
     }
 
     // Generates a random move
-    vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
+    vector<int> ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
 
         if (moves.size() > 0)
         {
             uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
 
-            int index = intDistribution(gen);
+            int index = intDistribution(RNG::gen);
 
             vector<int>::const_iterator first = moves.begin() + 6 * index;
             vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
@@ -374,17 +374,17 @@ namespace PijersiEngine
     }
 
     // Plays a random move
-    vector<int> _playRandom(uint8_t cells[45], uint8_t currentPlayer)
+    vector<int> playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
-        vector<int> move = _ponderRandom(cells, currentPlayer);
+        vector<int> move = ponderRandom(cells, currentPlayer);
         // Apply move
-        _playManual(move.data(), cells);
+        playManual(move.data(), cells);
 
         return move;
     }
 
     // Returns true if the board is in a winning position
-    bool _isWin(const uint8_t cells[45])
+    bool isWin(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {
@@ -412,7 +412,7 @@ namespace PijersiEngine
     }
 
     // Returns the list of possible moves for a specific piece
-    vector<int> _availablePieceMoves(int indexStart, uint8_t cells[45])
+    vector<int> availablePieceMoves(int indexStart, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -426,12 +426,12 @@ namespace PijersiEngine
             for (int indexMid : neighbours[indexStart])
             {
                 // stack, [1/2-range move] optional
-                if (_isStackValid(movingPiece, indexMid, cells))
+                if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
                     for (int indexEnd : neighbours2[indexMid])
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && _isMoveValid(movingPiece, indexEnd, cells)))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -440,7 +440,7 @@ namespace PijersiEngine
                     // stack, 0/1-range move
                     for (int indexEnd : neighbours[indexMid])
                     {
-                        if (_isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -450,7 +450,7 @@ namespace PijersiEngine
                     moves.insert(moves.end(), {indexStart, indexStart, indexMid});
                 }
                 // 1-range move
-                if (_isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, cells))
                 {
                     moves.insert(moves.end(), {indexStart, -1, indexMid});
                 }
@@ -461,19 +461,19 @@ namespace PijersiEngine
             // 2 range first action
             for (int indexMid : neighbours2[indexStart])
             {
-                if (_isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
                     for (int indexEnd : neighbours[indexMid])
                     {
                         // 2-range move, unstack
-                        if (_isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
 
                         // 2-range move, stack
-                        if (_isStackValid(movingPiece, indexEnd, cells))
+                        if (isStackValid(movingPiece, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -488,20 +488,20 @@ namespace PijersiEngine
             {
 
                 // 1-range move, [stack or unstack] optional
-                if (_isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, cells))
                 {
 
                     // 1-range move, stack or unstack
                     for (int indexEnd : neighbours[indexMid])
                     {
                         // 1-range move, unstack
-                        if (_isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
 
                         // 1-range move, stack
-                        if (_isStackValid(movingPiece, indexEnd, cells))
+                        if (isStackValid(movingPiece, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -513,12 +513,12 @@ namespace PijersiEngine
                     moves.insert(moves.end(), {indexStart, -1, indexMid});
                 }
                 // stack, [1/2-range move] optional
-                if (_isStackValid(movingPiece, indexMid, cells))
+                if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
                     for (int indexEnd : neighbours2[indexMid])
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -527,7 +527,7 @@ namespace PijersiEngine
                     // stack, 1-range move
                     for (int indexEnd : neighbours[indexMid])
                     {
-                        if (_isMoveValid(movingPiece, indexEnd, cells))
+                        if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
                         }
@@ -538,7 +538,7 @@ namespace PijersiEngine
                 }
 
                 // unstack
-                if (_isUnstackValid(movingPiece, indexMid, cells))
+                if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
                     moves.insert(moves.end(), {indexStart, indexStart, indexMid});
@@ -550,7 +550,7 @@ namespace PijersiEngine
     }
 
     // Returns the list of possible moves for a player
-    vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    vector<int> availablePlayerMoves(uint8_t player, uint8_t cells[45])
     {
         vector<int> moves = vector<int>();
         // Reserve space in vector for optimization purposes
@@ -563,7 +563,7 @@ namespace PijersiEngine
                 // Choose pieces of the current player's colour
                 if ((cells[index] & 2) == (player << 1))
                 {
-                    vector<int> pieceMoves = _availablePieceMoves(index, cells);
+                    vector<int> pieceMoves = availablePieceMoves(index, cells);
                     moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
                 }
             }
@@ -572,7 +572,7 @@ namespace PijersiEngine
     }
 
     // Returns whether a source piece can capture a target piece
-    bool _canTake(uint8_t source, uint8_t target)
+    bool canTake(uint8_t source, uint8_t target)
     {
         uint8_t sourceType = source & 12;
         uint8_t targetType = target & 12;
@@ -585,7 +585,7 @@ namespace PijersiEngine
     }
 
     // Applies a move between chosen coordinates
-    void _move(int indexStart, int indexEnd, uint8_t cells[45])
+    void move(int indexStart, int indexEnd, uint8_t cells[45])
     {
         // Do nothing if start and end coordinate are identical
         if (indexStart != indexEnd)
@@ -599,7 +599,7 @@ namespace PijersiEngine
     }
 
     // Applies a stack between chosen coordinates
-    void _stack(int indexStart, int indexEnd, uint8_t cells[45])
+    void stack(int indexStart, int indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
         uint8_t endPiece = cells[indexEnd];
@@ -612,7 +612,7 @@ namespace PijersiEngine
     }
 
     // Applies an unstack between chosen coordinates
-    void _unstack(int indexStart, int indexEnd, uint8_t cells[45])
+    void unstack(int indexStart, int indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -625,7 +625,7 @@ namespace PijersiEngine
     }
 
     // Returns whether a certain 1-range move is possible
-    bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    bool isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -634,7 +634,7 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -643,7 +643,7 @@ namespace PijersiEngine
     }
 
     // Returns whether a certain 2-range move is possible
-    bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45])
+    bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -657,7 +657,7 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -666,7 +666,7 @@ namespace PijersiEngine
     }
 
     // Returns whether a certain stack action is possible
-    bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
+    bool isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -684,7 +684,7 @@ namespace PijersiEngine
     }
 
     // Returns whether a certain unstack action is possible
-    bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    bool isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -693,7 +693,7 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }

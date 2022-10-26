@@ -2,7 +2,7 @@
 
 #include <nn.hpp>
 
-namespace PijersiEngine
+namespace PijersiEngine::NN
 {
     int8_t *cellsToTensor(uint8_t cells[45])
     {
