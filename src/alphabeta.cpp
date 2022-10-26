@@ -42,12 +42,6 @@ namespace PijersiEngine
                     scores[k] = -_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
                 }
 
-                for (int k = 0; k < nMoves; k++)
-                {
-                    cout << scores[k] << " ";
-                }
-                cout << endl;
-
                 // Find best move
                 float maximum = -FLT_MAX;
                 for (size_t k = 0; k < nMoves; k++)
@@ -229,7 +223,6 @@ namespace PijersiEngine
         _setState(newCells, cells);
         _playManual(move, newCells);
 
-        int16_t score = 0;
 
         // Stop the recursion if a winning position is achieved
         if (_isWin(newCells) || recursionDepth == 0)
@@ -239,21 +232,43 @@ namespace PijersiEngine
 
         vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size() / 3;
+        int16_t score = INT16_MIN;
 
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
-            int16_t maximum = INT16_MIN;
-            for (size_t k = 0; k < nMoves; k++)
+            if (recursionDepth > 1)
             {
-                maximum = max(maximum, (int16_t)-_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
-                if (maximum > beta)
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    break;
+                    score = max(score, (int16_t)-_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
+                    {
+                        break;
+                    }
                 }
-                alpha = max(alpha, maximum);
             }
-            score = maximum;
+            else
+            {
+                uint8_t cellsBuffer[45];
+                int16_t previousPieceScores[45] = {0};
+                int16_t previousScore = _evaluatePosition(newCells, previousPieceScores);
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    int16_t evaluation = _evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, previousScore, previousPieceScores);
+                    if (currentPlayer == 1)
+                    {
+                        evaluation = -evaluation;
+                    }
+                    score = max(score, evaluation);
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
+                    {
+                        break;
+                    }
+                }
+            }
         }
 
         return score;
@@ -265,7 +280,6 @@ namespace PijersiEngine
         _setState(newCells, cells);
         _playManual(move, newCells);
 
-        return _evaluatePosition(cells);
-        // return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
     }
 }
