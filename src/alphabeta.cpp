@@ -32,14 +32,30 @@ namespace PijersiEngine
                 size_t index = 0;
                 int16_t *scores = new int16_t[nMoves];
 
-                int16_t alpha = INT16_MIN + 1;
-                int16_t beta = INT16_MAX;
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    scores[k] = INT16_MIN;
+                }
+
+                // Cutoffs will happen on winning moves
+                int16_t alpha = -1500;
+                int16_t beta = 1500;
+
+                bool cut = false;
 
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic)
                 for (size_t k = 0; k < nMoves; k++)
                 {
+                    if (cut)
+                    {
+                        continue;
+                    }
                     scores[k] = -_evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
+                    if (scores[k] > beta)
+                    {
+                        cut = true;
+                    }
                 }
 
                 // Find best move
@@ -146,7 +162,7 @@ namespace PijersiEngine
             // If the piece is in a winning position
             if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
             {
-                score *= 128;
+                score *= 256;
             }
         }
         else
