@@ -149,6 +149,7 @@ namespace PijersiEngine::Logic
         return i;
     }
 
+    // Converts a native index into a "a1" style string
     string indexToString(int index)
     {
         Coords coords = indexToCoords(index);
@@ -156,6 +157,7 @@ namespace PijersiEngine::Logic
         return cellString;
     }
 
+    // Converts a "a1" style string coordinate into an index
     int stringToIndex(string cellString)
     {
         int i, j;
@@ -217,6 +219,7 @@ namespace PijersiEngine::Logic
         return coordsToIndex(i,j);
     }
 
+    // Convert a native triple-index move into the string (a1-b1=c1 style) format.
     string moveToString(int move[3], uint8_t cells[45])
     {
         int indexStart = move[0];
@@ -266,6 +269,7 @@ namespace PijersiEngine::Logic
         return moveString;
     }
 
+    // Converts a string (a1-b1=c1 style) move to the native triple-index format
     vector<int> stringToMove(string moveString, uint8_t cells[45])
     {
         vector<int> move(3, -1);
@@ -366,22 +370,25 @@ namespace PijersiEngine::Logic
 
         results.reserve(256);
 
+        // Get a vector of all the available moves for the current player
         vector<int> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size() / 3;
 
+        // Converts all those moves to string format
         for (size_t k = 0; k < nMoves; k++)
         {
             results.push_back(moveToString(moves.data() + 3 * k, cells));
         }
+
         if (recursionDepth == 1)
         {
             return results;
         }
         else
         {
-            // Get a vector of all the available moves for the current player
 
-#pragma omp parallel for schedule(dynamic)
+            // Add the number of leaf nodes associated to the corresponding move
+            #pragma omp parallel for schedule(dynamic)
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
@@ -393,12 +400,10 @@ namespace PijersiEngine::Logic
         return results;
     }
 
+    // Copy the data from origin to target
     void setState(uint8_t target[45], const uint8_t origin[45])
     {
-        for (int k = 0; k < 45; k++)
-        {
-            target[k] = origin[k];
-        }
+        copy(origin, origin+45, target);
     }
 
     // Plays the selected move
