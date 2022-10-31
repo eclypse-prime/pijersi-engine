@@ -15,7 +15,9 @@ namespace PijersiEngine::Logic
     Coords indexToCoords(int index);
     int indexToLine(int index);
     string indexToString(int index);
+    int stringToIndex(string cellString);
     string moveToString(int move[3], uint8_t cells[45]);
+    vector<int> stringToMove(string moveString, uint8_t cells[45]);
     uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     void setState(uint8_t target[45], const uint8_t origin[45]);

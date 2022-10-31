@@ -106,6 +106,9 @@ namespace PijersiEngine::Logic
         vector<int>({30, 42})};
 
     string rowLetters = "gfedcba";
+    
+    string invalidCellStringException = "Invalid character in coordinates string.";
+    string invalidMoveStringException = "Invalid move string.";
 
     // Converts a (i, j) coordinate set to an index
     int coordsToIndex(int i, int j)
@@ -153,6 +156,67 @@ namespace PijersiEngine::Logic
         return cellString;
     }
 
+    int stringToIndex(string cellString)
+    {
+        int i, j;
+        if (cellString.size() == 2)
+        {
+            switch (cellString[0])
+            {
+            case 'a':
+                i = 6;
+                break;
+            case 'b':
+                i = 5;
+                break;
+            case 'c':
+                i = 4;
+                break;
+            case 'd':
+                i = 3;
+                break;
+            case 'e':
+                i = 2;
+                break;
+            case 'f':
+                i = 1;
+                break;
+            case 'g':
+                i = 0;
+                break;
+            default:
+                throw invalid_argument(invalidCellStringException);
+            }
+            switch (cellString[1])
+            {
+            case '1':
+                j = 0;
+                break;
+            case '2':
+                j = 1;
+                break;
+            case '3':
+                j = 2;
+                break;
+            case '4':
+                j = 3;
+                break;
+            case '5':
+                j = 4;
+                break;
+            case '6':
+                j = 5;
+                break;
+            case '7':
+                j = 6;
+                break;
+            default:
+                throw invalid_argument(invalidCellStringException);
+            }
+        }
+        return coordsToIndex(i,j);
+    }
+
     string moveToString(int move[3], uint8_t cells[45])
     {
         int indexStart = move[0];
@@ -174,7 +238,14 @@ namespace PijersiEngine::Logic
             }
             else if (cells[indexStart] >= 16)
             {
-                moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+                if (cells[indexMid] != 0 && (cells[indexMid] & 2) == (cells[indexStart] & 2))
+                {
+                    moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                }
+                else
+                {
+                    moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+                }
             }
             else
             {
@@ -192,11 +263,35 @@ namespace PijersiEngine::Logic
                 moveString += "-" + indexToString(indexEnd);
             }
         }
-        // if (moveString == "f1-f1")
-        // {
-        //     cout << indexStart << " " << indexMid << " " << indexEnd << endl;
-        // }
         return moveString;
+    }
+
+    vector<int> stringToMove(string moveString, uint8_t cells[45])
+    {
+        vector<int> move(3, -1);
+        if(moveString.size() == 5)
+        {
+            move[0] = stringToIndex(moveString.substr(0, 2));
+            move[2] = stringToIndex(moveString.substr(3, 2));
+            if (moveString[2] == '-')
+            {
+                if (cells[move[0]] >= 16 || ((cells[move[0]] & 2) == (cells[move[1]] & 2)))
+                {
+                    move[1] = move[0];
+                }
+            }
+        }
+        else if (moveString.size() == 8)
+        {
+            move[0] = stringToIndex(moveString.substr(0, 2));
+            move[1] = stringToIndex(moveString.substr(3, 2));
+            move[2] = stringToIndex(moveString.substr(6, 2));
+        }
+        else
+        {
+            throw invalid_argument(invalidMoveStringException);
+        }
+        return move;
     }
 
     // Subroutine of the perft debug function that is ran by the main perft() function
@@ -248,7 +343,8 @@ namespace PijersiEngine::Logic
             size_t nMoves = moves.size() / 3;
 
             uint64_t sum = 0ULL;
-            #pragma omp parallel for schedule(dynamic) reduction(+ : sum)
+#pragma omp parallel for schedule(dynamic) reduction(+ \
+                                                     : sum)
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
@@ -285,7 +381,7 @@ namespace PijersiEngine::Logic
         {
             // Get a vector of all the available moves for the current player
 
-            #pragma omp parallel for schedule(dynamic)
+#pragma omp parallel for schedule(dynamic)
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
