@@ -38,7 +38,7 @@ def find_neighbours(i: int, j: int) -> List[int]:
 
 def print_case(i: int, j: int):
     index = coords_index(i, j)
-    line = "        vector<int>({"
+    line = "        vector<uint32_t>({"
     neighbours = find_neighbours(i, j)
     n = len(find_neighbours(i, j))
     for k in range(n):
