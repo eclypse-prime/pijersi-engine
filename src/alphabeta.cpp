@@ -17,14 +17,14 @@ namespace PijersiEngine::AlphaBeta
 {
 
     // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    vector<int> ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
     {
 
         // Get a vector of all the available moves for the current player
-        vector<int> moves = Logic::availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size() / 3;
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
 
-        if (moves.size() > 0)
+        if (nMoves > 0)
         {
             if (recursionDepth > 0)
             {
@@ -51,7 +51,7 @@ namespace PijersiEngine::AlphaBeta
                     {
                         continue;
                     }
-                    scores[k] = -evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
                     if (scores[k] > beta)
                     {
                         cut = true;
@@ -75,13 +75,10 @@ namespace PijersiEngine::AlphaBeta
                 delete scores;
 
 
-                vector<int>::const_iterator first = moves.begin() + 3 * index;
-                vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
-                vector<int> move(first, last);
-                return move;
+                return moves[index];
             }
         }
-        return vector<int>({-1, -1, -1});
+        return 0x00FFFFFF;
     }
 
     // vector<int> _ponderAlphaBetaIterative(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
@@ -89,7 +86,7 @@ namespace PijersiEngine::AlphaBeta
     //     // Get a vector of all the available moves for the current player
     //     vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
         
-    //     int nMoves = moves.size() / 3;
+    //     int nMoves = moves.size();
 
     //     if (moves.size() > 0)
     //     {
@@ -146,11 +143,11 @@ namespace PijersiEngine::AlphaBeta
     //             delete scores;
     //     }
 
-    //     return vector<int>({-1, -1, -1});
+    //     return 0x00FFFFFF;
     // }
 
     // Evaluate piece according to its position, colour and type
-    int16_t evaluatePiece(uint8_t piece, int i)
+    int16_t evaluatePiece(uint8_t piece, uint32_t i)
     {
 
         int16_t score;
@@ -232,7 +229,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t evaluateMove(int move[3], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
+    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
@@ -246,8 +243,8 @@ namespace PijersiEngine::AlphaBeta
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        vector<int> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
-        size_t nMoves = moves.size() / 3;
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
         int16_t score = INT16_MIN;
 
         // Evaluate available moves and find the best one
@@ -257,7 +254,7 @@ namespace PijersiEngine::AlphaBeta
             {
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMove(moves.data() + 3 * k, recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
+                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -272,7 +269,7 @@ namespace PijersiEngine::AlphaBeta
                 int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t evaluation = evaluateMoveTerminal(moves.data() + 3 * k, newCells, cellsBuffer, previousScore, previousPieceScores);
+                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
                     if (currentPlayer == 1)
                     {
                         evaluation = -evaluation;
@@ -291,7 +288,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    int16_t evaluateMoveTerminal(int move[3], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
     {
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);

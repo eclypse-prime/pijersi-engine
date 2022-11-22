@@ -10,110 +10,110 @@ using namespace std;
 namespace PijersiEngine::Logic
 {
     // A vector associating a cell index to the indices of its 1-range neighbours
-    vector<int> neighbours[45] = {
-        vector<int>({1, 6, 7}),
-        vector<int>({0, 2, 7, 8}),
-        vector<int>({1, 3, 8, 9}),
-        vector<int>({2, 4, 9, 10}),
-        vector<int>({3, 5, 10, 11}),
-        vector<int>({4, 11, 12}),
-        vector<int>({0, 7, 13}),
-        vector<int>({0, 1, 6, 8, 13, 14}),
-        vector<int>({1, 2, 7, 9, 14, 15}),
-        vector<int>({2, 3, 8, 10, 15, 16}),
-        vector<int>({3, 4, 9, 11, 16, 17}),
-        vector<int>({4, 5, 10, 12, 17, 18}),
-        vector<int>({5, 11, 18}),
-        vector<int>({6, 7, 14, 19, 20}),
-        vector<int>({7, 8, 13, 15, 20, 21}),
-        vector<int>({8, 9, 14, 16, 21, 22}),
-        vector<int>({9, 10, 15, 17, 22, 23}),
-        vector<int>({10, 11, 16, 18, 23, 24}),
-        vector<int>({11, 12, 17, 24, 25}),
-        vector<int>({13, 20, 26}),
-        vector<int>({13, 14, 19, 21, 26, 27}),
-        vector<int>({14, 15, 20, 22, 27, 28}),
-        vector<int>({15, 16, 21, 23, 28, 29}),
-        vector<int>({16, 17, 22, 24, 29, 30}),
-        vector<int>({17, 18, 23, 25, 30, 31}),
-        vector<int>({18, 24, 31}),
-        vector<int>({19, 20, 27, 32, 33}),
-        vector<int>({20, 21, 26, 28, 33, 34}),
-        vector<int>({21, 22, 27, 29, 34, 35}),
-        vector<int>({22, 23, 28, 30, 35, 36}),
-        vector<int>({23, 24, 29, 31, 36, 37}),
-        vector<int>({24, 25, 30, 37, 38}),
-        vector<int>({26, 33, 39}),
-        vector<int>({26, 27, 32, 34, 39, 40}),
-        vector<int>({27, 28, 33, 35, 40, 41}),
-        vector<int>({28, 29, 34, 36, 41, 42}),
-        vector<int>({29, 30, 35, 37, 42, 43}),
-        vector<int>({30, 31, 36, 38, 43, 44}),
-        vector<int>({31, 37, 44}),
-        vector<int>({32, 33, 40}),
-        vector<int>({33, 34, 39, 41}),
-        vector<int>({34, 35, 40, 42}),
-        vector<int>({35, 36, 41, 43}),
-        vector<int>({36, 37, 42, 44}),
-        vector<int>({37, 38, 43})};
+    vector<uint32_t> neighbours[45] = {
+        vector<uint32_t>({1, 6, 7}),
+        vector<uint32_t>({0, 2, 7, 8}),
+        vector<uint32_t>({1, 3, 8, 9}),
+        vector<uint32_t>({2, 4, 9, 10}),
+        vector<uint32_t>({3, 5, 10, 11}),
+        vector<uint32_t>({4, 11, 12}),
+        vector<uint32_t>({0, 7, 13}),
+        vector<uint32_t>({0, 1, 6, 8, 13, 14}),
+        vector<uint32_t>({1, 2, 7, 9, 14, 15}),
+        vector<uint32_t>({2, 3, 8, 10, 15, 16}),
+        vector<uint32_t>({3, 4, 9, 11, 16, 17}),
+        vector<uint32_t>({4, 5, 10, 12, 17, 18}),
+        vector<uint32_t>({5, 11, 18}),
+        vector<uint32_t>({6, 7, 14, 19, 20}),
+        vector<uint32_t>({7, 8, 13, 15, 20, 21}),
+        vector<uint32_t>({8, 9, 14, 16, 21, 22}),
+        vector<uint32_t>({9, 10, 15, 17, 22, 23}),
+        vector<uint32_t>({10, 11, 16, 18, 23, 24}),
+        vector<uint32_t>({11, 12, 17, 24, 25}),
+        vector<uint32_t>({13, 20, 26}),
+        vector<uint32_t>({13, 14, 19, 21, 26, 27}),
+        vector<uint32_t>({14, 15, 20, 22, 27, 28}),
+        vector<uint32_t>({15, 16, 21, 23, 28, 29}),
+        vector<uint32_t>({16, 17, 22, 24, 29, 30}),
+        vector<uint32_t>({17, 18, 23, 25, 30, 31}),
+        vector<uint32_t>({18, 24, 31}),
+        vector<uint32_t>({19, 20, 27, 32, 33}),
+        vector<uint32_t>({20, 21, 26, 28, 33, 34}),
+        vector<uint32_t>({21, 22, 27, 29, 34, 35}),
+        vector<uint32_t>({22, 23, 28, 30, 35, 36}),
+        vector<uint32_t>({23, 24, 29, 31, 36, 37}),
+        vector<uint32_t>({24, 25, 30, 37, 38}),
+        vector<uint32_t>({26, 33, 39}),
+        vector<uint32_t>({26, 27, 32, 34, 39, 40}),
+        vector<uint32_t>({27, 28, 33, 35, 40, 41}),
+        vector<uint32_t>({28, 29, 34, 36, 41, 42}),
+        vector<uint32_t>({29, 30, 35, 37, 42, 43}),
+        vector<uint32_t>({30, 31, 36, 38, 43, 44}),
+        vector<uint32_t>({31, 37, 44}),
+        vector<uint32_t>({32, 33, 40}),
+        vector<uint32_t>({33, 34, 39, 41}),
+        vector<uint32_t>({34, 35, 40, 42}),
+        vector<uint32_t>({35, 36, 41, 43}),
+        vector<uint32_t>({36, 37, 42, 44}),
+        vector<uint32_t>({37, 38, 43})};
 
     // A vector associating a cell index to the indices of its 2-range neighbours
-    vector<int> neighbours2[45] = {
-        vector<int>({2, 14}),
-        vector<int>({3, 13, 15}),
-        vector<int>({0, 4, 14, 16}),
-        vector<int>({1, 5, 15, 17}),
-        vector<int>({2, 16, 18}),
-        vector<int>({3, 17}),
-        vector<int>({8, 20}),
-        vector<int>({9, 19, 21}),
-        vector<int>({6, 10, 20, 22}),
-        vector<int>({7, 11, 21, 23}),
-        vector<int>({8, 12, 22, 24}),
-        vector<int>({9, 23, 25}),
-        vector<int>({10, 24}),
-        vector<int>({1, 15, 27}),
-        vector<int>({0, 2, 16, 26, 28}),
-        vector<int>({1, 3, 13, 17, 27, 29}),
-        vector<int>({2, 4, 14, 18, 28, 30}),
-        vector<int>({3, 5, 15, 29, 31}),
-        vector<int>({4, 16, 30}),
-        vector<int>({7, 21, 33}),
-        vector<int>({6, 8, 22, 32, 34}),
-        vector<int>({7, 9, 19, 23, 33, 35}),
-        vector<int>({8, 10, 20, 24, 34, 36}),
-        vector<int>({9, 11, 21, 25, 35, 37}),
-        vector<int>({10, 12, 22, 36, 38}),
-        vector<int>({11, 23, 37}),
-        vector<int>({14, 28, 40}),
-        vector<int>({13, 15, 29, 39, 41}),
-        vector<int>({14, 16, 26, 30, 40, 42}),
-        vector<int>({15, 17, 27, 31, 41, 43}),
-        vector<int>({16, 18, 28, 42, 44}),
-        vector<int>({17, 29, 43}),
-        vector<int>({20, 34}),
-        vector<int>({19, 21, 35}),
-        vector<int>({20, 22, 32, 36}),
-        vector<int>({21, 23, 33, 37}),
-        vector<int>({22, 24, 34, 38}),
-        vector<int>({23, 25, 35}),
-        vector<int>({24, 36}),
-        vector<int>({27, 41}),
-        vector<int>({26, 28, 42}),
-        vector<int>({27, 29, 39, 43}),
-        vector<int>({28, 30, 40, 44}),
-        vector<int>({29, 31, 41}),
-        vector<int>({30, 42})};
+    vector<uint32_t> neighbours2[45] = {
+        vector<uint32_t>({2, 14}),
+        vector<uint32_t>({3, 13, 15}),
+        vector<uint32_t>({0, 4, 14, 16}),
+        vector<uint32_t>({1, 5, 15, 17}),
+        vector<uint32_t>({2, 16, 18}),
+        vector<uint32_t>({3, 17}),
+        vector<uint32_t>({8, 20}),
+        vector<uint32_t>({9, 19, 21}),
+        vector<uint32_t>({6, 10, 20, 22}),
+        vector<uint32_t>({7, 11, 21, 23}),
+        vector<uint32_t>({8, 12, 22, 24}),
+        vector<uint32_t>({9, 23, 25}),
+        vector<uint32_t>({10, 24}),
+        vector<uint32_t>({1, 15, 27}),
+        vector<uint32_t>({0, 2, 16, 26, 28}),
+        vector<uint32_t>({1, 3, 13, 17, 27, 29}),
+        vector<uint32_t>({2, 4, 14, 18, 28, 30}),
+        vector<uint32_t>({3, 5, 15, 29, 31}),
+        vector<uint32_t>({4, 16, 30}),
+        vector<uint32_t>({7, 21, 33}),
+        vector<uint32_t>({6, 8, 22, 32, 34}),
+        vector<uint32_t>({7, 9, 19, 23, 33, 35}),
+        vector<uint32_t>({8, 10, 20, 24, 34, 36}),
+        vector<uint32_t>({9, 11, 21, 25, 35, 37}),
+        vector<uint32_t>({10, 12, 22, 36, 38}),
+        vector<uint32_t>({11, 23, 37}),
+        vector<uint32_t>({14, 28, 40}),
+        vector<uint32_t>({13, 15, 29, 39, 41}),
+        vector<uint32_t>({14, 16, 26, 30, 40, 42}),
+        vector<uint32_t>({15, 17, 27, 31, 41, 43}),
+        vector<uint32_t>({16, 18, 28, 42, 44}),
+        vector<uint32_t>({17, 29, 43}),
+        vector<uint32_t>({20, 34}),
+        vector<uint32_t>({19, 21, 35}),
+        vector<uint32_t>({20, 22, 32, 36}),
+        vector<uint32_t>({21, 23, 33, 37}),
+        vector<uint32_t>({22, 24, 34, 38}),
+        vector<uint32_t>({23, 25, 35}),
+        vector<uint32_t>({24, 36}),
+        vector<uint32_t>({27, 41}),
+        vector<uint32_t>({26, 28, 42}),
+        vector<uint32_t>({27, 29, 39, 43}),
+        vector<uint32_t>({28, 30, 40, 44}),
+        vector<uint32_t>({29, 31, 41}),
+        vector<uint32_t>({30, 42})};
 
     string rowLetters = "gfedcba";
-    
+
     string invalidCellStringException = "Invalid character in coordinates string.";
     string invalidMoveStringException = "Invalid move string.";
 
     // Converts a (i, j) coordinate set to an index
-    int coordsToIndex(int i, int j)
+    uint32_t coordsToIndex(uint32_t i, uint32_t j)
     {
-        int index;
+        uint32_t index;
         if (i % 2 == 0)
         {
             index = 13 * i / 2 + j;
@@ -126,10 +126,10 @@ namespace PijersiEngine::Logic
     }
 
     // Converts an index to a (i, j) coordinate set
-    Coords indexToCoords(int index)
+    Coords indexToCoords(uint32_t index)
     {
-        int i = 2 * (index / 13);
-        int j = index % 13;
+        uint32_t i = 2 * (index / 13);
+        uint32_t j = index % 13;
         if (j > 5)
         {
             j -= 6;
@@ -139,9 +139,9 @@ namespace PijersiEngine::Logic
     }
 
     // Converts an index to a line number
-    int indexToLine(int index)
+    uint32_t indexToLine(uint32_t index)
     {
-        int i = 2 * (index / 13);
+        uint32_t i = 2 * (index / 13);
         if ((index % 13) > 5)
         {
             i += 1;
@@ -149,8 +149,13 @@ namespace PijersiEngine::Logic
         return i;
     }
 
+    inline uint32_t _concatenateMove(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd)
+    {
+        return (indexStart) | (indexMid << 8) | (indexEnd << 16);
+    }
+
     // Converts a native index into a "a1" style string
-    string indexToString(int index)
+    string indexToString(uint32_t index)
     {
         Coords coords = indexToCoords(index);
         string cellString = rowLetters[coords.first] + to_string(coords.second + 1);
@@ -158,9 +163,9 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a "a1" style string coordinate into an index
-    int stringToIndex(string cellString)
+    uint32_t stringToIndex(string cellString)
     {
-        int i, j;
+        uint32_t i, j;
         if (cellString.size() == 2)
         {
             switch (cellString[0])
@@ -216,17 +221,17 @@ namespace PijersiEngine::Logic
                 throw invalid_argument(invalidCellStringException);
             }
         }
-        return coordsToIndex(i,j);
+        return coordsToIndex(i, j);
     }
 
     // Convert a native triple-index move into the string (a1-b1=c1 style) format.
-    string moveToString(int move[3], uint8_t cells[45])
+    string moveToString(uint32_t move, uint8_t cells[45])
     {
-        int indexStart = move[0];
-        int indexMid = move[1];
-        int indexEnd = move[2];
+        uint32_t indexStart = move & 0x000000FF;
+        uint32_t indexMid = (move >> 8) & 0x000000FF;
+        uint32_t indexEnd = (move >> 16) & 0x000000FF;
 
-        if (indexStart < 0)
+        if (indexStart > 44)
         {
             return string("");
         }
@@ -270,10 +275,10 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a string (a1-b1=c1 style) move to the native triple-index format
-    vector<int> stringToMove(string moveString, uint8_t cells[45])
+    uint32_t stringToMove(string moveString, uint8_t cells[45])
     {
-        vector<int> move(3, -1);
-        if(moveString.size() == 5)
+        vector<uint32_t> move(3, -1);
+        if (moveString.size() == 5)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
             move[2] = stringToIndex(moveString.substr(3, 2));
@@ -295,8 +300,9 @@ namespace PijersiEngine::Logic
         {
             throw invalid_argument(invalidMoveStringException);
         }
-        return move;
+        return _concatenateMove(move[0], move[1], move[2]);
     }
+
 
     // Subroutine of the perft debug function that is ran by the main perft() function
     uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
@@ -306,8 +312,8 @@ namespace PijersiEngine::Logic
             return 0ULL;
         }
         // Get a vector of all the available moves for the current player
-        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size() / 3;
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
         if (recursionDepth == 1)
         {
             return nMoves;
@@ -319,7 +325,7 @@ namespace PijersiEngine::Logic
         for (size_t k = 0; k < nMoves; k++)
         {
             setState(newCells, cells);
-            playManual(moves.data() + 3 * k, newCells);
+            playManual(moves[k], newCells);
             sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
         }
         return sum;
@@ -343,8 +349,8 @@ namespace PijersiEngine::Logic
         else
         {
             // Get a vector of all the available moves for the current player
-            vector<int> moves = availablePlayerMoves(currentPlayer, cells);
-            size_t nMoves = moves.size() / 3;
+            vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+            size_t nMoves = moves.size();
 
             uint64_t sum = 0ULL;
 #pragma omp parallel for schedule(dynamic) reduction(+ \
@@ -353,7 +359,7 @@ namespace PijersiEngine::Logic
             {
                 uint8_t newCells[45];
                 setState(newCells, cells);
-                playManual(moves.data() + 3 * k, newCells);
+                playManual(moves[k], newCells);
                 sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
             }
             return sum;
@@ -371,13 +377,13 @@ namespace PijersiEngine::Logic
         results.reserve(256);
 
         // Get a vector of all the available moves for the current player
-        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size() / 3;
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
 
         // Converts all those moves to string format
         for (size_t k = 0; k < nMoves; k++)
         {
-            results.push_back(moveToString(moves.data() + 3 * k, cells));
+            results.push_back(moveToString(moves[k], cells));
         }
 
         if (recursionDepth == 1)
@@ -387,13 +393,13 @@ namespace PijersiEngine::Logic
         else
         {
 
-            // Add the number of leaf nodes associated to the corresponding move
-            #pragma omp parallel for schedule(dynamic)
+// Add the number of leaf nodes associated to the corresponding move
+#pragma omp parallel for schedule(dynamic)
             for (size_t k = 0; k < nMoves; k++)
             {
                 uint8_t newCells[45];
                 setState(newCells, cells);
-                playManual(moves.data() + 3 * k, newCells);
+                playManual(moves[k], newCells);
                 results[k] += ": " + to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
             }
         }
@@ -403,13 +409,13 @@ namespace PijersiEngine::Logic
     // Copy the data from origin to target
     void setState(uint8_t target[45], const uint8_t origin[45])
     {
-        copy(origin, origin+45, target);
+        copy(origin, origin + 45, target);
     }
 
     // Plays the selected move
-    void play(int indexStart, int indexMid, int indexEnd, uint8_t cells[45])
+    void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45])
     {
-        if (indexStart < 0)
+        if (indexStart > 44)
         {
             return;
         }
@@ -417,7 +423,7 @@ namespace PijersiEngine::Logic
         if (movingPiece != 0)
         {
             // If there is no intermediate move
-            if (indexMid < 0)
+            if (indexMid > 44)
             {
                 // Simple move
                 move(indexStart, indexEnd, cells);
@@ -449,37 +455,37 @@ namespace PijersiEngine::Logic
         }
     }
 
-    void playManual(int move[3], uint8_t cells[45])
+    void playManual(uint32_t move, uint8_t cells[45])
     {
-        play(move[0], move[1], move[2], cells);
+        uint32_t indexStart = move & 0x000000FF;
+        uint32_t indexMid = (move >> 8) & 0x000000FF;
+        uint32_t indexEnd = (move >> 16) & 0x000000FF;
+        play(indexStart, indexMid, indexEnd, cells);
     }
 
     // Generates a random move
-    vector<int> ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
-        vector<int> moves = availablePlayerMoves(currentPlayer, cells);
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
 
         if (moves.size() > 0)
         {
             uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
 
-            int index = intDistribution(RNG::gen);
+            uint32_t index = intDistribution(RNG::gen);
 
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-            vector<int> move(first, last);
-            return move;
+            return moves[index];
         }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return 0x00FFFFFF;
     }
 
     // Plays a random move
-    vector<int> playRandom(uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
-        vector<int> move = ponderRandom(cells, currentPlayer);
+        uint32_t move = ponderRandom(cells, currentPlayer);
         // Apply move
-        playManual(move.data(), cells);
+        playManual(move, cells);
 
         return move;
     }
@@ -513,79 +519,108 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    vector<int> availablePieceMoves(int indexStart, uint8_t cells[45])
+    vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
-        vector<int> moves = vector<int>();
-        moves.reserve(128);
+        vector<uint32_t> moves = vector<uint32_t>();
+        moves.reserve(64);
 
         // If the piece is not a stack
         if (movingPiece < 16)
         {
             // 1-range first action
-            for (int indexMid : neighbours[indexStart])
+            for (uint32_t indexMid : neighbours[indexStart])
             {
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (int indexEnd : neighbours2[indexMid])
+                    for (uint32_t indexEnd : neighbours2[indexMid])
                     {
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
 
                     // stack, 0/1-range move
-                    for (int indexEnd : neighbours[indexMid])
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
 
                     // stack only
-                    moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    // moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
                 }
                 // 1-range move
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    // moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = 255;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
                 }
             }
         }
         else
         {
             // 2 range first action
-            for (int indexMid : neighbours2[indexStart])
+            for (uint32_t indexMid : neighbours2[indexStart])
             {
                 if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
-                    for (int indexEnd : neighbours[indexMid])
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
 
                         // 2-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
 
                     // 2-range move
-                    moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    // moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = 255;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
+                    // cout << indexStart << " " << 255 << " " << indexMid << " " << moves[moves.size()-1] << endl;
                 }
             }
             // 1-range first action
-            for (int indexMid : neighbours[indexStart])
+            for (uint32_t indexMid : neighbours[indexStart])
             {
 
                 // 1-range move, [stack or unstack] optional
@@ -593,56 +628,88 @@ namespace PijersiEngine::Logic
                 {
 
                     // 1-range move, stack or unstack
-                    for (int indexEnd : neighbours[indexMid])
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
 
                         // 1-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
                     // 1-range move, unstack on starting position
-                    moves.insert(moves.end(), {indexStart, indexMid, indexStart});
+                    moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
+                    // moves.insert(moves.end(), {indexStart, indexMid, indexStart});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexStart;
 
                     // 1-range move
-                    moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    // moves.insert(moves.end(), {indexStart, -1, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = 255;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
                 }
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (int indexEnd : neighbours2[indexMid])
+                    for (uint32_t indexEnd : neighbours2[indexMid])
                     {
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
 
                     // stack, 1-range move
-                    for (int indexEnd : neighbours[indexMid])
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            moves.push_back(_concatenateMove(indexStart, indexMid, indexEnd));
+                            // moves.insert(moves.end(), {indexStart, indexMid, indexEnd});
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexMid;
+                            // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexEnd;
                         }
                     }
 
                     // stack only
-                    moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    // moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
                 }
 
                 // unstack
                 if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    // moves.insert(moves.end(), {indexStart, indexStart, indexMid});
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 1) = indexStart;
+                    // *((uint8_t *)moves.data() + (moves.size() - 1) * 4 + 2) = indexMid;
                 }
             }
         }
@@ -651,11 +718,11 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a player
-    vector<int> availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45])
     {
-        vector<int> moves = vector<int>();
+        vector<uint32_t> moves = vector<uint32_t>();
         // Reserve space in vector for optimization purposes
-        moves.reserve(1024);
+        moves.reserve(512);
         // Calculate possible moves
         for (int index = 0; index < 45; index++)
         {
@@ -664,7 +731,7 @@ namespace PijersiEngine::Logic
                 // Choose pieces of the current player's colour
                 if ((cells[index] & 2) == (player << 1))
                 {
-                    vector<int> pieceMoves = availablePieceMoves(index, cells);
+                    vector<uint32_t> pieceMoves = availablePieceMoves(index, cells);
                     moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
                 }
             }
@@ -686,7 +753,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies a move between chosen coordinates
-    void move(int indexStart, int indexEnd, uint8_t cells[45])
+    void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         // Do nothing if start and end coordinate are identical
         if (indexStart != indexEnd)
@@ -700,7 +767,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies a stack between chosen coordinates
-    void stack(int indexStart, int indexEnd, uint8_t cells[45])
+    void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
         uint8_t endPiece = cells[indexEnd];
@@ -713,7 +780,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies an unstack between chosen coordinates
-    void unstack(int indexStart, int indexEnd, uint8_t cells[45])
+    void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -726,7 +793,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    bool isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -744,7 +811,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 2-range move is possible
-    bool isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45])
+    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -767,7 +834,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain stack action is possible
-    bool isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
+    bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -785,7 +852,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    bool isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {

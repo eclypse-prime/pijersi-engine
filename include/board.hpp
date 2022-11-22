@@ -16,14 +16,14 @@ namespace PijersiEngine
         Board(Board &board);
         // ~Board();
 
-        void playManual(vector<int> move);
-        vector<int> ponderAlphaBeta(int recursionDepth, bool random);
-        vector<int> playAlphaBeta(int recursionDepth = 3, bool random = true);
-        vector<int> playMCTS(int seconds = 10, int simulationsPerRollout = 3);
-        vector<int> ponderRandom();
-        vector<int> playRandom();
-        vector<int> ponderMCTS(int seconds, int simulationsPerRollout);
-        bool isMoveLegal(vector<int> move);
+        void playManual(vector<uint32_t> move);
+        uint32_t ponderAlphaBeta(int recursionDepth, bool random);
+        uint32_t playAlphaBeta(int recursionDepth = 3, bool random = true);
+        uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);
+        uint32_t ponderRandom();
+        uint32_t playRandom();
+        uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
+        bool isMoveLegal(uint32_t move);
         int16_t evaluate();
         void setState(uint8_t newState[45]);
         uint8_t *getState();

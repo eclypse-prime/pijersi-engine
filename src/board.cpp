@@ -65,55 +65,48 @@ namespace PijersiEngine
     }
 
     // Plays a move and returns it
-    vector<int> Board::playAlphaBeta(int recursionDepth, bool random)
+    uint32_t Board::playAlphaBeta(int recursionDepth, bool random)
     {
         // Calculate move
-        vector<int> move = ponderAlphaBeta(recursionDepth, random);
+        uint32_t move = ponderAlphaBeta(recursionDepth, random);
         // Apply move
-        playManual(move);
+        Logic::playManual(move, cells);
         return move;
     }
 
-    vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
+    uint32_t Board::ponderAlphaBeta(int recursionDepth, bool random)
     {
         return AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
     }
 
     // Chooses a random move
-    vector<int> Board::ponderRandom()
+    uint32_t Board::ponderRandom()
     {
         return Logic::ponderRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
-    vector<int> Board::playRandom()
+    uint32_t Board::playRandom()
     {
         return Logic::playRandom(cells, currentPlayer);
     }
 
-    bool Board::isMoveLegal(vector<int> move)
+    bool Board::isMoveLegal(uint32_t move)
     {
-        if (cells[move[0]] == 0)
+        uint32_t indexStart = move & 255;
+        if (cells[indexStart] == 0)
         {
             return false;
         }
-        if ((cells[move[0]] & 2) != currentPlayer << 1)
+        if ((cells[indexStart] & 2) != currentPlayer << 1)
         {
             return false;
         }
-        vector<int> moves = Logic::availablePieceMoves(move[0], cells);
+        vector<uint32_t> moves = Logic::availablePieceMoves(indexStart, cells);
         size_t nMoves = moves.size()/3;
         for (size_t k = 0; k < nMoves; k++)
         {
-            bool legal = true;
-            for (int m = 0; m < 3; m++)
-            {
-                if (moves[k*3+m] != move[m])
-                {
-                    legal = false;
-                }
-            }
-            if (legal)
+            if (move == moves[k])
             {
                 return true;
             }
@@ -125,7 +118,7 @@ namespace PijersiEngine
 
 
 
-    void Board::playManual(vector<int> move)
+    void Board::playManual(vector<uint32_t> move)
     {
         Logic::play(move[0], move[1], move[2], cells);
         // Set current player to the other colour.
@@ -328,18 +321,18 @@ namespace PijersiEngine
         return forecast;
     }
 
-    vector<int> Board::ponderMCTS(int seconds, int simulationsPerRollout)
+    uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)
     {
         return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
     }
 
     // Plays a move and returns it
-    vector<int> Board::playMCTS(int seconds, int simulationsPerRollout)
+    uint32_t Board::playMCTS(int seconds, int simulationsPerRollout)
     {
         // Calculate move
-        vector<int> move = ponderMCTS(seconds, simulationsPerRollout);
+        uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
         // Apply move
-        playManual(move);
+        Logic::playManual(move, cells);
         return move;
     }
 
