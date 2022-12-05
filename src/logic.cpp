@@ -314,6 +314,161 @@ namespace PijersiEngine::Logic
     }
 
 
+    // Returns the list of possible moves for a specific piece
+    uint64_t _countPieceMoves(uint32_t indexStart, uint8_t cells[45])
+    {
+        uint8_t movingPiece = cells[indexStart];
+
+        uint64_t count = 0ULL;
+
+        // If the piece is not a stack
+        if (movingPiece < 16)
+        {
+            // 1-range first action
+            for (uint32_t indexMid : neighbours[indexStart])
+            {
+                // stack, [1/2-range move] optional
+                if (isStackValid(movingPiece, indexMid, cells))
+                {
+                    // stack, 2-range move
+                    for (uint32_t indexEnd : neighbours2[indexMid])
+                    {
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack, 0/1-range move
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack only
+                    count++;
+                }
+                // 1-range move
+                if (isMoveValid(movingPiece, indexMid, cells))
+                {
+                    count++;
+                }
+            }
+        }
+        else
+        {
+            // 2 range first action
+            for (uint32_t indexMid : neighbours2[indexStart])
+            {
+                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                {
+                    // 2-range move, stack or unstack
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        // 2-range move, unstack
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+
+                        // 2-range move, stack
+                        if (isStackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // 2-range move
+                    count++;
+                }
+            }
+            // 1-range first action
+            for (uint32_t indexMid : neighbours[indexStart])
+            {
+                // 1-range move, [stack or unstack] optional
+                if (isMoveValid(movingPiece, indexMid, cells))
+                {
+
+                    // 1-range move, stack or unstack
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        // 1-range move, unstack
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+
+                        // 1-range move, stack
+                        if (isStackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+                    // 1-range move, unstack on starting position
+                    count++;
+
+                    // 1-range move
+                    count++;
+                }
+                // stack, [1/2-range move] optional
+                if (isStackValid(movingPiece, indexMid, cells))
+                {
+                    // stack, 2-range move
+                    for (uint32_t indexEnd : neighbours2[indexMid])
+                    {
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack, 1-range move
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        if (isMoveValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack only
+                    count++;
+                }
+
+                // unstack
+                if (isUnstackValid(movingPiece, indexMid, cells))
+                {
+                    // unstack only
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    // Returns the number of possible moves for a player
+    uint64_t _countPlayerMoves(uint8_t player, uint8_t cells[45])
+    {
+        uint64_t count = 0ULL;
+        // Calculate possible moves
+        for (int index = 0; index < 45; index++)
+        {
+            if (cells[index] != 0)
+            {
+                // Choose pieces of the current player's colour
+                if ((cells[index] & 2) == (player << 1))
+                {
+                    count += _countPieceMoves(index, cells);
+                }
+            }
+        }
+        return count;
+    }
+
     // Subroutine of the perft debug function that is ran by the main perft() function
     uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
@@ -321,13 +476,13 @@ namespace PijersiEngine::Logic
         {
             return 0ULL;
         }
+        if (recursionDepth == 1)
+        {
+            return _countPlayerMoves(currentPlayer, cells);
+        }
         // Get a vector of all the available moves for the current player
         vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size();
-        if (recursionDepth == 1)
-        {
-            return nMoves;
-        }
 
         uint64_t sum = 0ULL;
 
