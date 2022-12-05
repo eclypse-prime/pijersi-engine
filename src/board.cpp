@@ -71,6 +71,7 @@ namespace PijersiEngine
         uint32_t move = ponderAlphaBeta(recursionDepth, random);
         // Apply move
         Logic::playManual(move, cells);
+        currentPlayer = 1 - currentPlayer;
         return move;
     }
 
@@ -333,6 +334,7 @@ namespace PijersiEngine
         uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
         // Apply move
         Logic::playManual(move, cells);
+        currentPlayer = 1 - currentPlayer;
         return move;
     }
 
