@@ -159,6 +159,11 @@ namespace PijersiEngine::Logic
         return halfMove | (indexEnd << 16);
     }
 
+    inline uint32_t _concatenateVictory(uint32_t move)
+    {
+        return 0x80000000U | move;
+    }
+
     // Converts a native index into a "a1" style string
     string indexToString(uint32_t index)
     {
@@ -527,6 +532,7 @@ namespace PijersiEngine::Logic
     vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
+        uint8_t playerColour = movingPiece & 2;
 
         vector<uint32_t> moves = vector<uint32_t>();
         moves.reserve(64);
@@ -546,7 +552,12 @@ namespace PijersiEngine::Logic
                     {
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
@@ -555,7 +566,12 @@ namespace PijersiEngine::Logic
                     {
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
@@ -565,7 +581,12 @@ namespace PijersiEngine::Logic
                 // 1-range move
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
+                    {
+                        concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    moves.push_back(concatenatedMove);
                 }
             }
         }
@@ -583,7 +604,12 @@ namespace PijersiEngine::Logic
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
 
                         // 2-range move, stack
@@ -594,7 +620,12 @@ namespace PijersiEngine::Logic
                     }
 
                     // 2-range move
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
+                    {
+                        concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    moves.push_back(concatenatedMove);
                 }
             }
             // 1-range first action
@@ -611,7 +642,12 @@ namespace PijersiEngine::Logic
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
 
                         // 1-range move, stack
@@ -624,7 +660,12 @@ namespace PijersiEngine::Logic
                     moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
 
                     // 1-range move
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
+                    {
+                        concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    moves.push_back(concatenatedMove);
                 }
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
@@ -634,7 +675,12 @@ namespace PijersiEngine::Logic
                     {
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
@@ -643,7 +689,12 @@ namespace PijersiEngine::Logic
                     {
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
+                            {
+                                concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
@@ -655,7 +706,12 @@ namespace PijersiEngine::Logic
                 if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, indexStart, indexMid);
+                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
+                    {
+                        concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    moves.push_back(concatenatedMove);
                 }
             }
         }
