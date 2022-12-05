@@ -24,6 +24,8 @@ namespace PijersiEngine::AlphaBeta
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size();
 
+        // Logic::sortMoves(moves);
+
         if (nMoves > 0)
         {
             if (recursionDepth > 0)
@@ -181,6 +183,9 @@ namespace PijersiEngine::AlphaBeta
 
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size();
+
+        // Logic::sortMoves(moves);
+        
         int16_t score = INT16_MIN;
 
         // Evaluate available moves and find the best one

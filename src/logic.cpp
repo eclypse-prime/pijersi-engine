@@ -871,4 +871,26 @@ namespace PijersiEngine::Logic
         return true;
     }
 
+    void sortMoves(vector<uint32_t> moves)
+    {
+        size_t nMoves = moves.size();
+        size_t k = 0;
+        bool stop = false;
+        while (!stop && k < nMoves)
+        {
+            stop = true;
+            for (size_t index = k; index < nMoves; index++)
+            {
+                if ((moves[index] & 0x80000000U) != 0)
+                {
+                    uint32_t temp = moves[k];
+                    moves[k] = moves[index];
+                    moves[index] = temp;
+                    stop = false;
+                    break;
+                }
+            }
+            k++;
+        }
+    }
 }
