@@ -51,6 +51,8 @@ build/debug.exe: $(OBJ) src/debug.o
 	@if not exist "build" mkdir build
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/debug.o -o build/debug.exe
 
+debug : build/debug.exe
+
 clean:
 	@del /Q /F /S wrap_csharp\*
 	@if exist "src\wrap" rmdir /Q /s "src\wrap"
