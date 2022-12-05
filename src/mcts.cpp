@@ -21,11 +21,11 @@ namespace PijersiEngine::MCTS
         return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
-    vector<int> ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
     {
         int nThreads = omp_get_max_threads();
-        vector<int> moves = Logic::availablePlayerMoves(currentPlayer, cells);
-        int nMoves = moves.size()/3;
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        int nMoves = moves.size();
 
         vector<int> visitsPerThreads(nMoves*nThreads);
 
@@ -36,7 +36,7 @@ namespace PijersiEngine::MCTS
             // for (int k = 0; k < nThreads; k++)
             for (int k = 0; k < 1; k++)
             {
-                Node root(nullptr, vector<int>(), currentPlayer);
+                Node root(nullptr, 0x00FFFFFF, currentPlayer);
                 Logic::setState(root.cells, cells);
                 root.expand();
 
@@ -113,7 +113,7 @@ namespace PijersiEngine::MCTS
 
             for (int k = 0; k < nMoves; k++)
             {
-                cout << Logic::moveToString(moves.data() + 3*k, cells) << ":" << visitsPerNode[k] << endl;
+                cout << Logic::moveToString(moves[k], cells) << ":" << visitsPerNode[k] << endl;
             }
 
             // Get child with max visits from root
@@ -129,23 +129,19 @@ namespace PijersiEngine::MCTS
             }
 
             // Select the corresponding move
-            vector<int>::const_iterator first = moves.begin() + 3 * index;
-            vector<int>::const_iterator last = moves.begin() + 3 * (index + 1);
-            vector<int> move(first, last);
-
-            return move;
+            return moves[index];
         }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return 0x00FFFFFF;
     }
 
-    Node::Node(Node *newParent, const vector<int> &newMove, uint8_t newPlayer) : move(newMove)
+    Node::Node(Node *newParent, const uint32_t &newMove, uint8_t newPlayer) : move(newMove)
     {
         parent = newParent;
         player = newPlayer;
         if (parent != nullptr)
         {
             Logic::setState(cells, parent->cells);
-            Logic::playManual(move.data(), cells);
+            Logic::playManual(move, cells);
         }
 
         children.reserve(256);
@@ -193,7 +189,7 @@ namespace PijersiEngine::MCTS
             while (!Logic::isWin(newCells))
             {
                 // Logic::playRandom(newCells, currentPlayer);
-                Logic::playManual(AlphaBeta::ponderAlphaBeta(0, true, newCells, currentPlayer).data(), newCells);
+                Logic::playManual(AlphaBeta::ponderAlphaBeta(0, true, newCells, currentPlayer), newCells);
                 currentPlayer = 1 - currentPlayer;
             }
             if (currentPlayer == player)
@@ -207,16 +203,13 @@ namespace PijersiEngine::MCTS
     void Node::expand()
     {
         // Get a vector of all the available moves for the current player
-        vector<int> moves = Logic::availablePlayerMoves(player, cells);
+        vector<uint32_t> moves = Logic::availablePlayerMoves(player, cells);
         if (moves.size() > 0)
         {
-            size_t nMoves = moves.size() / 3;
+            size_t nMoves = moves.size();
             for (size_t k = 0; k < nMoves; k++)
             {
-                vector<int>::const_iterator first = moves.begin() + 3 * k;
-                vector<int>::const_iterator last = moves.begin() + 3 * (k + 1);
-                vector<int> chosenMove(first, last);
-                children.push_back(new Node(this, chosenMove, 1-player));
+                children.push_back(new Node(this, moves[k], 1-player));
             }
         }
     }
