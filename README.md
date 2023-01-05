@@ -25,13 +25,14 @@ The DLL and the C# files will be found in ```/wrap_csharp```. Simply copy and pa
 
 ### Perft results
 
-Ran on 16 threads Ryzen 7 4800H. Time averaged over 5 runs.
+Ran on 16 threads Ryzen 7 4800H. Time averaged over 5 runs (except for perft 6).
 
-| Depth | Leaf nodes      | Time (ms) |
-|-------|-----------------|-----------|
-| 0     | 1               | 0         |
-| 1     | 186             | 0.0036    |
-| 2     | 34,054          | 1.460     |
-| 3     | 6,410,472       | 3.847     |
-| 4     | 1,181,445,032   | 411.371   |
-| 5     | 220,561,140,835 | 73896.22  |
+| Depth | Leaf nodes         | Time (ms) |
+|-------|--------------------|-----------|
+| 0     | 1                  | 0         |
+| 1     | 186                | 0.0036    |
+| 2     | 34,054             | 1.460     |
+| 3     | 6,410,472          | 3.847     |
+| 4     | 1,181,445,032      | 411.371   |
+| 5     | 220,561,140,835    | 73896.22  |
+| 6     | 40,310,812,241,663 | 13541600  |
