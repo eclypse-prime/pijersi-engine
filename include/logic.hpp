@@ -46,8 +46,6 @@ namespace PijersiEngine::Logic
     bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
     bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
-
-    void sortMoves(vector<uint32_t> moves);
 }
 
 #endif

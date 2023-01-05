@@ -708,10 +708,6 @@ namespace PijersiEngine::Logic
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
                     }
@@ -722,10 +718,6 @@ namespace PijersiEngine::Logic
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
                     }
@@ -737,10 +729,6 @@ namespace PijersiEngine::Logic
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
                     uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
-                    {
-                        concatenatedMove = _concatenateVictory(concatenatedMove);
-                    }
                     moves.push_back(concatenatedMove);
                 }
             }
@@ -760,10 +748,6 @@ namespace PijersiEngine::Logic
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
 
@@ -776,10 +760,6 @@ namespace PijersiEngine::Logic
 
                     // 2-range move
                     uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
-                    {
-                        concatenatedMove = _concatenateVictory(concatenatedMove);
-                    }
                     moves.push_back(concatenatedMove);
                 }
             }
@@ -798,10 +778,6 @@ namespace PijersiEngine::Logic
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
 
@@ -816,10 +792,6 @@ namespace PijersiEngine::Logic
 
                     // 1-range move
                     uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
-                    {
-                        concatenatedMove = _concatenateVictory(concatenatedMove);
-                    }
                     moves.push_back(concatenatedMove);
                 }
                 // stack, [1/2-range move] optional
@@ -831,10 +803,6 @@ namespace PijersiEngine::Logic
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
                     }
@@ -845,10 +813,6 @@ namespace PijersiEngine::Logic
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
-                            {
-                                concatenatedMove = _concatenateVictory(concatenatedMove);
-                            }
                             moves.push_back(concatenatedMove);
                         }
                     }
@@ -862,10 +826,6 @@ namespace PijersiEngine::Logic
                 {
                     // unstack only
                     uint32_t concatenatedMove = _concatenateMove(indexStart, indexStart, indexMid);
-                    if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
-                    {
-                        concatenatedMove = _concatenateVictory(concatenatedMove);
-                    }
                     moves.push_back(concatenatedMove);
                 }
             }
@@ -1024,28 +984,5 @@ namespace PijersiEngine::Logic
             }
         }
         return true;
-    }
-
-    void sortMoves(vector<uint32_t> moves)
-    {
-        size_t nMoves = moves.size();
-        size_t k = 0;
-        bool stop = false;
-        while (!stop && k < nMoves)
-        {
-            stop = true;
-            for (size_t index = k; index < nMoves; index++)
-            {
-                if ((moves[index] & 0x80000000U) != 0)
-                {
-                    uint32_t temp = moves[k];
-                    moves[k] = moves[index];
-                    moves[index] = temp;
-                    stop = false;
-                    break;
-                }
-            }
-            k++;
-        }
     }
 }
