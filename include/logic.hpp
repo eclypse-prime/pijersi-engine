@@ -42,10 +42,10 @@ namespace PijersiEngine::Logic
     void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     
-    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
-    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
+    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, bool& isCapture, uint8_t cells[45]);
+    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, bool& isCapture, uint8_t cells[45]);
     bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
+    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, bool& isCapture, uint8_t cells[45]);
 
     void sortMoves(vector<uint32_t> moves);
 }

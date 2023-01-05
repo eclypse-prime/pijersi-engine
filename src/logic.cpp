@@ -5,12 +5,14 @@
 #include <string>
 #include <utility>
 
+#include <iomanip>
+
 using namespace std;
 
 namespace PijersiEngine::Logic
 {
     // A vector associating a cell index to the indices of its 1-range neighbours
-    vector<uint32_t> neighbours[45] = {
+    const vector<uint32_t> neighbours[45] = {
         vector<uint32_t>({1, 6, 7}),
         vector<uint32_t>({0, 2, 7, 8}),
         vector<uint32_t>({1, 3, 8, 9}),
@@ -58,7 +60,7 @@ namespace PijersiEngine::Logic
         vector<uint32_t>({37, 38, 43})};
 
     // A vector associating a cell index to the indices of its 2-range neighbours
-    vector<uint32_t> neighbours2[45] = {
+    const vector<uint32_t> neighbours2[45] = {
         vector<uint32_t>({2, 14}),
         vector<uint32_t>({3, 13, 15}),
         vector<uint32_t>({0, 4, 14, 16}),
@@ -162,6 +164,11 @@ namespace PijersiEngine::Logic
     inline uint32_t _concatenateVictory(uint32_t move)
     {
         return 0x80000000U | move;
+    }
+
+    inline uint32_t _concatenateCapture(uint32_t move)
+    {
+        return 0x40000000U | move;
     }
 
     // Converts a native index into a "a1" style string
@@ -321,6 +328,8 @@ namespace PijersiEngine::Logic
 
         uint64_t count = 0ULL;
 
+        bool isCapture = false;
+
         // If the piece is not a stack
         if (movingPiece < 16)
         {
@@ -333,7 +342,7 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, isCapture, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, isCapture, cells)))
                         {
                             count++;
                         }
@@ -342,7 +351,7 @@ namespace PijersiEngine::Logic
                     // stack, 0/1-range move
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        if (isMoveValid(movingPiece, indexEnd, isCapture, cells) || (indexStart == indexEnd))
                         {
                             count++;
                         }
@@ -352,7 +361,7 @@ namespace PijersiEngine::Logic
                     count++;
                 }
                 // 1-range move
-                if (isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, isCapture, cells))
                 {
                     count++;
                 }
@@ -363,13 +372,13 @@ namespace PijersiEngine::Logic
             // 2 range first action
             for (uint32_t indexMid : neighbours2[indexStart])
             {
-                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                if (isMove2Valid(movingPiece, indexStart, indexMid, isCapture, cells))
                 {
                     // 2-range move, stack or unstack
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 2-range move, unstack
-                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             count++;
                         }
@@ -389,14 +398,14 @@ namespace PijersiEngine::Logic
             for (uint32_t indexMid : neighbours[indexStart])
             {
                 // 1-range move, [stack or unstack] optional
-                if (isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, isCapture, cells))
                 {
 
                     // 1-range move, stack or unstack
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 1-range move, unstack
-                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             count++;
                         }
@@ -419,7 +428,7 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, isCapture, cells))
                         {
                             count++;
                         }
@@ -428,7 +437,7 @@ namespace PijersiEngine::Logic
                     // stack, 1-range move
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (isMoveValid(movingPiece, indexEnd, cells))
+                        if (isMoveValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             count++;
                         }
@@ -439,7 +448,7 @@ namespace PijersiEngine::Logic
                 }
 
                 // unstack
-                if (isUnstackValid(movingPiece, indexMid, cells))
+                if (isUnstackValid(movingPiece, indexMid, isCapture, cells))
                 {
                     // unstack only
                     count++;
@@ -689,6 +698,8 @@ namespace PijersiEngine::Logic
         uint8_t movingPiece = cells[indexStart];
         uint8_t playerColour = movingPiece & 2;
 
+        bool isCapture = false;
+
         vector<uint32_t> moves = vector<uint32_t>();
         moves.reserve(64);
 
@@ -705,12 +716,17 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
+                        isCapture = false;
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, isCapture, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, isCapture, cells)))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -719,12 +735,17 @@ namespace PijersiEngine::Logic
                     // stack, 0/1-range move
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        isCapture = false;
+                        if (isMoveValid(movingPiece, indexEnd, isCapture, cells) || (indexStart == indexEnd))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -734,12 +755,17 @@ namespace PijersiEngine::Logic
                     moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
                 }
                 // 1-range move
-                if (isMoveValid(movingPiece, indexMid, cells))
+                isCapture = false;
+                if (isMoveValid(movingPiece, indexMid, isCapture, cells))
                 {
                     uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
                     if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
                     {
                         concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    else if (isCapture)
+                    {
+                        concatenatedMove = _concatenateCapture(concatenatedMove);
                     }
                     moves.push_back(concatenatedMove);
                 }
@@ -750,19 +776,24 @@ namespace PijersiEngine::Logic
             // 2 range first action
             for (uint32_t indexMid : neighbours2[indexStart])
             {
+                isCapture = false;
                 uint32_t halfMove = indexStart | (indexMid << 8);
-                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                if (isMove2Valid(movingPiece, indexStart, indexMid, isCapture, cells))
                 {
                     // 2-range move, stack or unstack
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 2-range move, unstack
-                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -770,7 +801,12 @@ namespace PijersiEngine::Logic
                         // 2-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
@@ -780,27 +816,36 @@ namespace PijersiEngine::Logic
                     {
                         concatenatedMove = _concatenateVictory(concatenatedMove);
                     }
+                    else if (isCapture)
+                    {
+                        concatenatedMove = _concatenateCapture(concatenatedMove);
+                    }
                     moves.push_back(concatenatedMove);
                 }
             }
             // 1-range first action
             for (uint32_t indexMid : neighbours[indexStart])
             {
+                isCapture = false;
                 uint32_t halfMove = indexStart | (indexMid << 8);
                 // 1-range move, [stack or unstack] optional
-                if (isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, isCapture, cells))
                 {
 
                     // 1-range move, stack or unstack
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 1-range move, unstack
-                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -808,17 +853,31 @@ namespace PijersiEngine::Logic
                         // 1-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
+                            }
+                            moves.push_back(concatenatedMove);
                         }
                     }
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, indexMid, indexStart);
                     // 1-range move, unstack on starting position
-                    moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
+                    if (isCapture)
+                    {
+                        concatenatedMove = _concatenateCapture(concatenatedMove);
+                    }
+                    moves.push_back(concatenatedMove);
 
                     // 1-range move
-                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
                     if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
                     {
                         concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    else if (isCapture)
+                    {
+                        concatenatedMove = _concatenateCapture(concatenatedMove);
                     }
                     moves.push_back(concatenatedMove);
                 }
@@ -828,12 +887,17 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        isCapture = false;
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, isCapture, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -842,12 +906,16 @@ namespace PijersiEngine::Logic
                     // stack, 1-range move
                     for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (isMoveValid(movingPiece, indexEnd, cells))
+                        if (isMoveValid(movingPiece, indexEnd, isCapture, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
                             if ((playerColour == 0 && indexEnd <= 5) || (playerColour == 2 && indexEnd >= 39))
                             {
                                 concatenatedMove = _concatenateVictory(concatenatedMove);
+                            }
+                            else if (isCapture)
+                            {
+                                concatenatedMove = _concatenateCapture(concatenatedMove);
                             }
                             moves.push_back(concatenatedMove);
                         }
@@ -858,13 +926,18 @@ namespace PijersiEngine::Logic
                 }
 
                 // unstack
-                if (isUnstackValid(movingPiece, indexMid, cells))
+                isCapture = false;
+                if (isUnstackValid(movingPiece, indexMid, isCapture, cells))
                 {
                     // unstack only
                     uint32_t concatenatedMove = _concatenateMove(indexStart, indexStart, indexMid);
                     if ((playerColour == 0 && indexMid <= 5) || (playerColour == 2 && indexMid >= 39))
                     {
                         concatenatedMove = _concatenateVictory(concatenatedMove);
+                    }
+                    else if (isCapture)
+                    {
+                        concatenatedMove = _concatenateCapture(concatenatedMove);
                     }
                     moves.push_back(concatenatedMove);
                 }
@@ -950,7 +1023,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, bool& isCapture, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -963,12 +1036,16 @@ namespace PijersiEngine::Logic
             {
                 return false;
             }
+            else
+            {
+                isCapture = true;
+            }
         }
         return true;
     }
 
     // Returns whether a certain 2-range move is possible
-    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, bool& isCapture, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -985,6 +1062,10 @@ namespace PijersiEngine::Logic
             if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
+            }
+            else
+            {
+                isCapture = true;
             }
         }
         return true;
@@ -1009,7 +1090,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, bool& isCapture, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1021,6 +1102,10 @@ namespace PijersiEngine::Logic
             if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
+            }
+            else
+            {
+                isCapture = true;
             }
         }
         return true;
@@ -1037,6 +1122,27 @@ namespace PijersiEngine::Logic
             for (size_t index = k; index < nMoves; index++)
             {
                 if ((moves[index] & 0x80000000U) != 0)
+                {
+                    uint32_t temp = moves[k];
+                    moves[k] = moves[index];
+                    moves[index] = temp;
+                    stop = false;
+                    break;
+                }
+            }
+            k++;
+        }
+        if (k > 0)
+        {
+            k--;
+        }
+        stop = false;
+        while (!stop && k < nMoves)
+        {
+            stop = true;
+            for (size_t index = k; index < nMoves; index++)
+            {
+                if ((moves[index] & 0x40000000U) != 0)
                 {
                     uint32_t temp = moves[k];
                     moves[k] = moves[index];
