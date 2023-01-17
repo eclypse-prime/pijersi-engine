@@ -248,7 +248,7 @@ namespace PijersiEngine::Logic
 
         string moveString = indexToString(indexStart);
 
-        if (indexMid >= 0)
+        if (indexMid < 45)
         {
             if (indexMid == indexStart)
             {
@@ -287,7 +287,7 @@ namespace PijersiEngine::Logic
     // Converts a string (a1-b1=c1 style) move to the native triple-index format
     uint32_t stringToMove(string moveString, uint8_t cells[45])
     {
-        vector<uint32_t> move(3, -1);
+        vector<uint32_t> move(3, 0x000000FF);
         if (moveString.size() == 5)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
