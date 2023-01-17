@@ -25,6 +25,7 @@ namespace PijersiEngine
         uint32_t ponderRandom();
         uint32_t playRandom();
         uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
+        string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
         int16_t evaluate();
         void setState(uint8_t newState[45]);

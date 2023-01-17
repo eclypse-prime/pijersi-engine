@@ -349,5 +349,11 @@ namespace PijersiEngine
         return move;
     }
 
+    string Board::advice(int recursionDepth, bool random)
+    {
+        uint32_t move = ponderAlphaBeta(recursionDepth, random);
+        string moveString = Logic::moveToString(move, cells);
+        return moveString;
+    }
 
 }
