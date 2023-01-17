@@ -17,6 +17,8 @@ namespace PijersiEngine
         // ~Board();
 
         void playManual(vector<uint32_t> move);
+        void playManual(uint32_t move);
+        void playManual(string move);
         uint32_t ponderAlphaBeta(int recursionDepth, bool random);
         uint32_t playAlphaBeta(int recursionDepth = 3, bool random = true);
         uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);

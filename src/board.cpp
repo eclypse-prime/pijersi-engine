@@ -115,13 +115,24 @@ namespace PijersiEngine
         return false;
     }
 
-
-
-
-
     void Board::playManual(vector<uint32_t> move)
     {
         Logic::play(move[0], move[1], move[2], cells);
+        // Set current player to the other colour.
+        currentPlayer = 1 - currentPlayer;
+    }
+
+    void Board::playManual(uint32_t move)
+    {
+        Logic::playManual(move, cells);
+        // Set current player to the other colour.
+        currentPlayer = 1 - currentPlayer;
+    }
+
+    void Board::playManual(string moveString)
+    {
+        uint32_t move = Logic::stringToMove(moveString, cells);
+        Logic::playManual(move, cells);
         // Set current player to the other colour.
         currentPlayer = 1 - currentPlayer;
     }
