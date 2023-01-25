@@ -11,8 +11,7 @@
 #include <mcts.hpp>
 #include <rng.hpp>
 
-using namespace std;
-
+using std::cout;
 
 namespace PijersiEngine
 {

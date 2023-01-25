@@ -4,6 +4,7 @@
 #include <iostream>
 #include <numeric>
 #include <vector>
+#include <chrono>
 
 #include <omp.h>
 
@@ -11,7 +12,11 @@
 #include <logic.hpp>
 #include <rng.hpp>
 
-using namespace std;
+using std::chrono::steady_clock;
+using std::chrono::time_point;
+using std::cout;
+using std::max;
+using std::vector;
 
 namespace PijersiEngine::AlphaBeta
 {

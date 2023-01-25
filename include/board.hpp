@@ -5,7 +5,8 @@
 #include <vector>
 #include <cstdint>
 
-using namespace std;
+using std::string;
+using std::vector;
 
 namespace PijersiEngine
 {

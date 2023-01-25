@@ -5,7 +5,7 @@
 
 namespace PijersiEngine::Hash
 {
-    uniform_int_distribution<uint64_t> uint64rng(0ULL, UINT64_MAX);
+    std::uniform_int_distribution<uint64_t> uint64rng(0ULL, UINT64_MAX);
 
     uint64_t hashKeys[1530];
 

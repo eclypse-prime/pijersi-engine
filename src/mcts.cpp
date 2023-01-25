@@ -12,7 +12,9 @@
 #include <logic.hpp>
 #include <mcts.hpp>
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
 
 namespace PijersiEngine::MCTS
 {
@@ -40,7 +42,7 @@ namespace PijersiEngine::MCTS
                 Logic::setState(root.cells, cells);
                 root.expand();
 
-                auto finish = chrono::steady_clock::now() + chrono::seconds(seconds);
+                auto finish = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
 
                 Node *current = &root;
                 do
@@ -93,7 +95,7 @@ namespace PijersiEngine::MCTS
                         }
                         current = current->children[index];
                     }
-                } while (chrono::steady_clock::now() <= finish);
+                } while (std::chrono::steady_clock::now() <= finish);
                 for (int n = 0; n < nMoves; n++)
                 {
                     visitsPerThreads[k*nMoves+n] = root.children[n]->visits;

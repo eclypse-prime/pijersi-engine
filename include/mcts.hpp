@@ -2,7 +2,7 @@
 #define MCTS_HPP
 #include <vector>
 
-using namespace std;
+using std::vector;
 
 namespace PijersiEngine::MCTS
 {

@@ -5,11 +5,12 @@
 #include <string>
 #include <utility>
 
-using namespace std;
+using std::string;
+using std::vector;
 
 namespace PijersiEngine::Logic
 {
-    using Coords = pair<uint32_t,uint32_t>;
+    using Coords = std::pair<uint32_t,uint32_t>;
 
     uint32_t coordsToIndex(uint32_t i, uint32_t j);
     Coords indexToCoords(uint32_t index);

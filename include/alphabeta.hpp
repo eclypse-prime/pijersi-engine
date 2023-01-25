@@ -3,8 +3,6 @@
 #include <vector>
 #include <cstdint>
 
-using namespace std;
-
 namespace PijersiEngine::AlphaBeta
 {
     uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer);

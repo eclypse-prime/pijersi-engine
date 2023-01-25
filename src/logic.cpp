@@ -4,8 +4,10 @@
 #include <iostream>
 #include <string>
 #include <utility>
+#include <vector>
 
-using namespace std;
+using std::string;
+using std::vector;
 
 namespace PijersiEngine::Logic
 {
@@ -168,7 +170,7 @@ namespace PijersiEngine::Logic
     string indexToString(uint32_t index)
     {
         Coords coords = indexToCoords(index);
-        string cellString = rowLetters[coords.first] + to_string(coords.second + 1);
+        string cellString = rowLetters[coords.first] + std::to_string(coords.second + 1);
         return cellString;
     }
 
@@ -202,7 +204,7 @@ namespace PijersiEngine::Logic
                 i = 0;
                 break;
             default:
-                throw invalid_argument(invalidCellStringException);
+                throw std::invalid_argument(invalidCellStringException);
             }
             switch (cellString[1])
             {
@@ -228,7 +230,7 @@ namespace PijersiEngine::Logic
                 j = 6;
                 break;
             default:
-                throw invalid_argument(invalidCellStringException);
+                throw std::invalid_argument(invalidCellStringException);
             }
         }
         return coordsToIndex(i, j);
@@ -308,7 +310,7 @@ namespace PijersiEngine::Logic
         }
         else
         {
-            throw invalid_argument(invalidMoveStringException);
+            throw std::invalid_argument(invalidMoveStringException);
         }
         return _concatenateMove(move[0], move[1], move[2]);
     }
@@ -565,7 +567,7 @@ namespace PijersiEngine::Logic
                 uint8_t newCells[45];
                 setState(newCells, cells);
                 playManual(moves[k], newCells);
-                results[k] += ": " + to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
+                results[k] += ": " + std::to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
             }
         }
         return results;
@@ -574,7 +576,7 @@ namespace PijersiEngine::Logic
     // Copy the data from origin to target
     void setState(uint8_t target[45], const uint8_t origin[45])
     {
-        copy(origin, origin + 45, target);
+        std::copy(origin, origin + 45, target);
     }
 
     // Plays the selected move
@@ -636,7 +638,7 @@ namespace PijersiEngine::Logic
 
         if (moves.size() > 0)
         {
-            uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
+            std::uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
 
             uint32_t index = intDistribution(RNG::gen);
 
