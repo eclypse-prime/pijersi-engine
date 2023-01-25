@@ -29,7 +29,7 @@ namespace PijersiEngine::Logic
     
     void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45]);
     void playManual(uint32_t move, uint8_t *cells);
-    uint32_t ponderRandom(uint8_t cells[45], uint8_t currentPlayer);
+    uint32_t searchRandom(uint8_t cells[45], uint8_t currentPlayer);
     uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer);
     
     bool isWin(const uint8_t cells[45]);

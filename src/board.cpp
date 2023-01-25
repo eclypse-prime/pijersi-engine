@@ -63,26 +63,84 @@ namespace PijersiEngine
         currentPlayer = board.currentPlayer;
     }
 
-    // Plays a move and returns it
-    uint32_t Board::playAlphaBeta(int recursionDepth, bool random)
+    /* Plays a move using alphabeta minimax algorithm of chosen depth.
+    If a duration is provided, it will search until that time is over.
+    In that case, the engine will not play and the function will return a null move. */
+    uint32_t Board::playDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds)
     {
+
         // Calculate move
-        uint32_t move = ponderAlphaBeta(recursionDepth, random);
-        // Apply move
-        Logic::playManual(move, cells);
-        currentPlayer = 1 - currentPlayer;
+        uint32_t move = searchDepth(recursionDepth, random, searchTimeMilliseconds);
+        if (move != 0x00FFFFFF)
+        {
+            playManual(move);
+        }
         return move;
     }
 
-    uint32_t Board::ponderAlphaBeta(int recursionDepth, bool random)
+    /* Calculates a move using alphabeta minimax algorithm of chosen depth.
+    If a duration is provided, it will search until that time is over.
+    In that case, the function will return a null move. */
+    uint32_t Board::searchDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds)
     {
-        return AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
+        
+        // Calculate finish time point
+        time_point<steady_clock> finishTime;
+        if (searchTimeMilliseconds == UINT64_MAX)
+        {
+            finishTime = time_point<steady_clock>::max();
+        }
+        else
+        {
+            finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
+        }
+        return AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, finishTime);
+    }
+
+    /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
+    The engine will then return the best move found during that timeframe.
+    If no move is found, the engine will not play and the function will return a null move. */
+    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
+    {
+        // Calculate move
+        uint32_t move = searchTime(random, searchTimeMilliseconds);
+        if (move != 0x00FFFFFF)
+        {
+            playManual(move);
+        }
+        return move;
+    }
+
+    /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
+    The engine will then return the best move found during that timeframe.
+    If no move is found, the engine will return a null move. */
+    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
+    {
+        int recursionDepth = 1;
+        
+        // Calculate finish time point
+        time_point<steady_clock> finishTime;
+        finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
+
+        uint32_t move;
+
+        while (steady_clock::now() < finishTime)
+        {
+            uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
+            uint32_t proposedMove = searchDepth(recursionDepth, true, remainingTimeMilliseconds);
+            if (proposedMove != 0x00FFFFFF)
+            {
+                move = proposedMove;
+                recursionDepth += 1;
+            }
+        }
+        return move;
     }
 
     // Chooses a random move
-    uint32_t Board::ponderRandom()
+    uint32_t Board::searchRandom()
     {
-        return Logic::ponderRandom(cells, currentPlayer);
+        return Logic::searchRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
@@ -331,25 +389,24 @@ namespace PijersiEngine
         return forecast;
     }
 
-    uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)
-    {
-        return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
-    }
+    // uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)
+    // {
+    //     return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
+    // }
 
-    // Plays a move and returns it
-    uint32_t Board::playMCTS(int seconds, int simulationsPerRollout)
-    {
-        // Calculate move
-        uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
-        // Apply move
-        Logic::playManual(move, cells);
-        currentPlayer = 1 - currentPlayer;
-        return move;
-    }
+    // // Plays a move and returns it
+    // uint32_t Board::playMCTS(int seconds, int simulationsPerRollout)
+    // {
+    //     // Calculate move
+    //     uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
+    //     // Apply move
+    //     playManual(move);
+    //     return move;
+    // }
 
     string Board::advice(int recursionDepth, bool random)
     {
-        uint32_t move = ponderAlphaBeta(recursionDepth, random);
+        uint32_t move = searchDepth(recursionDepth, random);
         string moveString = Logic::moveToString(move, cells);
         return moveString;
     }

@@ -1,9 +1,10 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
-#include <piece.hpp>
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
+
+#include <piece.hpp>
 
 using std::string;
 using std::vector;
@@ -20,12 +21,23 @@ namespace PijersiEngine
         void playManual(vector<uint32_t> move);
         void playManual(uint32_t move);
         void playManual(string move);
-        uint32_t ponderAlphaBeta(int recursionDepth, bool random);
-        uint32_t playAlphaBeta(int recursionDepth = 3, bool random = true);
-        uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);
-        uint32_t ponderRandom();
+
+        // Depth limited search
+
+        uint32_t searchDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t playDepth(int recursionDepth = 3, bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+
+        // Time limited search
+        
+        uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        
+        uint32_t searchRandom();
         uint32_t playRandom();
-        uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
+
+        // uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);
+        // uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
+        
         string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
         int16_t evaluate();

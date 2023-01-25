@@ -631,7 +631,7 @@ namespace PijersiEngine::Logic
     }
 
     // Generates a random move
-    uint32_t ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t searchRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
         vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
@@ -650,7 +650,7 @@ namespace PijersiEngine::Logic
     // Plays a random move
     uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
-        uint32_t move = ponderRandom(cells, currentPlayer);
+        uint32_t move = searchRandom(cells, currentPlayer);
         // Apply move
         playManual(move, cells);
 

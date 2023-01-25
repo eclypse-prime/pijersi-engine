@@ -12,22 +12,29 @@
 #include <logic.hpp>
 #include <rng.hpp>
 
-using std::chrono::steady_clock;
-using std::chrono::time_point;
 using std::cout;
 using std::max;
 using std::vector;
+using std::chrono::steady_clock;
+using std::chrono::time_point;
 
 namespace PijersiEngine::AlphaBeta
 {
 
-    // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    /* Calculates a move using alphabeta minimax algorithm of chosen depth.
+    If a finish time is provided, it will search until that time point is reached.
+    In that case, the function will return a null move. */
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime)
     {
 
         // Get a vector of all the available moves for the current player
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size();
+
+        if (steady_clock::now() > finishTime)
+        {
+            return 0x00FFFFFF;
+        }
 
         if (nMoves > 0)
         {
@@ -56,11 +63,16 @@ namespace PijersiEngine::AlphaBeta
                     {
                         continue;
                     }
-                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer);
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime);
                     if (scores[k] > beta)
                     {
                         cut = true;
                     }
+                }
+
+                if (steady_clock::now() > finishTime)
+                {
+                    return 0x00FFFFFF;
                 }
 
                 // Find best move
@@ -69,7 +81,7 @@ namespace PijersiEngine::AlphaBeta
                 {
                     // Add randomness to separate equal moves if parameter active
                     float salt = random ? RNG::distribution(RNG::gen) : 0.f;
-                    float saltedScore = salt + (float) scores[k];
+                    float saltedScore = salt + (float)scores[k];
                     if (saltedScore > maximum)
                     {
                         maximum = saltedScore;
@@ -79,13 +91,11 @@ namespace PijersiEngine::AlphaBeta
 
                 delete scores;
 
-
                 return moves[index];
             }
         }
         return 0x00FFFFFF;
     }
-
 
     // Evaluate piece according to its position, colour and type
     int16_t evaluatePiece(uint8_t piece, uint32_t i)
@@ -98,7 +108,7 @@ namespace PijersiEngine::AlphaBeta
             score = 15 - 12 * (piece & 2) - i;
 
             // If the piece is in a winning position
-            if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
+            if ((i == 0 && (piece & 2) == 0) || (i == 6 && (piece & 2) == 2))
             {
                 score *= 256;
             }
@@ -170,13 +180,12 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
+    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);
-
 
         // Stop the recursion if a winning position is achieved
         if (Logic::isWin(newCells) || recursionDepth == 0)
@@ -186,8 +195,13 @@ namespace PijersiEngine::AlphaBeta
 
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size();
-        
+
         int16_t score = INT16_MIN;
+
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
 
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
@@ -196,7 +210,7 @@ namespace PijersiEngine::AlphaBeta
             {
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer));
+                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
