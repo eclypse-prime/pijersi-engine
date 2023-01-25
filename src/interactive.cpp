@@ -8,7 +8,12 @@
 #include <board.hpp>
 #include <logic.hpp>
 
-using namespace std;
+using namespace std::chrono;
+using std::vector;
+using std::cin;
+using std::cout;
+using std::endl;
+
 using namespace PijersiEngine;
 
 vector<string> split(string str, string token = " "){
@@ -38,7 +43,7 @@ int main(int argc, char** argv)
     {
         cout << ">>> ";
         string line;
-        getline(cin, line);
+        std::getline(cin, line);
         
         vector<string> words = split(line);
 
@@ -47,6 +52,7 @@ int main(int argc, char** argv)
             string command = words[0];
             if (command == "q")
             {
+                cout << "Exiting engine..." << endl;
                 quit = true;
             }
             else if (command == "p")
@@ -64,13 +70,49 @@ int main(int argc, char** argv)
                         uint32_t move;
                         for (int k = 1; k <= depth; k++)
                         {
-                            auto start = chrono::steady_clock::now();
-                            move = board.ponderAlphaBeta(k, true);
+                            auto start = steady_clock::now();
+                            move = board.searchDepth(k, true);
                             string moveString = Logic::moveToString(move, board.getState());
-                            auto end = chrono::steady_clock::now();
-                            int duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+                            auto end = steady_clock::now();
+                            int duration = duration_cast<milliseconds>(end - start).count();
                             cout << "alphabeta depth " << k << " move: " << moveString << " duration: "<< duration << "ms" << endl;
                         }
+                        board.playManual(move);
+                        board.print();
+                        if (board.checkWin())
+                        {
+                            cout << "\n--- Game ended ---\n" << endl;
+                        }
+                    }
+                }
+            }
+            else if (command == "t")
+            {
+                if (words.size() >= 2)
+                {
+                    string parameter = words[1];
+                    int duration = stoi(parameter);
+                    time_point<steady_clock> finishTime = steady_clock::now() + seconds(duration);
+                    if (duration >= 0)
+                    {
+                        uint32_t move;
+                        int depth = 1;
+                        while (steady_clock::now() < finishTime)
+                        {
+                            uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
+                            auto start = steady_clock::now();
+                            uint32_t proposedMove = board.searchDepth(depth, true, remainingTimeMilliseconds);
+                            if (proposedMove != 0x00FFFFFF)
+                            {
+                                move = proposedMove;
+                                string moveString = Logic::moveToString(move, board.getState());
+                                auto end = steady_clock::now();
+                                int duration = duration_cast<milliseconds>(end - start).count();
+                                cout << "alphabeta depth " << depth << " move: " << moveString << " duration: "<< duration << "ms" << endl;
+                                depth += 1;
+                            }
+                        }
+                        cout << "best move chosen at depth " << depth-1 << endl;
                         board.playManual(move);
                         board.print();
                         if (board.checkWin())
@@ -88,10 +130,10 @@ int main(int argc, char** argv)
                     int depth = stoi(parameter);
                     for (int k = 0; k <= depth; k++)
                     {
-                        auto start = chrono::steady_clock::now();
+                        auto start = steady_clock::now();
                         uint64_t result = Logic::perft(k, board.getState(), board.currentPlayer);
-                        auto end = chrono::steady_clock::now();
-                        int duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+                        auto end = steady_clock::now();
+                        int duration = duration_cast<milliseconds>(end - start).count();
                         cout << "perft depth " << k << " result: " << result << " duration: "<< duration << "ms" << endl;
                     }
                 }
@@ -111,7 +153,7 @@ int main(int argc, char** argv)
             }
             else if (command == "h")
             {
-                cout << "help:\n"<< "p -> print board\n" << "a [depth] -> alpha beta\n" << "m [move] -> manual move\n" << "r -> reset board\n" << "q -> exit\n" << endl;
+                cout << "help:\n"<< "p -> print board\n" << "a [depth] -> alpha beta\n" << "m [move] -> manual move\n" << "r -> reset board\n" << "perft [depth] -> node count" << "q -> exit\n" << endl;
             }
         }
     }
