@@ -59,7 +59,7 @@ int main(int argc, char** argv)
             {
                 board.print();
             }
-            else if (command == "a")
+            else if (command == "d")
             {
                 if (words.size() >= 2)
                 {
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
             }
             else if (command == "h")
             {
-                cout << "help:\n"<< "p -> print board\n" << "a [depth] -> alpha beta\n" << "m [move] -> manual move\n" << "r -> reset board\n" << "perft [depth] -> node count" << "q -> exit\n" << endl;
+                cout << "help:\n"<< "p -> print board\n" << "d [depth] -> alpha beta to depth\n" << "t [time] -> alpha beta to time (in seconds)\n" << "m [move] -> manual move\n" << "r -> reset board\n" << "perft [depth] -> node count" << "q -> exit\n" << endl;
             }
         }
     }
