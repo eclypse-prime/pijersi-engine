@@ -8,14 +8,14 @@
 #include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
-#include <mcts.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
 using std::cout;
+using std::endl;
 
 namespace PijersiEngine
 {
-
 
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
@@ -27,22 +27,23 @@ namespace PijersiEngine
     uint8_t createPiece(PieceColour colour, PieceType type)
     {
         uint8_t piece = 1;
-        if (colour == Black) {
+        if (colour == Black)
+        {
             piece += 2;
         }
         switch (type)
         {
-            case Scissors:
-                break;
-            case Paper:
-                piece += 4;
-                break;
-            case Rock:
-                piece += 8;
-                break;
-            case Wise:
-                piece += 12;
-                break;
+        case Scissors:
+            break;
+        case Paper:
+            piece += 4;
+            break;
+        case Rock:
+            piece += 8;
+            break;
+        case Wise:
+            piece += 12;
+            break;
         }
         return piece;
     }
@@ -83,7 +84,7 @@ namespace PijersiEngine
     In that case, the function will return a null move. */
     uint32_t Board::searchDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds)
     {
-        
+
         // Calculate finish time point
         time_point<steady_clock> finishTime;
         if (searchTimeMilliseconds == UINT64_MAX)
@@ -117,12 +118,12 @@ namespace PijersiEngine
     uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
     {
         int recursionDepth = 1;
-        
+
         // Calculate finish time point
         time_point<steady_clock> finishTime;
         finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
 
-        uint32_t move;
+        uint32_t move = 0x00FFFFFF;
 
         while (steady_clock::now() < finishTime)
         {
@@ -220,6 +221,21 @@ namespace PijersiEngine
         return cells;
     }
 
+    void Board::setStringState(string stateString)
+    {
+        vector<string> stateWords = Utils::split(stateString, "_");
+        Logic::stringToCells(stateWords[0], cells);
+        currentPlayer = (stateWords[1] == "w") ? 0U : 1U;
+    }
+
+    string Board::getStringState()
+    {
+        string cellsString = Logic::cellsToString(cells);
+        string playerString = (currentPlayer == 0U) ? "w" : "b";
+
+        return cellsString + "_" + playerString;
+    }
+
     // Initializes the board to the starting position
     void Board::init()
     {
@@ -239,7 +255,7 @@ namespace PijersiEngine
         addPiece(createPiece(Black, Paper), 1, 0);
         addPiece(createPiece(Black, Rock), 1, 1);
         addPiece(createPiece(Black, Scissors), 1, 2);
-        addPiece(addBottom(createPiece(Black, Wise),createPiece(Black, Wise)), 1, 3);
+        addPiece(addBottom(createPiece(Black, Wise), createPiece(Black, Wise)), 1, 3);
         addPiece(createPiece(Black, Rock), 1, 4);
         addPiece(createPiece(Black, Scissors), 1, 5);
         addPiece(createPiece(Black, Paper), 1, 6);
@@ -248,7 +264,7 @@ namespace PijersiEngine
         addPiece(createPiece(White, Paper), 5, 0);
         addPiece(createPiece(White, Scissors), 5, 1);
         addPiece(createPiece(White, Rock), 5, 2);
-        addPiece(addBottom(createPiece(White, Wise),createPiece(White, Wise)), 5, 3);
+        addPiece(addBottom(createPiece(White, Wise), createPiece(White, Wise)), 5, 3);
         addPiece(createPiece(White, Scissors), 5, 4);
         addPiece(createPiece(White, Rock), 5, 5);
         addPiece(createPiece(White, Paper), 5, 6);
@@ -261,58 +277,6 @@ namespace PijersiEngine
 
         // Set active player to White
         currentPlayer = 0;
-    }
-
-    // Converts a piece to char format
-    // Used for debug purposes
-    char _pieceToChar(uint8_t piece)
-    {
-        char res = ' ';
-        // If the piece is White
-        if ((piece & 2) == 0)
-        {
-            // Read the piece's type
-            switch (piece & 12)
-            {
-            case 0:
-                res = 'S';
-                break;
-            case 4:
-                res = 'P';
-                break;
-            case 8:
-                res = 'R';
-                break;
-            case 12:
-                res = 'W';
-                break;
-            default:
-                break;
-            }
-        }
-        // If the piece is Black
-        else if ((piece & 2) == 2)
-        {
-            // Read the piece's type
-            switch (piece & 12)
-            {
-            case 0:
-                res = 's';
-                break;
-            case 4:
-                res = 'p';
-                break;
-            case 8:
-                res = 'r';
-                break;
-            case 12:
-                res = 'w';
-                break;
-            default:
-                break;
-            }
-        }
-        return res;
     }
 
     // Prints the board
@@ -329,54 +293,34 @@ namespace PijersiEngine
         string output = "";
         for (int i = 0; i < 7; i++)
         {
+            int nColumns;
             if (i % 2 == 0)
             {
+                nColumns = 6;
                 output += ' ';
-                for (int j = 0; j < 6; j++)
-                {
-                    char char1 = '.';
-                    char char2 = ' ';
-                    uint8_t piece = cells[Logic::coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        char1 = _pieceToChar(piece);
-                        // If the piece is a stack
-                        if (piece >= 16)
-                        {
-                            char2 = _pieceToChar(piece >> 4);
-                        }
-                    }
-                    output += char1;
-                    output += char2;
-                }
-                output += '\n';
             }
             else
             {
-                for (int j = 0; j < 7; j++)
-                {
-                    char char1 = '.';
-                    char char2 = ' ';
-                    uint8_t piece = cells[Logic::coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        char1 = _pieceToChar(piece);
-                        // If the piece is a stack
-                        if (piece >= 16)
-                        {
-                            char2 = _pieceToChar(piece >> 4);
-                        }
-                    }
-                    output += char1;
-                    output += char2;
-                }
-                output += '\n';
+                nColumns = 7;
             }
+
+            for (int j = 0; j < nColumns; j++)
+            {
+                char char1 = '.';
+                char char2 = ' ';
+                uint8_t piece = cells[Logic::coordsToIndex(i, j)];
+                if (piece != 0)
+                {
+                    char1 = Logic::pieceToChar[piece & 0x0FU];
+                    char2 = Logic::pieceToChar[piece >> 4];
+                }
+                output += char1;
+                output += char2;
+            }
+            output += '\n';
         }
         return output;
     }
-
-
 
     // Returns true if the board is in a winning position
     bool Board::checkWin()

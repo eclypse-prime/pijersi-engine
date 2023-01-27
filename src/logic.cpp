@@ -1,8 +1,10 @@
 #include <logic.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -108,9 +110,37 @@ namespace PijersiEngine::Logic
         vector<uint32_t>({30, 42})};
 
     string rowLetters = "gfedcba";
+    
+    // Convert a char into the corresponding piece
+    std::unordered_map<char, uint8_t> charToPiece = {
+        {'-', 0x00U},
+        {'S', 0x01U},
+        {'P', 0x05U},
+        {'R', 0x09U},
+        {'W', 0x0DU},
+        {'s', 0x03U},
+        {'p', 0x07U},
+        {'r', 0x0BU},
+        {'w', 0x0FU}
+    };
+
+    // Convert a piece into the corresponding char
+    std::unordered_map<uint8_t, char> pieceToChar =
+    {
+        {0x00U, '-'},
+        {0x01U, 'S'},
+        {0x05U, 'P'},
+        {0x09U, 'R'},
+        {0x0DU, 'W'},
+        {0x03U, 's'},
+        {0x07U, 'p'},
+        {0x0BU, 'r'},
+        {0x0FU, 'w'}
+    };
 
     string invalidCellStringException = "Invalid character in coordinates string.";
     string invalidMoveStringException = "Invalid move string.";
+    string invalidStateStringException = "Invalid state string.";
 
     // Converts a (i, j) coordinate set to an index
     uint32_t coordsToIndex(uint32_t i, uint32_t j)
@@ -177,7 +207,8 @@ namespace PijersiEngine::Logic
     // Converts a "a1" style string coordinate into an index
     uint32_t stringToIndex(string cellString)
     {
-        uint32_t i, j;
+        uint32_t i = 0xFFFFFFFFU;
+        uint32_t j = 0xFFFFFFFFU;
         if (cellString.size() == 2)
         {
             switch (cellString[0])
@@ -239,9 +270,9 @@ namespace PijersiEngine::Logic
     // Convert a native triple-index move into the string (a1-b1=c1 style) format.
     string moveToString(uint32_t move, uint8_t cells[45])
     {
-        uint32_t indexStart = move & 0x000000FF;
-        uint32_t indexMid = (move >> 8) & 0x000000FF;
-        uint32_t indexEnd = (move >> 16) & 0x000000FF;
+        uint32_t indexStart = move & 0x000000FFU;
+        uint32_t indexMid = (move >> 8) & 0x000000FFU;
+        uint32_t indexEnd = (move >> 16) & 0x000000FFU;
 
         if (indexStart > 44)
         {
@@ -315,6 +346,80 @@ namespace PijersiEngine::Logic
         return _concatenateMove(move[0], move[1], move[2]);
     }
 
+    string cellsToString(uint8_t cells[45])
+    {
+        string cellsString = "";
+        for (int i = 0; i < 7; i++)
+        {
+            int nColumns = (i % 2 == 0) ? 6 : 7;
+            int counter = 0;
+            for (int j = 0; j < nColumns; j++)
+            {
+                uint8_t piece = cells[coordsToIndex(i,j)];
+                if (piece == 0x00U)
+                {
+                    counter += 1;
+                }
+                else
+                {
+                    if (counter > 0)
+                    {
+                        cellsString += std::to_string(counter);
+                        counter = 0;
+                    }
+                    cellsString += Logic::pieceToChar[piece & 0x0FU];
+                    cellsString += Logic::pieceToChar[piece >> 4];
+                }
+            }
+            if (counter > 0)
+            {
+                cellsString += std::to_string(counter);
+            }
+            if (i < 6)
+            {
+                cellsString += '/';
+            }
+        }
+        return cellsString;
+    }
+
+    void stringToCells(string cellsString, uint8_t targetCells[45])
+    {
+        vector<string> cellLines = Utils::split(cellsString, "/");
+        if (cellLines.size() != 7)
+        {
+            throw std::invalid_argument(invalidStateStringException);
+        }
+        size_t cursor = 0;
+
+        uint8_t newCells[45];
+        for (int k = 0; k < 45; k++)
+        {
+            newCells[k] = 0;
+        }
+
+        for (size_t i = 0; i < cellLines.size(); i++)
+        {
+            size_t j = 0;
+            while (j < (cellLines[i].size()))
+            {
+                if (Logic::charToPiece.find(cellLines[i][j]) != Logic::charToPiece.end())
+                {
+                    newCells[cursor] = Logic::charToPiece[cellLines[i][j]] | (Logic::charToPiece[cellLines[i][j+1]] << 4);
+                    j +=2;
+                    cursor += 1;
+                }
+                else
+                {
+                    int jump = cellLines[i][j] - '0';
+                    j += 1;
+                    cursor += jump;
+                }
+            }
+        }
+
+        setState(targetCells, newCells);
+    }
 
     // Returns the list of possible moves for a specific piece
     uint64_t _countPieceMoves(uint32_t indexStart, uint8_t cells[45])
@@ -689,7 +794,6 @@ namespace PijersiEngine::Logic
     vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
-        uint8_t playerColour = movingPiece & 2;
 
         vector<uint32_t> moves = vector<uint32_t>();
         moves.reserve(64);

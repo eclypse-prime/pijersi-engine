@@ -32,6 +32,8 @@ namespace PijersiEngine
         uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
         uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
         
+        // Random search
+
         uint32_t searchRandom();
         uint32_t playRandom();
 
@@ -41,8 +43,13 @@ namespace PijersiEngine
         string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
         int16_t evaluate();
+
         void setState(uint8_t newState[45]);
         uint8_t *getState();
+        
+        void setStringState(string stateString);
+        string getStringState();
+
         void init();
 
         uint8_t at(int i, int j);

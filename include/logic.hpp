@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 using std::string;
@@ -16,11 +17,17 @@ namespace PijersiEngine::Logic
     Coords indexToCoords(uint32_t index);
     uint32_t indexToLine(uint32_t index);
     
+    extern std::unordered_map<uint8_t, char> pieceToChar;
+    extern std::unordered_map<char, uint8_t> charToPiece;
+
     string indexToString(uint32_t index);
     uint32_t stringToIndex(string cellString);
     
     string moveToString(uint32_t move, uint8_t cells[45]);
     uint32_t stringToMove(string moveString, uint8_t cells[45]);
+    
+    string cellsToString(uint8_t cells[45]);
+    void stringToCells(string cellsString, uint8_t targetCells[45]);
     
     uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);

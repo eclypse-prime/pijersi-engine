@@ -7,6 +7,7 @@
 
 #include <board.hpp>
 #include <logic.hpp>
+#include <utils.hpp>
 
 using namespace std::chrono;
 using std::vector;
@@ -15,22 +16,6 @@ using std::cout;
 using std::endl;
 
 using namespace PijersiEngine;
-
-vector<string> split(string str, string token = " "){
-    vector<string>result;
-    while(str.size()){
-        size_t index = str.find(token);
-        if(index!=string::npos){
-            result.push_back(str.substr(0,index));
-            str = str.substr(index+token.size());
-            if(str.size()==0)result.push_back(str);
-        }else{
-            result.push_back(str);
-            str = "";
-        }
-    }
-    return result;
-}
 
 int main(int argc, char** argv)
 {
@@ -45,7 +30,7 @@ int main(int argc, char** argv)
         string line;
         std::getline(cin, line);
         
-        vector<string> words = split(line);
+        vector<string> words = Utils::split(line);
 
         if (words.size() >= 1)
         {
@@ -95,7 +80,7 @@ int main(int argc, char** argv)
                     time_point<steady_clock> finishTime = steady_clock::now() + seconds(duration);
                     if (duration >= 0)
                     {
-                        uint32_t move;
+                        uint32_t move = 0x00FFFFFF;
                         int depth = 1;
                         while (steady_clock::now() < finishTime)
                         {
@@ -112,12 +97,19 @@ int main(int argc, char** argv)
                                 depth += 1;
                             }
                         }
-                        cout << "best move chosen at depth " << depth-1 << endl;
-                        board.playManual(move);
-                        board.print();
-                        if (board.checkWin())
+                        if (move != 0x00FFFFFF)
                         {
-                            cout << "\n--- Game ended ---\n" << endl;
+                            cout << "best move chosen at depth " << depth-1 << endl;
+                            board.playManual(move);
+                            board.print();
+                            if (board.checkWin())
+                            {
+                                cout << "\n--- Game ended ---\n" << endl;
+                            }
+                        }
+                        else
+                        {
+                            cout << "no move found" << endl;
                         }
                     }
                 }
@@ -154,6 +146,10 @@ int main(int argc, char** argv)
             else if (command == "h")
             {
                 cout << "help:\n"<< "p -> print board\n" << "d [depth] -> alpha beta to depth\n" << "t [time] -> alpha beta to time (in seconds)\n" << "m [move] -> manual move\n" << "r -> reset board\n" << "perft [depth] -> node count" << "q -> exit\n" << endl;
+            }
+            else if (command == "f")
+            {
+                cout << board.getStringState() << endl;
             }
         }
     }
