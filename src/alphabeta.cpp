@@ -56,7 +56,7 @@ namespace PijersiEngine::AlphaBeta
                 bool cut = false;
 
                 // Evaluate possible moves
-                #pragma omp parallel for schedule(dynamic)
+                #pragma omp parallel for schedule(dynamic) shared (alpha)
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     if (cut)
@@ -64,7 +64,13 @@ namespace PijersiEngine::AlphaBeta
                         continue;
                     }
                     scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime);
-                    if (scores[k] > beta)
+                    
+                    #pragma omp critical
+                    {
+                        alpha = max(alpha, scores[k]);
+                    }
+
+                    if (alpha > beta)
                     {
                         cut = true;
                     }
