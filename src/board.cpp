@@ -95,7 +95,18 @@ namespace PijersiEngine
         {
             finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
         }
-        return AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, finishTime);
+
+        uint32_t move = 0x00FFFFFF;
+        // for (int depth = 1; depth <= recursionDepth; depth++)
+        // {
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, finishTime);
+            // uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, vector<uint32_t>({move}), finishTime);
+            if (proposedMove != 0x00FFFFFF)
+            {
+                move = proposedMove;
+            }
+        // }
+        return move;
     }
 
     /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
