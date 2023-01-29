@@ -48,7 +48,7 @@ int main(int argc, char** argv)
         {
             uint32_t move;
             move = board.searchDepth(depth, true);
-            if (move != 0x00FFFFFF)
+            if (move != NULL_MOVE)
             {
                 string moveString = Logic::moveToString(move, board.getState());
                 cout << moveString << endl;
@@ -61,13 +61,13 @@ int main(int argc, char** argv)
         time_point<steady_clock> finishTime = steady_clock::now() + seconds(duration);
         if (duration >= 0)
         {
-            uint32_t move = 0x00FFFFFF;
+            uint32_t move = NULL_MOVE;
             int depth = 1;
             while (steady_clock::now() < finishTime)
             {
                 uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
                 uint32_t proposedMove = board.searchDepth(depth, true, remainingTimeMilliseconds);
-                if (proposedMove != 0x00FFFFFF)
+                if (proposedMove != NULL_MOVE)
                 {
                     move = proposedMove;
                     string moveString = Logic::moveToString(move, board.getState());
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
                 }
                 
             }
-            if (move != 0x00FFFFFF)
+            if (move != NULL_MOVE)
             {
                 string moveString = Logic::moveToString(move, board.getState());
                 cout << moveString << endl;

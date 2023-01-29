@@ -35,7 +35,7 @@ namespace PijersiEngine::AlphaBeta
 
         if (steady_clock::now() > finishTime)
         {
-            return 0x00FFFFFFU;
+            return NULL_MOVE;
         }
 
         if (nMoves > 0)
@@ -43,7 +43,7 @@ namespace PijersiEngine::AlphaBeta
             if (recursionDepth > 0)
             {
 
-                if (principalVariation != 0x00FFFFFFU)
+                if (principalVariation != NULL_MOVE)
                 {
                     Utils::sortPrincipalVariation(moves, principalVariation);
                 }
@@ -85,7 +85,7 @@ namespace PijersiEngine::AlphaBeta
 
                 if (steady_clock::now() > finishTime)
                 {
-                    return 0x00FFFFFF;
+                    return NULL_MOVE;
                 }
 
                 // Find best move
@@ -107,7 +107,7 @@ namespace PijersiEngine::AlphaBeta
                 return moves[index];
             }
         }
-        return 0x00FFFFFF;
+        return NULL_MOVE;
     }
 
     // Evaluate piece according to its position, colour and type
@@ -201,7 +201,7 @@ namespace PijersiEngine::AlphaBeta
         Logic::playManual(move, newCells);
 
         // Stop the recursion if a winning position is achieved
-        if (Logic::isWin(newCells) || recursionDepth == 0)
+        if (Logic::isWin(newCells) || recursionDepth <= 0)
         {
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
@@ -219,18 +219,18 @@ namespace PijersiEngine::AlphaBeta
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
+
+            // if (recursionDepth >= 5)
+            // {
+            //     score = -evaluateMove(NULL_MOVE, recursionDepth - 3, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
+            //     if (score >= beta)
+            //     {
+            //         return beta;
+            //     }
+            // }
+
             if (recursionDepth > 1)
             {
-
-                if (recursionDepth >= 4)
-                {
-                    score = -evaluateMove(0x00FFFFFFU, recursionDepth - 1, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
-                    if (score >= beta)
-                    {
-                        return beta;
-                    }
-                }
-
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));

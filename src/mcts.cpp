@@ -38,7 +38,7 @@ namespace PijersiEngine::MCTS
             // for (int k = 0; k < nThreads; k++)
             for (int k = 0; k < 1; k++)
             {
-                Node root(nullptr, 0x00FFFFFF, currentPlayer);
+                Node root(nullptr, NULL_MOVE, currentPlayer);
                 Logic::setState(root.cells, cells);
                 root.expand();
 
@@ -133,7 +133,7 @@ namespace PijersiEngine::MCTS
             // Select the corresponding move
             return moves[index];
         }
-        return 0x00FFFFFF;
+        return NULL_MOVE;
     }
 
     Node::Node(Node *newParent, const uint32_t &newMove, uint8_t newPlayer) : move(newMove)

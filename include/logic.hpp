@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <utility>
 
+#define NULL_MOVE 0x00FFFFFFU
+
 using std::string;
 using std::vector;
 
