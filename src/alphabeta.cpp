@@ -70,7 +70,7 @@ namespace PijersiEngine::AlphaBeta
                     {
                         continue;
                     }
-                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime);
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
 
                     #pragma omp critical
                     {
@@ -193,7 +193,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime)
+    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
@@ -221,9 +221,19 @@ namespace PijersiEngine::AlphaBeta
         {
             if (recursionDepth > 1)
             {
+
+                if (recursionDepth >= 4)
+                {
+                    score = -evaluateMove(0x00FFFFFFU, recursionDepth - 1, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
+                    if (score >= beta)
+                    {
+                        return beta;
+                    }
+                }
+
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime));
+                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
