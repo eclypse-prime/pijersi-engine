@@ -12,15 +12,15 @@ all: csharp interactive executable versus
 csharp: $(CSHARP_DLL)
 
 $(CSHARP_SRC): pijersi_engine.i $(HEADERS)
-	@if not exist "wrap_csharp" mkdir wrap_csharp
-	@if not exist "src\wrap" mkdir src\wrap
+	@mkdir -p wrap_csharp
+	@mkdir -p src\wrap
 	@swig -csharp -c++ $(INCLUDE) -namespace PijersiEngine -outdir wrap_csharp -o $(CSHARP_SRC) pijersi_engine.i
 
 $(CSHARP_OBJ): $(CSHARP_SRC) $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) $(CSHARP_SRC) -o $(CSHARP_OBJ)
 
 $(CSHARP_DLL): $(OBJ) $(CSHARP_OBJ)
-	@if not exist "wrap_csharp" mkdir wrap_csharp
+	@mkdir -p wrap_csharp
 	@g++ $(FLAGS) -shared $(INCLUDE) $(OBJ) $(CSHARP_OBJ) -o $(CSHARP_DLL)
 
 src/alphabeta.o: src/alphabeta.cpp $(HEADERS)
@@ -52,7 +52,7 @@ src/interactive.o: src/interactive.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/interactive.cpp -o src/interactive.o
 
 build/interactive.exe: $(OBJ) src/interactive.o
-	@if not exist "build" mkdir build
+	@mkdir -p build
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/interactive.o -o build/interactive.exe
 
 interactive: build/interactive.exe
@@ -62,7 +62,7 @@ src/executable.o: src/executable.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/executable.cpp -o src/executable.o
 
 build/executable.exe: $(OBJ) src/executable.o
-	@if not exist "build" mkdir build
+	@mkdir -p build
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/executable.o -o build/executable.exe
 
 executable: build/executable.exe
@@ -72,7 +72,7 @@ src/versus.o: src/versus.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/versus.cpp -o src/versus.o
 
 build/versus.exe: $(OBJ) src/versus.o
-	@if not exist "build" mkdir build
+	@mkdir -p build
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/versus.o -o build/versus.exe
 
 versus : build/versus.exe
@@ -82,13 +82,13 @@ src/debug.o: src/debug.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/debug.cpp -o src/debug.o
 
 build/debug.exe: $(OBJ) src/debug.o
-	@if not exist "build" mkdir build
+	@mkdir -p build
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/debug.o -o build/debug.exe
 
 debug: build/debug.exe
 
 clean:
-	@del /Q /F /S wrap_csharp\*
-	@if exist "src\wrap" rmdir /Q /s "src\wrap"
-	@del /Q /F /S "src\*.o"
-	@if exist "build" rmdir /Q /s "build"
+	@rm -rf build/
+	@rm -rf src/*.o
+	@rm -rf src/wrap
+	@rm -rf wrap_csharp
