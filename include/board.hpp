@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include <logic.hpp>
 #include <piece.hpp>
 
 using std::string;
@@ -24,8 +25,8 @@ namespace PijersiEngine
 
         // Depth limited search
 
-        uint32_t searchDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
-        uint32_t playDepth(int recursionDepth = 3, bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t searchDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+        uint32_t playDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
 
         // Time limited search
         

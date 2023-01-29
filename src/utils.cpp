@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 
+#include <logic.hpp>
 #include <utils.hpp>
 
 using std::string;
@@ -38,7 +39,7 @@ namespace PijersiEngine::Utils
         size_t index = 0;
         while (!sorted && index < moves.size())
         {
-            if ((moves[index] & 0x00FFFFFFU) == (principalVariation & 0x00FFFFFFU))
+            if ((moves[index] & NULL_MOVE) == (principalVariation & NULL_MOVE))
             {
                 uint32_t temp = moves[0];
                 moves[0] = moves[index];

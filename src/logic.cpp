@@ -749,7 +749,7 @@ namespace PijersiEngine::Logic
 
             return moves[index];
         }
-        return 0x00FFFFFF;
+        return NULL_MOVE;
     }
 
     // Plays a random move
