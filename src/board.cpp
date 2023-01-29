@@ -67,12 +67,12 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the engine will not play and the function will return a null move. */
-    uint32_t Board::playDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
         // Calculate move
-        uint32_t move = searchDepth(recursionDepth, random, searchTimeMilliseconds);
-        if (move != 0x00FFFFFF)
+        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
+        if (move != NULL_MOVE)
         {
             playManual(move);
         }
@@ -82,9 +82,8 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the function will return a null move. */
-    uint32_t Board::searchDepth(int recursionDepth, bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
-
         // Calculate finish time point
         time_point<steady_clock> finishTime;
         if (searchTimeMilliseconds == UINT64_MAX)
@@ -96,14 +95,21 @@ namespace PijersiEngine
             finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
         }
 
-        uint32_t move = 0x00FFFFFF;
-        for (int depth = 1; depth <= recursionDepth; depth++)
+        uint32_t move = NULL_MOVE;
+        if (iterative)
         {
-            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime);
-            if (proposedMove != 0x00FFFFFF)
+            for (int depth = 1; depth <= recursionDepth; depth++)
             {
-                move = proposedMove;
+                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime);
+                if (proposedMove != NULL_MOVE)
+                {
+                    move = proposedMove;
+                }
             }
+        }
+        else
+        {
+            move = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, principalVariation, finishTime);
         }
         return move;
     }
@@ -115,7 +121,7 @@ namespace PijersiEngine
     {
         // Calculate move
         uint32_t move = searchTime(random, searchTimeMilliseconds);
-        if (move != 0x00FFFFFF)
+        if (move != NULL_MOVE)
         {
             playManual(move);
         }
@@ -133,12 +139,12 @@ namespace PijersiEngine
         time_point<steady_clock> finishTime;
         finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
 
-        uint32_t move = 0x00FFFFFF;
+        uint32_t move = NULL_MOVE;
 
         while (steady_clock::now() < finishTime)
         {
             uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
-            if (proposedMove != 0x00FFFFFF)
+            if (proposedMove != NULL_MOVE)
             {
                 move = proposedMove;
             }

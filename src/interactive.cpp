@@ -49,14 +49,14 @@ int main(int argc, char** argv)
                 if (words.size() >= 2)
                 {
                     string parameter = words[1];
-                    int depth = stoi(parameter);
-                    if (depth >= 1)
+                    int recursionDepth = stoi(parameter);
+                    if (recursionDepth >= 1)
                     {
-                        uint32_t move;
-                        for (int k = 1; k <= depth; k++)
+                        uint32_t move = NULL_MOVE;
+                        for (int k = 1; k <= recursionDepth; k++)
                         {
                             auto start = steady_clock::now();
-                            move = board.searchDepth(k, true);
+                            move = board.searchDepth(k, true, move, UINT64_MAX, false);
                             string moveString = Logic::moveToString(move, board.getState());
                             auto end = steady_clock::now();
                             int duration = duration_cast<milliseconds>(end - start).count();
@@ -80,14 +80,14 @@ int main(int argc, char** argv)
                     time_point<steady_clock> finishTime = steady_clock::now() + seconds(duration);
                     if (duration >= 0)
                     {
-                        uint32_t move = 0x00FFFFFF;
+                        uint32_t move = NULL_MOVE;
                         int depth = 1;
                         while (steady_clock::now() < finishTime)
                         {
                             uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
                             auto start = steady_clock::now();
                             uint32_t proposedMove = board.searchDepth(depth, true, remainingTimeMilliseconds);
-                            if (proposedMove != 0x00FFFFFF)
+                            if (proposedMove != NULL_MOVE)
                             {
                                 move = proposedMove;
                                 string moveString = Logic::moveToString(move, board.getState());
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
                                 depth += 1;
                             }
                         }
-                        if (move != 0x00FFFFFF)
+                        if (move != NULL_MOVE)
                         {
                             cout << "best move chosen at depth " << depth-1 << endl;
                             board.playManual(move);
