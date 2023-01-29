@@ -11,8 +11,10 @@
 #include <alphabeta.hpp>
 #include <logic.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
 using std::cout;
+using std::endl;
 using std::max;
 using std::vector;
 using std::chrono::steady_clock;
@@ -24,7 +26,7 @@ namespace PijersiEngine::AlphaBeta
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime)
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime)
     {
 
         // Get a vector of all the available moves for the current player
@@ -33,13 +35,18 @@ namespace PijersiEngine::AlphaBeta
 
         if (steady_clock::now() > finishTime)
         {
-            return 0x00FFFFFF;
+            return 0x00FFFFFFU;
         }
 
         if (nMoves > 0)
         {
             if (recursionDepth > 0)
             {
+
+                if (principalVariation != 0x00FFFFFFU)
+                {
+                    Utils::sortPrincipalVariation(moves, principalVariation);
+                }
 
                 size_t index = 0;
                 int16_t *scores = new int16_t[nMoves];
@@ -64,7 +71,7 @@ namespace PijersiEngine::AlphaBeta
                         continue;
                     }
                     scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime);
-                    
+
                     #pragma omp critical
                     {
                         alpha = max(alpha, scores[k]);
