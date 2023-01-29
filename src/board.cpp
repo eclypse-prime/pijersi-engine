@@ -97,15 +97,14 @@ namespace PijersiEngine
         }
 
         uint32_t move = 0x00FFFFFF;
-        // for (int depth = 1; depth <= recursionDepth; depth++)
-        // {
-            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, finishTime);
-            // uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, vector<uint32_t>({move}), finishTime);
+        for (int depth = 1; depth <= recursionDepth; depth++)
+        {
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime);
             if (proposedMove != 0x00FFFFFF)
             {
                 move = proposedMove;
             }
-        // }
+        }
         return move;
     }
 
@@ -138,13 +137,12 @@ namespace PijersiEngine
 
         while (steady_clock::now() < finishTime)
         {
-            uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
-            uint32_t proposedMove = searchDepth(recursionDepth, true, remainingTimeMilliseconds);
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
             if (proposedMove != 0x00FFFFFF)
             {
                 move = proposedMove;
-                recursionDepth += 1;
             }
+            recursionDepth += 1;
         }
         return move;
     }

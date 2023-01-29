@@ -9,7 +9,7 @@ using std::chrono::time_point;
 
 namespace PijersiEngine::AlphaBeta
 {
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime = time_point<steady_clock>::max());
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime = time_point<steady_clock>::max());
     int16_t evaluatePiece(uint8_t piece, uint32_t i);
     int16_t evaluatePosition(uint8_t cells[45]);
     int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45]);
