@@ -10,12 +10,43 @@
 #include <utils.hpp>
 
 using namespace std::chrono;
-using std::vector;
 using std::cin;
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 using namespace PijersiEngine;
+
+uint32_t ugiStringToMove(string ugiMoveString, Board board)
+{
+    if (ugiMoveString.size() != 6 && ugiMoveString.size() != 4)
+    {
+        throw std::invalid_argument("Invalid UGI move string.");
+    }
+
+    // One piece action
+    if (ugiMoveString.size() == 4)
+    {
+
+    }
+}
+
+string ugiMoveToString(uint32_t move, Board board)
+{
+    uint32_t indexStart = move & 0x000000FFU;
+    uint32_t indexMid = (move >> 8) & 0x000000FFU;
+    uint32_t indexEnd = (move >> 16) & 0x000000FFU;
+
+    if (indexStart > 44)
+    {
+        return string("");
+    }
+
+    string ugiMoveString = Logic::indexToString(indexStart);
+    
+    return string("");
+}
 
 int main(int argc, char** argv)
 {
