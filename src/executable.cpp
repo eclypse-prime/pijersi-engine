@@ -10,10 +10,11 @@
 #include <utils.hpp>
 
 using namespace std::chrono;
-using std::vector;
 using std::cin;
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 using namespace PijersiEngine;
 
