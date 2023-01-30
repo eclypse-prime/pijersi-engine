@@ -2,8 +2,6 @@
 #define MCTS_HPP
 #include <vector>
 
-using std::vector;
-
 namespace PijersiEngine::MCTS
 {
     uint32_t ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
@@ -13,7 +11,7 @@ namespace PijersiEngine::MCTS
         uint8_t cells[45];
         uint8_t player;
         Node *parent;
-        vector<Node*> children;
+        std::vector<Node*> children;
         uint32_t move;
 
         int visits = 0;

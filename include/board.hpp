@@ -7,9 +7,6 @@
 #include <logic.hpp>
 #include <piece.hpp>
 
-using std::string;
-using std::vector;
-
 namespace PijersiEngine
 {
     class Board
@@ -19,9 +16,9 @@ namespace PijersiEngine
         Board(Board &board);
         // ~Board();
 
-        void playManual(vector<uint32_t> move);
+        void playManual(std::vector<uint32_t> move);
         void playManual(uint32_t move);
-        void playManual(string move);
+        void playManual(std::string move);
 
         // Depth limited search
 
@@ -41,21 +38,21 @@ namespace PijersiEngine
         // uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);
         // uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
         
-        string advice(int recursionDepth, bool random);
+        std::string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
         int16_t evaluate();
 
         void setState(uint8_t newState[45]);
         uint8_t *getState();
         
-        void setStringState(string stateString);
-        string getStringState();
+        void setStringState(std::string stateString);
+        std::string getStringState();
 
         void init();
 
         uint8_t at(int i, int j);
         void print();
-        string toString();
+        std::string toString();
 
         bool checkWin();
         int16_t getForecast();

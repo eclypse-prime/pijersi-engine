@@ -7,7 +7,7 @@ CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
 CSHARP_OBJ=src/wrap/pijersi_engine_csharp.o
 CSHARP_DLL=wrap_csharp/PijersiCore.dll
 
-all: csharp interactive executable versus
+all: csharp interactive executable ugi versus
 
 csharp: $(CSHARP_DLL)
 
@@ -66,6 +66,16 @@ build/executable.exe: $(OBJ) src/executable.o
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/executable.o -o build/executable.exe
 
 executable: build/executable.exe
+
+# Command-line engine
+src/ugi.o: src/ugi.cpp $(HEADERS)
+	@g++ $(FLAGS) -c $(INCLUDE) src/ugi.cpp -o src/ugi.o
+
+build/ugi.exe: $(OBJ) src/ugi.o
+	@if not exist "build" mkdir build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/ugi.o -o build/ugi.exe
+
+ugi: build/ugi.exe
 
 # Match between two engines
 src/versus.o: src/versus.cpp $(HEADERS)

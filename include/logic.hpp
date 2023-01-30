@@ -8,9 +8,6 @@
 
 #define NULL_MOVE 0x00FFFFFFU
 
-using std::string;
-using std::vector;
-
 namespace PijersiEngine::Logic
 {
     using Coords = std::pair<uint32_t,uint32_t>;
@@ -22,17 +19,17 @@ namespace PijersiEngine::Logic
     extern std::unordered_map<uint8_t, char> pieceToChar;
     extern std::unordered_map<char, uint8_t> charToPiece;
 
-    string indexToString(uint32_t index);
-    uint32_t stringToIndex(string cellString);
+    std::string indexToString(uint32_t index);
+    uint32_t stringToIndex(std::string cellString);
     
-    string moveToString(uint32_t move, uint8_t cells[45]);
-    uint32_t stringToMove(string moveString, uint8_t cells[45]);
+    std::string moveToString(uint32_t move, uint8_t cells[45]);
+    uint32_t stringToMove(std::string moveString, uint8_t cells[45]);
     
-    string cellsToString(uint8_t cells[45]);
-    void stringToCells(string cellsString, uint8_t targetCells[45]);
+    std::string cellsToString(uint8_t cells[45]);
+    void stringToCells(std::string cellsString, uint8_t targetCells[45]);
     
     uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
-    vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
+    std::vector<std::string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     
     void setState(uint8_t target[45], const uint8_t origin[45]);
     
@@ -43,8 +40,8 @@ namespace PijersiEngine::Logic
     
     bool isWin(const uint8_t cells[45]);
     
-    vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45]);
-    vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
+    std::vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45]);
+    std::vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
     
     bool canTake(uint8_t source, uint8_t target);
     
