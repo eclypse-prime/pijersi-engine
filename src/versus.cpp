@@ -56,13 +56,15 @@ int main(int argc, char** argv)
     Board board;
 
     int wins = 0;
+    int draws = 0;
 
     for (int iter = 0; iter < nRounds; iter++)
     {
         std::cout << "Starting game " << iter << std::endl;
         board.init();
         int moves = 0;
-        while (!board.checkWin())
+        bool go = true;
+        while (go)
         {
             if (switchColours)
             {
@@ -111,36 +113,52 @@ int main(int argc, char** argv)
                 }
             }
             moves++;
+            if (board.checkDraw() || board.checkWin())
+            {
+                go = false;
+            }
         }
-        if (switchColours)
+        if (board.checkDraw())
         {
-            if ((board.evaluate() > 0 && iter % 2 == 0) || (board.evaluate() < 0 && iter % 2 == 1))
-            {
-                wins ++;
-                std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
-            }
-            else
-            {
-                std::cout << "Engine 2 wins in " << moves << " moves" << std::endl;
-            }
+            std::cout << "Draw" << std::endl;
+            draws++;
         }
         else
         {
-            if (board.evaluate() > 0)
+            if (switchColours)
             {
-                wins ++;
-                std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
+                if ((board.evaluate() > 0 && iter % 2 == 0) || (board.evaluate() < 0 && iter % 2 == 1))
+                {
+                    wins ++;
+                    std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Engine 2 wins in " << moves << " moves" << std::endl;
+                }
             }
             else
             {
-                std::cout << "Engine 2 wins in " << moves << " moves" << std::endl;
+                if (board.evaluate() > 0)
+                {
+                    wins ++;
+                    std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
+                }
+                else
+                {
+                    std::cout << "Engine 2 wins in " << moves << " moves" << std::endl;
+                }
             }
         }
         std::cout << std::endl;
     }
 
+    int losses = nRounds - wins - draws;
+
     std::cout << "Player 1 won " << wins << " games out of " << nRounds << std::endl;
-    std::cout << "Player 1 win rate: " << (float)wins/(float)nRounds*100.f << "%" << std::endl;
+    std::cout << "Draws: " << draws << " games out of " << nRounds << std::endl;
+    std::cout << wins << " - " << losses << " - " << draws << std::endl;
+    std::cout << "Player 1 win rate: " << (float)wins/(float)(wins + losses)*100.f << "%" << std::endl;
 
     return EXIT_SUCCESS;
 }
