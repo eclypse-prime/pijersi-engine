@@ -240,6 +240,7 @@ namespace PijersiEngine::AlphaBeta
 
         int16_t score = INT16_MIN;
 
+        // Return a minimal score if time is elapsed
         if (steady_clock::now() > finishTime)
         {
             return score;
