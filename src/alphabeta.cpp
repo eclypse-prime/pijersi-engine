@@ -33,6 +33,7 @@ namespace PijersiEngine::AlphaBeta
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves.size();
 
+        // Return a null move if time is elapsed
         if (steady_clock::now() > finishTime)
         {
             return NULL_MOVE;
@@ -43,14 +44,16 @@ namespace PijersiEngine::AlphaBeta
             if (recursionDepth > 0)
             {
 
+                // The Principal Variation is the first move to be searched
                 if (principalVariation != NULL_MOVE)
                 {
                     Utils::sortPrincipalVariation(moves, principalVariation);
                 }
 
                 size_t index = 0;
-                int16_t *scores = new int16_t[nMoves];
 
+                // Initializing scores array
+                int16_t *scores = new int16_t[nMoves];
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     scores[k] = INT16_MIN;
@@ -60,17 +63,36 @@ namespace PijersiEngine::AlphaBeta
                 int16_t alpha = -1500;
                 int16_t beta = 1500;
 
+                // This will stop iteration if there is a cutoff
                 bool cut = false;
 
+                // Search the first move first (Principal Variation)
+                scores[0] = -evaluateMove(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                if (scores[0] > alpha)
+                {
+                    alpha = scores[0];
+                }
+                if (alpha > beta)
+                {
+                    cut = true;
+                }
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
-                for (size_t k = 0; k < nMoves; k++)
+                for (size_t k = 1; k < nMoves; k++)
                 {
                     if (cut)
                     {
                         continue;
                     }
-                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+
+                    // Search with a null window
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+
+                    // If fail high, do the search with the full window
+                    if (alpha < scores[k] && scores[k] < beta)
+                    {
+                        scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                    }
 
                     #pragma omp atomic compare
                     if (scores[k] > alpha)
@@ -84,6 +106,7 @@ namespace PijersiEngine::AlphaBeta
                     }
                 }
 
+                // Return a null move if time is elapsed
                 if (steady_clock::now() > finishTime)
                 {
                     return NULL_MOVE;
