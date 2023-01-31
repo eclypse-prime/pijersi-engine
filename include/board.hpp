@@ -72,7 +72,6 @@ namespace PijersiEngine
         int16_t forecast = 0;
 
         uint32_t halfMoves = 0;
-        // TODO: increment move counter after black move in endTurn()
         uint32_t moves = 1;
 
         void addPiece(uint8_t piece, int i, int j);

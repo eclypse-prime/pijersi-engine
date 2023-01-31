@@ -412,6 +412,10 @@ namespace PijersiEngine
 
     void Board::endTurn()
     {
+        if (currentPlayer == 1U)
+        {
+            moves += 1;
+        }
         currentPlayer = 1U - currentPlayer;
         uint32_t pieceCount = countPieces();
         if (lastPieceCount != pieceCount)
