@@ -71,8 +71,8 @@ namespace PijersiEngine
         uint8_t cells[45];
         int16_t forecast = 0;
 
-        uint32_t halfMoves = 0;
-        uint32_t moves = 1;
+        uint32_t halfMoveCounter = 0;
+        uint32_t moveCounter = 1;
 
         void addPiece(uint8_t piece, int i, int j);
     };

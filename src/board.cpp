@@ -237,11 +237,12 @@ namespace PijersiEngine
 
     void Board::setStringState(string stateString)
     {
-        vector<string> stateWords = Utils::split(stateString, "_");
+        vector<string> stateWords = Utils::split(stateString, " ");
         Logic::stringToCells(stateWords[0], cells);
         currentPlayer = (stateWords[1] == "w") ? 0U : 1U;
         lastPieceCount = countPieces();
-        // TODO: set half move counter and move counter
+        halfMoveCounter = std::stoi(stateWords[2]);
+        moveCounter = std::stoi(stateWords[3]);
     }
 
     string Board::getStringState()
@@ -249,7 +250,7 @@ namespace PijersiEngine
         string cellsString = Logic::cellsToString(cells);
         string playerString = (currentPlayer == 0U) ? "w" : "b";
 
-        return cellsString + "_" + playerString;
+        return cellsString + " " + playerString + " " + std::to_string(halfMoveCounter) + " " + std::to_string(moveCounter);
     }
 
     // Initializes the board to the starting position
@@ -294,8 +295,8 @@ namespace PijersiEngine
         // Set active player to White
         currentPlayer = 0;
 
-        halfMoves = 0;
-        moves = 1;
+        halfMoveCounter = 0;
+        moveCounter = 1;
 
         lastPieceCount = countPieces();
     }
@@ -351,7 +352,7 @@ namespace PijersiEngine
 
     bool Board::checkDraw()
     {
-        return halfMoves >= 20;
+        return halfMoveCounter >= 20;
     }
 
     // TODO
@@ -363,7 +364,7 @@ namespace PijersiEngine
     uint8_t Board::getWinner()
     {
         // TODO refactor function name below
-        return Logic::winningPlayer(cells);
+        return Logic::getWinningPlayer(cells);
     }
 
     int16_t Board::getForecast()
@@ -414,18 +415,18 @@ namespace PijersiEngine
     {
         if (currentPlayer == 1U)
         {
-            moves += 1;
+            moveCounter += 1;
         }
         currentPlayer = 1U - currentPlayer;
         uint32_t pieceCount = countPieces();
         if (lastPieceCount != pieceCount)
         {
             lastPieceCount = pieceCount;
-            halfMoves = 0;
+            halfMoveCounter = 0;
         }
         else
         {
-            halfMoves += 1;
+            halfMoveCounter += 1;
         }
     }
 

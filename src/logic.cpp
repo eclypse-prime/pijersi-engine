@@ -790,7 +790,7 @@ namespace PijersiEngine::Logic
         return false;
     }
 
-    uint8_t winningPlayer(const uint8_t cells[45])
+    uint8_t getWinningPlayer(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {
