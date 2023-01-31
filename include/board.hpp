@@ -7,6 +7,8 @@
 #include <logic.hpp>
 #include <piece.hpp>
 
+#define MAX_DEPTH 10
+
 namespace PijersiEngine
 {
     class Board

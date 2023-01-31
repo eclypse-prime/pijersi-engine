@@ -143,7 +143,7 @@ namespace PijersiEngine
 
         uint32_t move = NULL_MOVE;
 
-        while (steady_clock::now() < finishTime)
+        while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
             uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
             if (proposedMove != NULL_MOVE)

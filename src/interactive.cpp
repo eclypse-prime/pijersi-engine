@@ -83,11 +83,11 @@ int main(int argc, char** argv)
                     {
                         uint32_t move = NULL_MOVE;
                         int depth = 1;
-                        while (steady_clock::now() < finishTime)
+                        while (steady_clock::now() < finishTime && depth <= MAX_DEPTH)
                         {
                             uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
                             auto start = steady_clock::now();
-                            uint32_t proposedMove = board.searchDepth(depth, true, remainingTimeMilliseconds);
+                            uint32_t proposedMove = board.searchDepth(depth, true, move, remainingTimeMilliseconds, false);
                             if (proposedMove != NULL_MOVE)
                             {
                                 move = proposedMove;
