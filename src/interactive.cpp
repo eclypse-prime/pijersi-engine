@@ -10,10 +10,11 @@
 #include <utils.hpp>
 
 using namespace std::chrono;
-using std::vector;
 using std::cin;
 using std::cout;
 using std::endl;
+using std::string;
+using std::vector;
 
 using namespace PijersiEngine;
 
@@ -76,9 +77,9 @@ int main(int argc, char** argv)
                 if (words.size() >= 2)
                 {
                     string parameter = words[1];
-                    int duration = stoi(parameter);
-                    time_point<steady_clock> finishTime = steady_clock::now() + seconds(duration);
-                    if (duration >= 0)
+                    int durationMilliseconds = stoi(parameter);
+                    time_point<steady_clock> finishTime = steady_clock::now() + milliseconds(durationMilliseconds);
+                    if (durationMilliseconds >= 0)
                     {
                         uint32_t move = NULL_MOVE;
                         int depth = 1;
