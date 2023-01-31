@@ -39,6 +39,7 @@ namespace PijersiEngine::Logic
     uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer);
     
     bool isWin(const uint8_t cells[45]);
+    uint8_t winningPlayer(const uint8_t cells[45]);
     
     std::vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45]);
     std::vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45]);

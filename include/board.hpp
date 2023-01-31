@@ -55,15 +55,27 @@ namespace PijersiEngine
         std::string toString();
 
         bool checkWin();
+        bool checkDraw();
+        // TODO
+        bool checkStalemate();
+        uint8_t getWinner();
         int16_t getForecast();
         uint8_t currentPlayer = 0;
 
     private:
+        uint32_t countPieces();
+        void endTurn();
+
+        uint32_t lastPieceCount = 0;
+
         uint8_t cells[45];
         int16_t forecast = 0;
 
-        void addPiece(uint8_t piece, int i, int j);
+        uint32_t halfMoves = 0;
+        // TODO: increment move counter after black move in endTurn()
+        uint32_t moves = 1;
 
+        void addPiece(uint8_t piece, int i, int j);
     };
 
 }

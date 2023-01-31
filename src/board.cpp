@@ -192,23 +192,20 @@ namespace PijersiEngine
     void Board::playManual(vector<uint32_t> move)
     {
         Logic::play(move[0], move[1], move[2], cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     void Board::playManual(uint32_t move)
     {
         Logic::playManual(move, cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     void Board::playManual(string moveString)
     {
         uint32_t move = Logic::stringToMove(moveString, cells);
         Logic::playManual(move, cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     uint8_t Board::at(int i, int j)
@@ -243,6 +240,8 @@ namespace PijersiEngine
         vector<string> stateWords = Utils::split(stateString, "_");
         Logic::stringToCells(stateWords[0], cells);
         currentPlayer = (stateWords[1] == "w") ? 0U : 1U;
+        lastPieceCount = countPieces();
+        // TODO: set half move counter and move counter
     }
 
     string Board::getStringState()
@@ -294,6 +293,11 @@ namespace PijersiEngine
 
         // Set active player to White
         currentPlayer = 0;
+
+        halfMoves = 0;
+        moves = 1;
+
+        lastPieceCount = countPieces();
     }
 
     // Prints the board
@@ -345,6 +349,23 @@ namespace PijersiEngine
         return Logic::isWin(cells);
     }
 
+    bool Board::checkDraw()
+    {
+        return halfMoves >= 20;
+    }
+
+    // TODO
+    bool Board::checkStalemate()
+    {
+        return false;
+    }
+
+    uint8_t Board::getWinner()
+    {
+        // TODO refactor function name below
+        return Logic::winningPlayer(cells);
+    }
+
     int16_t Board::getForecast()
     {
         return forecast;
@@ -370,6 +391,38 @@ namespace PijersiEngine
         uint32_t move = searchDepth(recursionDepth, random);
         string moveString = Logic::moveToString(move, cells);
         return moveString;
+    }
+
+    uint32_t Board::countPieces()
+    {
+        uint32_t count = 0U;
+        for (size_t index = 0; index < 45; index++)
+        {
+            if (cells[index] >= 16)
+            {
+                count += 2;
+            }
+            else if (cells[index] >= 1)
+            {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    void Board::endTurn()
+    {
+        currentPlayer = 1U - currentPlayer;
+        uint32_t pieceCount = countPieces();
+        if (lastPieceCount != pieceCount)
+        {
+            lastPieceCount = pieceCount;
+            halfMoves = 0;
+        }
+        else
+        {
+            halfMoves += 1;
+        }
     }
 
 }
