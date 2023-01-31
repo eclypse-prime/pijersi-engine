@@ -790,6 +790,33 @@ namespace PijersiEngine::Logic
         return false;
     }
 
+    uint8_t getWinningPlayer(const uint8_t cells[45])
+    {
+        for (int k = 0; k < 6; k++)
+        {
+            if (cells[k] != 0)
+            {
+                // If piece is White and not Wise
+                if ((cells[k] & 2) == 0 && (cells[k] & 12) != 12)
+                {
+                    return 0U;
+                }
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                // If piece is Black and not Wise
+                if ((cells[k] & 2) == 2 && (cells[k] & 12) != 12)
+                {
+                    return 1U;
+                }
+            }
+        }
+        return 0xFFU;
+    }
+
     // Returns the list of possible moves for a specific piece
     vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
     {

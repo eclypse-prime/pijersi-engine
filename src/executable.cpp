@@ -20,26 +20,29 @@ using namespace PijersiEngine;
 
 int main(int argc, char** argv)
 {
-    if (argc != 4)
+    if (argc != 4 && argc != 7)
     {
         return 0;
     }
 
     Board board;
 
-    string stringState = argv[1];
+    string stringState;
+    string mode;
+    string parameter;
 
-    string mode = argv[2];
-
-    string parameter = argv[3];
-
-    if (stringState == "startpos")
+    if (string(argv[1]) == "startpos")
     {
         board.init();
+        mode = argv[2];
+        parameter = argv[3];
     }
     else
     {
+        stringState = argv[1] + string(" ") + argv[2] + string(" ") + argv[3] + string(" ") + argv[4];
         board.setStringState(stringState);
+        mode = argv[5];
+        parameter = argv[6];
     }
 
     if (mode == "d")

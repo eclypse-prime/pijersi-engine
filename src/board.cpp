@@ -143,7 +143,7 @@ namespace PijersiEngine
 
         uint32_t move = NULL_MOVE;
 
-        while (steady_clock::now() < finishTime)
+        while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
             uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
             if (proposedMove != NULL_MOVE)
@@ -192,23 +192,20 @@ namespace PijersiEngine
     void Board::playManual(vector<uint32_t> move)
     {
         Logic::play(move[0], move[1], move[2], cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     void Board::playManual(uint32_t move)
     {
         Logic::playManual(move, cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     void Board::playManual(string moveString)
     {
         uint32_t move = Logic::stringToMove(moveString, cells);
         Logic::playManual(move, cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        endTurn();
     }
 
     uint8_t Board::at(int i, int j)
@@ -240,9 +237,12 @@ namespace PijersiEngine
 
     void Board::setStringState(string stateString)
     {
-        vector<string> stateWords = Utils::split(stateString, "_");
+        vector<string> stateWords = Utils::split(stateString, " ");
         Logic::stringToCells(stateWords[0], cells);
         currentPlayer = (stateWords[1] == "w") ? 0U : 1U;
+        lastPieceCount = countPieces();
+        halfMoveCounter = std::stoi(stateWords[2]);
+        moveCounter = std::stoi(stateWords[3]);
     }
 
     string Board::getStringState()
@@ -250,7 +250,7 @@ namespace PijersiEngine
         string cellsString = Logic::cellsToString(cells);
         string playerString = (currentPlayer == 0U) ? "w" : "b";
 
-        return cellsString + "_" + playerString;
+        return cellsString + " " + playerString + " " + std::to_string(halfMoveCounter) + " " + std::to_string(moveCounter);
     }
 
     // Initializes the board to the starting position
@@ -294,6 +294,11 @@ namespace PijersiEngine
 
         // Set active player to White
         currentPlayer = 0;
+
+        halfMoveCounter = 0;
+        moveCounter = 1;
+
+        lastPieceCount = countPieces();
     }
 
     // Prints the board
@@ -345,6 +350,23 @@ namespace PijersiEngine
         return Logic::isWin(cells);
     }
 
+    bool Board::checkDraw()
+    {
+        return halfMoveCounter >= 20;
+    }
+
+    // TODO
+    bool Board::checkStalemate()
+    {
+        return false;
+    }
+
+    uint8_t Board::getWinner()
+    {
+        // TODO refactor function name below
+        return Logic::getWinningPlayer(cells);
+    }
+
     int16_t Board::getForecast()
     {
         return forecast;
@@ -370,6 +392,42 @@ namespace PijersiEngine
         uint32_t move = searchDepth(recursionDepth, random);
         string moveString = Logic::moveToString(move, cells);
         return moveString;
+    }
+
+    uint32_t Board::countPieces()
+    {
+        uint32_t count = 0U;
+        for (size_t index = 0; index < 45; index++)
+        {
+            if (cells[index] >= 16)
+            {
+                count += 2;
+            }
+            else if (cells[index] >= 1)
+            {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    void Board::endTurn()
+    {
+        if (currentPlayer == 1U)
+        {
+            moveCounter += 1;
+        }
+        currentPlayer = 1U - currentPlayer;
+        uint32_t pieceCount = countPieces();
+        if (lastPieceCount != pieceCount)
+        {
+            lastPieceCount = pieceCount;
+            halfMoveCounter = 0;
+        }
+        else
+        {
+            halfMoveCounter += 1;
+        }
     }
 
 }
