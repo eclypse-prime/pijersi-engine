@@ -94,12 +94,14 @@ namespace PijersiEngine::AlphaBeta
                         scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
                     }
 
+                    // Update alpha
                     #pragma omp atomic compare
                     if (scores[k] > alpha)
                     {
                         alpha = scores[k];
                     }
 
+                    // Cutoff
                     if (alpha > beta)
                     {
                         cut = true;
@@ -192,6 +194,7 @@ namespace PijersiEngine::AlphaBeta
         return totalScore;
     }
 
+    // Update a piece's score according to its last measured score, returns the difference between its current and last score
     int16_t updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
     {
         if (piece == 0)
@@ -204,6 +207,8 @@ namespace PijersiEngine::AlphaBeta
         }
     }
 
+    // Update the position's score according to the last measured position and score.
+    // This will only evaluate the pieces that have changed.
     int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
         for (int k = 0; k < 45; k++)
