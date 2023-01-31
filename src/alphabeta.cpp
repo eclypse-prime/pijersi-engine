@@ -67,7 +67,7 @@ namespace PijersiEngine::AlphaBeta
                 bool cut = false;
 
                 // Search the first move first (Principal Variation)
-                scores[0] = -evaluateMove(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
                 if (scores[0] > alpha)
                 {
                     alpha = scores[0];
@@ -268,6 +268,87 @@ namespace PijersiEngine::AlphaBeta
                     if (alpha > beta)
                     {
                         break;
+                    }
+                }
+            }
+            else
+            {
+                uint8_t cellsBuffer[45];
+                int16_t previousPieceScores[45] = {0};
+                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
+                    if (currentPlayer == 1)
+                    {
+                        evaluation = -evaluation;
+                    }
+                    score = max(score, evaluation);
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return score;
+    }
+
+    // Evaluates a move by calculating the possible subsequent moves recursively
+    int16_t evaluateMoveParallel(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    {
+        // Create a new board on which the move will be played
+        uint8_t newCells[45];
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
+
+        // Stop the recursion if a winning position is achieved
+        if (Logic::isWin(newCells) || recursionDepth <= 0)
+        {
+            return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
+        }
+
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
+
+        int16_t score = INT16_MIN;
+
+        // Return a minimal score if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
+
+        // Evaluate available moves and find the best one
+        if (moves.size() > 0)
+        {
+
+            if (recursionDepth > 1)
+            {
+                bool cut = false;
+                #pragma omp parallel for schedule(dynamic) shared(alpha)
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    if (cut)
+                    {
+                        continue;
+                    }
+                    int16_t eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                    #pragma omp atomic compare
+                    if (eval > score)
+                    {
+                        score = eval;
+                    }
+                    #pragma omp atomic compare
+                    if (score > alpha)
+                    {
+                        alpha = score;
+                    }
+                    if (alpha > beta)
+                    {
+                        cut = true;
                     }
                 }
             }
