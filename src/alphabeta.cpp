@@ -137,7 +137,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluate piece according to its position, colour and type
-    int16_t evaluatePiece(uint8_t piece, uint32_t i)
+    inline int16_t evaluatePiece(uint8_t piece, uint32_t i)
     {
 
         int16_t score;
@@ -169,11 +169,53 @@ namespace PijersiEngine::AlphaBeta
     int16_t evaluatePosition(uint8_t cells[45])
     {
         int16_t score = 0;
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != 0)
             {
-                score += evaluatePiece(cells[k], Logic::indexToLine(k));
+                score += evaluatePiece(cells[k], 0);
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 1);
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 2);
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 3);
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 4);
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 5);
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 6);
             }
         }
         return score;
@@ -182,11 +224,65 @@ namespace PijersiEngine::AlphaBeta
     int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
     {
         int16_t totalScore = 0;
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != 0)
             {
-                int score = evaluatePiece(cells[k], Logic::indexToLine(k));
+                int score = evaluatePiece(cells[k], 0);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 1);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 2);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 3);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 4);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 5);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 6);
                 pieceScores[k] = score;
                 totalScore += score;
             }
@@ -211,11 +307,53 @@ namespace PijersiEngine::AlphaBeta
     // This will only evaluate the pieces that have changed.
     int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != previousCells[k])
             {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], Logic::indexToLine(k));
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 0);
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 1);
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 2);
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 3);
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 4);
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 5);
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 6);
             }
         }
         return previousScore;
