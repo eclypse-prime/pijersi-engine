@@ -67,7 +67,7 @@ namespace PijersiEngine::AlphaBeta
                 bool cut = false;
 
                 // Search the first move first (Principal Variation)
-                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
                 if (scores[0] > alpha)
                 {
                     alpha = scores[0];
@@ -250,7 +250,7 @@ namespace PijersiEngine::AlphaBeta
         if (moves.size() > 0)
         {
 
-            // if (recursionDepth >= 5)
+            // if (allowNullMove && recursionDepth >= 4)
             // {
             //     score = -evaluateMove(NULL_MOVE, recursionDepth - 3, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
             //     if (score >= beta)
@@ -328,7 +328,7 @@ namespace PijersiEngine::AlphaBeta
             if (recursionDepth > 1)
             {
                 bool cut = false;
-                #pragma omp parallel for schedule(dynamic) shared(alpha)
+                #pragma omp parallel for schedule(dynamic) shared(alpha) if (recursionDepth > 1)
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     if (cut)
