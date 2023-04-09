@@ -1,755 +1,141 @@
-#include <vector>
+#include <algorithm>
 #include <cstdint>
 #include <cfloat>
 #include <iostream>
+#include <numeric>
+#include <vector>
+#include <chrono>
 
 #include <omp.h>
 
 #include <alphabeta.hpp>
 #include <logic.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::max;
+using std::vector;
+using std::chrono::steady_clock;
+using std::chrono::time_point;
 
-namespace PijersiEngine
+namespace PijersiEngine::AlphaBeta
 {
 
-    // Calculates a move using alphabeta minimax algorithm of chosen depth.
-    vector<int> _ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer)
+    /* Calculates a move using alphabeta minimax algorithm of chosen depth.
+    If a finish time is provided, it will search until that time point is reached.
+    In that case, the function will return a null move. */
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime)
     {
 
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
 
-        if (moves.size() > 0)
+        // Return a null move if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return NULL_MOVE;
+        }
+
+        if (nMoves > 0)
         {
             if (recursionDepth > 0)
             {
-
-                int index = 0;
-                int16_t *scores = new int16_t[moves.size() / 6];
-
-                int16_t alpha = INT16_MIN;
-                int16_t beta = INT16_MAX;
-
-                // Evaluate possible moves
-                #pragma omp parallel for schedule(dynamic)
-                for (int k = 0; k < moves.size() / 6; k++)
+                // The Principal Variation is the first move to be searched
+                if (principalVariation != NULL_MOVE)
                 {
-                    scores[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
+                    Utils::sortPrincipalVariation(moves, principalVariation);
+                }
+
+                size_t index = 0;
+
+                // Initializing scores array
+                int16_t *scores = new int16_t[nMoves];
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    scores[k] = INT16_MIN
+                }
+
+                // Cutoffs will happen on winning moves
+                int16_t alpha = -1500;
+                int16_t beta = 1500;
+
+                // This will stop iteration if there is a cutoff
+                bool cut = false;
+
+                // Search the first move first (Principal Variation)
+                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
+                if (scores[0] > alpha)
+                {
+                    alpha = scores[0];
+                }
+                if (alpha > beta)
+                {
+                    cut = true;
+                }
+                // Evaluate possible moves
+                #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
+                for (size_t k = 1; k < nMoves; k++)
+                {
+                    if (cut)
+                    {
+                        continue;
+                    }
+                    // Search with a null window
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+
+                    // If fail high, do the search with the full window
+                    if (alpha < scores[k] && scores[k] < beta)
+                    {
+                        scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                    }
+
+                    // Update alpha
+                    #pragma omp atomic compare
+                    if (scores[k] > alpha)
+                    {
+                        alpha = scores[k];
+                    }
+
+                    // Cutoff
+                    if (alpha > beta)
+                    {
+                        cut = true;
+                    }
+                }
+
+                // Return a null move if time is elapsed
+                if (steady_clock::now() > finishTime)
+                {
+                    return NULL_MOVE;
                 }
 
                 // Find best move
-                if (currentPlayer == 0)
+                float maximum = -FLT_MAX;
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    float maximum = -FLT_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? RNG::distribution(RNG::gen) : 0.f;
+                    float saltedScore = salt + (float)scores[k];
+                    if (saltedScore > maximum)
                     {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)scores[k];
-                        if (extremum > maximum)
-                        {
-                            maximum = extremum;
-                            index = k;
-                        }
-                    }
-                }
-                else
-                {
-                    float minimum = FLT_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float extremum = salt + (float)scores[k];
-                        if (extremum < minimum)
-                        {
-                            minimum = extremum;
-                            index = k;
-                        }
+                        maximum = saltedScore;
+                        index = k;
                     }
                 }
 
                 delete scores;
 
-                vector<int>::const_iterator first = moves.begin() + 6 * index;
-                vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-                vector<int> move(first, last);
-                return move;
-            }
-            else
-            {
-                float extremum = 0.f;
-                int index = 0;
-                uint8_t cellsBuffer[45];
-                int16_t currentPieceScores[45] = {0};
-
-                int16_t currentScore = _evaluatePosition(cells, currentPieceScores);
-
-                if (currentPlayer == 0)
-                {
-                    extremum = -FLT_MAX;
-                    int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float salted_score = salt + (float)score;
-                        if (salted_score > extremum)
-                        {
-                            extremum = salted_score;
-                            index = k;
-                        }
-                    }
-                }
-                else
-                {
-                    extremum = FLT_MAX;
-                    int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? distribution(gen) : 0.f;
-                        float salted_score = salt + (float)score;
-                        if (salted_score < extremum)
-                        {
-                            extremum = salted_score;
-                            index = k;
-                        }
-                    }
-                }
-                
-                vector<int>::const_iterator first = moves.begin() + 6 * index;
-                vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-                vector<int> move(first, last);
-                return move;
+                return moves[index];
             }
         }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return NULL_MOVE;
     }
 
-    // int16_t _evaluatePiece(uint8_t piece, int i)
-    // {
-    //     switch (piece)
-    //     {
-    //     case 17:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 21:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 25:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 81:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 85:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 89:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 145:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 149:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 153:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 209:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 213:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 217:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 3003;
-    //         case 1:
-    //             return 31;
-    //         case 2:
-    //             return 29;
-    //         case 3:
-    //             return 27;
-    //         case 4:
-    //             return 25;
-    //         case 5:
-    //             return 23;
-    //         case 6:
-    //             return 21;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 221:
-    //         return 19;
-    //     case 1:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 5:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 9:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return 1500;
-    //         case 1:
-    //             return 14;
-    //         case 2:
-    //             return 13;
-    //         case 3:
-    //             return 12;
-    //         case 4:
-    //             return 11;
-    //         case 5:
-    //             return 10;
-    //         case 6:
-    //             return 9;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 13:
-    //         return 8;
-    //     case 51:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 55:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 59:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 115:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 119:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 123:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 179:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 183:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 187:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 243:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 247:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 251:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -21;
-    //         case 1:
-    //             return -23;
-    //         case 2:
-    //             return -25;
-    //         case 3:
-    //             return -27;
-    //         case 4:
-    //             return -29;
-    //         case 5:
-    //             return -31;
-    //         case 6:
-    //             return -3003;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 255:
-    //         return -19;
-    //     case 3:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 7:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 11:
-    //         switch (i)
-    //         {
-    //         case 0:
-    //             return -9;
-    //         case 1:
-    //             return -10;
-    //         case 2:
-    //             return -11;
-    //         case 3:
-    //             return -12;
-    //         case 4:
-    //             return -13;
-    //         case 5:
-    //             return -14;
-    //         case 6:
-    //             return -1500;
-    //         default:
-    //             return 0;
-    //         }
-    //     case 15:
-    //         return -8;
-    //     default:
-    //         return 0;
-    //     }
-    // }
-
     // Evaluate piece according to its position, colour and type
-    int16_t _evaluatePiece(uint8_t piece, int i)
+    inline int16_t evaluatePiece(uint8_t piece, uint32_t i)
     {
         // The following score modifiers apply in this order
         // A piece' base score is 8
@@ -764,9 +150,9 @@ namespace PijersiEngine
             score = 14 - 11 * (piece & 2) - i;
 
             // If the piece is in a winning position
-            if ((i == 0 && (piece & 2) == 0 ) || (i == 6 && (piece & 2) == 2))
+            if ((i == 0 && (piece & 2) == 0) || (i == 6 && (piece & 2) == 2))
             {
-                score *= 16;
+                score *= 256;
             }
         }
         else
@@ -783,131 +169,131 @@ namespace PijersiEngine
     }
 
     // Evaluates the board
-    int16_t _evaluatePosition(uint8_t cells[45])
+    int16_t evaluatePosition(uint8_t cells[45])
     {
         int16_t score = 0;
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != 0)
             {
-                score += _evaluatePiece(cells[k], indexToLine(k));
+                score += evaluatePiece(cells[k], 0);
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 1);
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 2);
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 3);
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 4);
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 5);
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                score += evaluatePiece(cells[k], 6);
             }
         }
         return score;
     }
 
-    int16_t _evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
+    int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
     {
         int16_t totalScore = 0;
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != 0)
             {
-                int score = _evaluatePiece(cells[k], indexToLine(k));
+                int score = evaluatePiece(cells[k], 0);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 1);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 2);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 3);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 4);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 5);
+                pieceScores[k] = score;
+                totalScore += score;
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                int score = evaluatePiece(cells[k], 6);
                 pieceScores[k] = score;
                 totalScore += score;
             }
         }
         return totalScore;
     }
-
-    int16_t _evaluateFuturePosition(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
-    {
-        // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
-
-        if (moves.size() > 0)
-        {
-            if (recursionDepth > 0)
-            {
-
-                int16_t *scores = new int16_t[moves.size() / 6];
-
-                int16_t alpha = INT16_MIN;
-                int16_t beta = INT16_MAX;
-
-                // Evaluate possible moves
-                #pragma omp parallel for schedule(dynamic)
-                for (int k = 0; k < moves.size() / 6; k++)
-                {
-                    scores[k] = _evaluateMove(moves.data() + 6 * k, recursionDepth, alpha, beta, cells, currentPlayer);
-                }
-
-                // Find best move
-                if (currentPlayer == 0)
-                {
-                    int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        if (scores[k] > maximum)
-                        {
-                            maximum = scores[k];
-                        }
-                    }
-                    delete scores;
-                    return maximum;
-                }
-                else
-                {
-                    int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        if (scores[k] < minimum)
-                        {
-                            minimum = scores[k];;
-                        }
-                    }
-                    delete scores;
-                    return minimum;
-                }
-
-            }
-            else
-            {
-                int index = 0;
-                uint8_t cellsBuffer[45];
-                int16_t currentPieceScores[45] = {0};
-
-                int16_t currentScore = _evaluatePosition(cells, currentPieceScores);
-
-                if (currentPlayer == 0)
-                {
-                    int16_t maximum = INT16_MIN;
-                    int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        if (score > maximum)
-                        {
-                            maximum = score;
-                            index = k;
-                        }
-                    }
-                    return maximum;
-                }
-                else
-                {
-                    int16_t minimum = INT16_MAX;
-                    int16_t score;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        score = _evaluateMoveTerminal(moves.data() + 6 * k, cells, cellsBuffer, currentScore, currentPieceScores);
-                        if (score < minimum)
-                        {
-                            minimum = score;
-                            index = k;
-                        }
-                    }
-                    return minimum;
-                }
-            }
-        }
-        return 0;
-    }
-
-    int16_t _updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
+    // Update a piece's score according to its last measured score, returns the difference between its current and last score
+    int16_t updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
     {
         if (piece == 0)
         {
@@ -915,112 +301,215 @@ namespace PijersiEngine
         }
         else
         {
-            return _evaluatePiece(piece, i) - previousPieceScore;
+            return evaluatePiece(piece, i) - previousPieceScore;
         }
     }
 
-    int16_t _updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
+    // Update the position's score according to the last measured position and score.
+    // This will only evaluate the pieces that have changed.
+    int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
-        for (int k = 0; k < 45; k++)
+        for (int k = 0; k < 6; k++)
         {
             if (cells[k] != previousCells[k])
             {
-                previousScore += _updatePieceEval(previousPieceScores[k], cells[k], indexToLine(k));
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 0);
+            }
+        }
+        for (int k = 6; k < 13; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 1);
+            }
+        }
+        for (int k = 13; k < 19; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 2);
+            }
+        }
+        for (int k = 19; k < 26; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 3);
+            }
+        }
+        for (int k = 26; k < 32; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 4);
+            }
+        }
+        for (int k = 32; k < 39; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 5);
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 6);
             }
         }
         return previousScore;
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t _evaluateMove(int move[6], int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer)
+    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
-        _setState(newCells, cells);
-        _playManual(move, newCells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
-
-        int16_t score = 0;
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
 
         // Stop the recursion if a winning position is achieved
-        if (_checkWin(newCells))
+        if (Logic::isWin(newCells) || recursionDepth <= 0)
         {
-            return _evaluatePosition(newCells);
+            return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        vector<int> moves = _availablePlayerMoves(currentPlayer, newCells);
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
+
+        int16_t score = INT16_MIN;
+
+        // Return a minimal score if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
 
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
+
+            // if (allowNullMove && recursionDepth >= 4)
+            // {
+            //     score = -evaluateMove(NULL_MOVE, recursionDepth - 3, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
+            //     if (score >= beta)
+            //     {
+            //         return beta;
+            //     }
+            // }
+
             if (recursionDepth > 1)
             {
-                if (currentPlayer == 0)
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
                     {
-                        maximum = max(maximum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
-                        if (maximum > beta)
-                        {
-                            break;
-                        }
-                        alpha = max(alpha, maximum);
+                        break;
                     }
-                    score = maximum;
-                }
-                else
-                {
-                    int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
-                    {
-                        minimum = min(minimum, _evaluateMove(moves.data() + 6 * k, recursionDepth - 1, alpha, beta, newCells, currentPlayer));
-                        if (minimum < alpha)
-                        {
-                            break;
-                        }
-                        beta = min(beta, minimum);
-                    }
-                    score = minimum;
                 }
             }
-            // Recursion not needed, only applying move and evaluating
-            // This can save us a lot of memory allocations
             else
             {
                 uint8_t cellsBuffer[45];
-                int16_t currentPieceScores[45] = {0};
-
-                int16_t currentScore = _evaluatePosition(newCells, currentPieceScores);
-
-                if (currentPlayer == 0)
+                int16_t previousPieceScores[45] = {0};
+                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t maximum = INT16_MIN;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
+                    if (currentPlayer == 1)
                     {
-                        maximum = max(maximum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
-                        if (maximum > beta)
-                        {
-                            break;
-                        }
-                        alpha = max(alpha, maximum);
+                        evaluation = -evaluation;
                     }
-                    score = maximum;
+                    score = max(score, evaluation);
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
+                    {
+                        break;
+                    }
                 }
-                else
+            }
+        }
+
+        return score;
+    }
+
+    // Evaluates a move by calculating the possible subsequent moves recursively
+    int16_t evaluateMoveParallel(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    {
+        // Create a new board on which the move will be played
+        uint8_t newCells[45];
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
+
+        // Stop the recursion if a winning position is achieved
+        if (Logic::isWin(newCells) || recursionDepth <= 0)
+        {
+            return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
+        }
+
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
+
+        int16_t score = INT16_MIN;
+
+        // Return a minimal score if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
+
+        // Evaluate available moves and find the best one
+        if (moves.size() > 0)
+        {
+
+            if (recursionDepth > 1)
+            {
+                bool cut = false;
+                #pragma omp parallel for schedule(dynamic) shared(alpha) if (recursionDepth > 1)
+                for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t minimum = INT16_MAX;
-                    for (int k = 0; k < moves.size() / 6; k++)
+                    if (cut)
                     {
-                        minimum = min(minimum, _evaluateMoveTerminal(moves.data() + 6 * k, newCells, cellsBuffer, currentScore, currentPieceScores));
-                        if (minimum < alpha)
-                        {
-                            break;
-                        }
-                        beta = min(beta, minimum);
+                        continue;
                     }
-                    score = minimum;
+                    int16_t eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                    #pragma omp atomic compare
+                    if (eval > score)
+                    {
+                        score = eval;
+                    }
+                    #pragma omp atomic compare
+                    if (score > alpha)
+                    {
+                        alpha = score;
+                    }
+                    if (alpha > beta)
+                    {
+                        cut = true;
+                    }
+                }
+            }
+            else
+            {
+                uint8_t cellsBuffer[45];
+                int16_t previousPieceScores[45] = {0};
+                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
+                    if (currentPlayer == 1)
+                    {
+                        evaluation = -evaluation;
+                    }
+                    score = max(score, evaluation);
+                    alpha = max(alpha, score);
+                    if (alpha > beta)
+                    {
+                        break;
+                    }
                 }
             }
         }
@@ -1029,11 +518,11 @@ namespace PijersiEngine
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    int16_t _evaluateMoveTerminal(int move[6], uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
     {
-        _setState(newCells, cells);
-        _playManual(move, newCells);
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
 
-        return _updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        return updatePositionEval(previousScore, previousPieceScores, cells, newCells);
     }
 }

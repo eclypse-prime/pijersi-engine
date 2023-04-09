@@ -8,15 +8,16 @@
 #include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
-#include <mcts.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
-using namespace std;
-
+using std::cout;
+using std::endl;
+using std::string;
+using std::vector;
 
 namespace PijersiEngine
 {
-
 
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
@@ -28,22 +29,23 @@ namespace PijersiEngine
     uint8_t createPiece(PieceColour colour, PieceType type)
     {
         uint8_t piece = 1;
-        if (colour == Black) {
+        if (colour == Black)
+        {
             piece += 2;
         }
         switch (type)
         {
-            case Scissors:
-                break;
-            case Paper:
-                piece += 4;
-                break;
-            case Rock:
-                piece += 8;
-                break;
-            case Wise:
-                piece += 12;
-                break;
+        case Scissors:
+            break;
+        case Paper:
+            piece += 4;
+            break;
+        case Rock:
+            piece += 8;
+            break;
+        case Wise:
+            piece += 12;
+            break;
         }
         return piece;
     }
@@ -64,59 +66,122 @@ namespace PijersiEngine
         currentPlayer = board.currentPlayer;
     }
 
-    // Plays a move and returns it
-    vector<int> Board::playAlphaBeta(int recursionDepth, bool random)
+    /* Plays a move using alphabeta minimax algorithm of chosen depth.
+    If a duration is provided, it will search until that time is over.
+    In that case, the engine will not play and the function will return a null move. */
+    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
+
         // Calculate move
-        vector<int> move = ponderAlphaBeta(recursionDepth, random);
-        // Apply move
-        playManual(move);
+        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
+        if (move != NULL_MOVE)
+        {
+            playManual(move);
+        }
         return move;
     }
 
-    vector<int> Board::ponderAlphaBeta(int recursionDepth, bool random)
+    /* Calculates a move using alphabeta minimax algorithm of chosen depth.
+    If a duration is provided, it will search until that time is over.
+    In that case, the function will return a null move. */
+    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
-        return _ponderAlphaBeta(recursionDepth, random, cells, currentPlayer);
+        // Calculate finish time point
+        time_point<steady_clock> finishTime;
+        if (searchTimeMilliseconds == UINT64_MAX)
+        {
+            finishTime = time_point<steady_clock>::max();
+        }
+        else
+        {
+            finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
+        }
+
+        uint32_t move = NULL_MOVE;
+        if (iterative)
+        {
+            for (int depth = 1; depth <= recursionDepth; depth++)
+            {
+                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime);
+                if (proposedMove != NULL_MOVE)
+                {
+                    move = proposedMove;
+                }
+            }
+        }
+        else
+        {
+            move = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, principalVariation, finishTime);
+        }
+        return move;
+    }
+
+    /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
+    The engine will then return the best move found during that timeframe.
+    If no move is found, the engine will not play and the function will return a null move. */
+    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
+    {
+        // Calculate move
+        uint32_t move = searchTime(random, searchTimeMilliseconds);
+        if (move != NULL_MOVE)
+        {
+            playManual(move);
+        }
+        return move;
+    }
+
+    /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
+    The engine will then return the best move found during that timeframe.
+    If no move is found, the engine will return a null move. */
+    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
+    {
+        int recursionDepth = 1;
+
+        // Calculate finish time point
+        time_point<steady_clock> finishTime;
+        finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
+
+        uint32_t move = NULL_MOVE;
+
+        while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
+        {
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
+            if (proposedMove != NULL_MOVE)
+            {
+                move = proposedMove;
+            }
+            recursionDepth += 1;
+        }
+        return move;
     }
 
     // Chooses a random move
-    vector<int> Board::ponderRandom()
+    uint32_t Board::searchRandom()
     {
-        return _ponderRandom(cells, currentPlayer);
+        return Logic::searchRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
-    vector<int> Board::playRandom()
+    uint32_t Board::playRandom()
     {
-        vector<int> move = ponderRandom();
-
-        playManual(move);
-        return move;
-
+        return Logic::playRandom(cells, currentPlayer);
     }
 
-    bool Board::isMoveLegal(vector<int> move)
+    bool Board::isMoveLegal(uint32_t move)
     {
-        if (cells[coordsToIndex(move[0], move[1])] == 0)
+        uint32_t indexStart = move & 0x000000FF;
+        if (cells[indexStart] == 0)
         {
             return false;
         }
-        if ((cells[coordsToIndex(move[0], move[1])] & 2) != currentPlayer << 1)
+        if ((cells[indexStart] & 2) != currentPlayer << 1)
         {
             return false;
         }
-        vector<int> moves = _availablePieceMoves(move[0], move[1], cells);
-        for (int k = 0; k < moves.size()/6; k++)
+        vector<uint32_t> moves = Logic::availablePieceMoves(indexStart, cells);
+        for (size_t k = 0; k < moves.size(); k++)
         {
-            bool legal = true;
-            for (int m = 0; m < 6; m++)
-            {
-                if (moves[k*6+m] != move[m])
-                {
-                    legal = false;
-                }
-            }
-            if (legal)
+            if (move == moves[k])
             {
                 return true;
             }
@@ -124,42 +189,68 @@ namespace PijersiEngine
         return false;
     }
 
-
-
-
-
-    void Board::playManual(vector<int> move)
+    void Board::playManual(vector<uint32_t> move)
     {
-        _play(move[0], move[1], move[2], move[3], move[4], move[5], cells);
-        // Set current player to the other colour.
-        currentPlayer = 1 - currentPlayer;
+        Logic::play(move[0], move[1], move[2], cells);
+        endTurn();
+    }
+
+    void Board::playManual(uint32_t move)
+    {
+        Logic::playManual(move, cells);
+        endTurn();
+    }
+
+    void Board::playManual(string moveString)
+    {
+        uint32_t move = Logic::stringToMove(moveString, cells);
+        Logic::playManual(move, cells);
+        endTurn();
     }
 
     uint8_t Board::at(int i, int j)
     {
-        return cells[coordsToIndex(i, j)];
+        return cells[Logic::coordsToIndex(i, j)];
     }
 
     int16_t Board::evaluate()
     {
-        return _evaluatePosition(cells);
+        return AlphaBeta::evaluatePosition(cells);
     }
 
     // Adds a piece to the designated coordinates
     void Board::addPiece(uint8_t piece, int i, int j)
     {
-        cells[coordsToIndex(i, j)] = piece;
+        cells[Logic::coordsToIndex(i, j)] = piece;
     }
 
     // Sets the board to a chosen state
     void Board::setState(uint8_t newState[45])
     {
-        _setState(cells, newState);
+        Logic::setState(cells, newState);
     }
 
     uint8_t *Board::getState()
     {
         return cells;
+    }
+
+    void Board::setStringState(string stateString)
+    {
+        vector<string> stateWords = Utils::split(stateString, " ");
+        Logic::stringToCells(stateWords[0], cells);
+        currentPlayer = (stateWords[1] == "w") ? 0U : 1U;
+        lastPieceCount = countPieces();
+        halfMoveCounter = std::stoi(stateWords[2]);
+        moveCounter = std::stoi(stateWords[3]);
+    }
+
+    string Board::getStringState()
+    {
+        string cellsString = Logic::cellsToString(cells);
+        string playerString = (currentPlayer == 0U) ? "w" : "b";
+
+        return cellsString + " " + playerString + " " + std::to_string(halfMoveCounter) + " " + std::to_string(moveCounter);
     }
 
     // Initializes the board to the starting position
@@ -181,7 +272,7 @@ namespace PijersiEngine
         addPiece(createPiece(Black, Paper), 1, 0);
         addPiece(createPiece(Black, Rock), 1, 1);
         addPiece(createPiece(Black, Scissors), 1, 2);
-        addPiece(addBottom(createPiece(Black, Wise),createPiece(Black, Wise)), 1, 3);
+        addPiece(addBottom(createPiece(Black, Wise), createPiece(Black, Wise)), 1, 3);
         addPiece(createPiece(Black, Rock), 1, 4);
         addPiece(createPiece(Black, Scissors), 1, 5);
         addPiece(createPiece(Black, Paper), 1, 6);
@@ -190,7 +281,7 @@ namespace PijersiEngine
         addPiece(createPiece(White, Paper), 5, 0);
         addPiece(createPiece(White, Scissors), 5, 1);
         addPiece(createPiece(White, Rock), 5, 2);
-        addPiece(addBottom(createPiece(White, Wise),createPiece(White, Wise)), 5, 3);
+        addPiece(addBottom(createPiece(White, Wise), createPiece(White, Wise)), 5, 3);
         addPiece(createPiece(White, Scissors), 5, 4);
         addPiece(createPiece(White, Rock), 5, 5);
         addPiece(createPiece(White, Paper), 5, 6);
@@ -203,58 +294,11 @@ namespace PijersiEngine
 
         // Set active player to White
         currentPlayer = 0;
-    }
 
-    // Converts a piece to char format
-    // Used for debug purposes
-    char _pieceToChar(uint8_t piece)
-    {
-        char res = ' ';
-        // If the piece is White
-        if ((piece & 2) == 0)
-        {
-            // Read the piece's type
-            switch (piece & 12)
-            {
-            case 0:
-                res = 'S';
-                break;
-            case 4:
-                res = 'P';
-                break;
-            case 8:
-                res = 'R';
-                break;
-            case 12:
-                res = 'W';
-                break;
-            default:
-                break;
-            }
-        }
-        // If the piece is Black
-        else if ((piece & 2) == 2)
-        {
-            // Read the piece's type
-            switch (piece & 12)
-            {
-            case 0:
-                res = 's';
-                break;
-            case 4:
-                res = 'p';
-                break;
-            case 8:
-                res = 'r';
-                break;
-            case 12:
-                res = 'w';
-                break;
-            default:
-                break;
-            }
-        }
-        return res;
+        halfMoveCounter = 0;
+        moveCounter = 1;
+
+        lastPieceCount = countPieces();
     }
 
     // Prints the board
@@ -271,59 +315,56 @@ namespace PijersiEngine
         string output = "";
         for (int i = 0; i < 7; i++)
         {
+            int nColumns;
             if (i % 2 == 0)
             {
+                nColumns = 6;
                 output += ' ';
-                for (int j = 0; j < 6; j++)
-                {
-                    char char1 = '.';
-                    char char2 = ' ';
-                    uint8_t piece = cells[coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        char1 = _pieceToChar(piece);
-                        // If the piece is a stack
-                        if (piece >= 16)
-                        {
-                            char2 = _pieceToChar(piece >> 4);
-                        }
-                    }
-                    output += char1;
-                    output += char2;
-                }
-                output += '\n';
             }
             else
             {
-                for (int j = 0; j < 7; j++)
-                {
-                    char char1 = '.';
-                    char char2 = ' ';
-                    uint8_t piece = cells[coordsToIndex(i, j)];
-                    if (piece != 0)
-                    {
-                        char1 = _pieceToChar(piece);
-                        // If the piece is a stack
-                        if (piece >= 16)
-                        {
-                            char2 = _pieceToChar(piece >> 4);
-                        }
-                    }
-                    output += char1;
-                    output += char2;
-                }
-                output += '\n';
+                nColumns = 7;
             }
+
+            for (int j = 0; j < nColumns; j++)
+            {
+                char char1 = '.';
+                char char2 = ' ';
+                uint8_t piece = cells[Logic::coordsToIndex(i, j)];
+                if (piece != 0)
+                {
+                    char1 = Logic::pieceToChar[piece & 0x0FU];
+                    char2 = Logic::pieceToChar[piece >> 4];
+                }
+                output += char1;
+                output += char2;
+            }
+            output += '\n';
         }
         return output;
     }
 
-
-
     // Returns true if the board is in a winning position
     bool Board::checkWin()
     {
-        return _checkWin(cells);
+        return Logic::isWin(cells);
+    }
+
+    bool Board::checkDraw()
+    {
+        return halfMoveCounter >= 20;
+    }
+
+    // TODO
+    bool Board::checkStalemate()
+    {
+        return false;
+    }
+
+    uint8_t Board::getWinner()
+    {
+        // TODO refactor function name below
+        return Logic::getWinningPlayer(cells);
     }
 
     int16_t Board::getForecast()
@@ -331,20 +372,62 @@ namespace PijersiEngine
         return forecast;
     }
 
-    vector<int> Board::ponderMCTS(int seconds, int simulationsPerRollout)
+    // uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)
+    // {
+    //     return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
+    // }
+
+    // // Plays a move and returns it
+    // uint32_t Board::playMCTS(int seconds, int simulationsPerRollout)
+    // {
+    //     // Calculate move
+    //     uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
+    //     // Apply move
+    //     playManual(move);
+    //     return move;
+    // }
+
+    string Board::advice(int recursionDepth, bool random)
     {
-        return _ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
+        uint32_t move = searchDepth(recursionDepth, random);
+        string moveString = Logic::moveToString(move, cells);
+        return moveString;
     }
 
-    // Plays a move and returns it
-    vector<int> Board::playMCTS(int seconds, int simulationsPerRollout)
+    uint32_t Board::countPieces()
     {
-        // Calculate move
-        vector<int> move = ponderMCTS(seconds, simulationsPerRollout);
-        // Apply move
-        playManual(move);
-        return move;
+        uint32_t count = 0U;
+        for (size_t index = 0; index < 45; index++)
+        {
+            if (cells[index] >= 16)
+            {
+                count += 2;
+            }
+            else if (cells[index] >= 1)
+            {
+                count += 1;
+            }
+        }
+        return count;
     }
 
+    void Board::endTurn()
+    {
+        if (currentPlayer == 1U)
+        {
+            moveCounter += 1;
+        }
+        currentPlayer = 1U - currentPlayer;
+        uint32_t pieceCount = countPieces();
+        if (lastPieceCount != pieceCount)
+        {
+            lastPieceCount = pieceCount;
+            halfMoveCounter = 0;
+        }
+        else
+        {
+            halfMoveCounter += 1;
+        }
+    }
 
 }

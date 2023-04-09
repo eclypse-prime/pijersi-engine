@@ -12,7 +12,7 @@ using namespace std;
 
 uniform_real_distribution<float> uniform(-1.f, 1.f);
 
-namespace PijersiEngine
+namespace PijersiEngine::NN
 {
     void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720])
     {

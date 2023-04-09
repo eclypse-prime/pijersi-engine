@@ -1,14 +1,151 @@
 #include <logic.hpp>
 #include <rng.hpp>
+#include <utils.hpp>
 
-using namespace std;
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
-namespace PijersiEngine
+using std::string;
+using std::vector;
+
+namespace PijersiEngine::Logic
 {
-    // Converts a (i, j) coordinate set to an index
-    int coordsToIndex(int i, int j)
+    // A vector associating a cell index to the indices of its 1-range neighbours
+    vector<uint32_t> neighbours[45] = {
+        vector<uint32_t>({1, 6, 7}),
+        vector<uint32_t>({0, 2, 7, 8}),
+        vector<uint32_t>({1, 3, 8, 9}),
+        vector<uint32_t>({2, 4, 9, 10}),
+        vector<uint32_t>({3, 5, 10, 11}),
+        vector<uint32_t>({4, 11, 12}),
+        vector<uint32_t>({0, 7, 13}),
+        vector<uint32_t>({0, 1, 6, 8, 13, 14}),
+        vector<uint32_t>({1, 2, 7, 9, 14, 15}),
+        vector<uint32_t>({2, 3, 8, 10, 15, 16}),
+        vector<uint32_t>({3, 4, 9, 11, 16, 17}),
+        vector<uint32_t>({4, 5, 10, 12, 17, 18}),
+        vector<uint32_t>({5, 11, 18}),
+        vector<uint32_t>({6, 7, 14, 19, 20}),
+        vector<uint32_t>({7, 8, 13, 15, 20, 21}),
+        vector<uint32_t>({8, 9, 14, 16, 21, 22}),
+        vector<uint32_t>({9, 10, 15, 17, 22, 23}),
+        vector<uint32_t>({10, 11, 16, 18, 23, 24}),
+        vector<uint32_t>({11, 12, 17, 24, 25}),
+        vector<uint32_t>({13, 20, 26}),
+        vector<uint32_t>({13, 14, 19, 21, 26, 27}),
+        vector<uint32_t>({14, 15, 20, 22, 27, 28}),
+        vector<uint32_t>({15, 16, 21, 23, 28, 29}),
+        vector<uint32_t>({16, 17, 22, 24, 29, 30}),
+        vector<uint32_t>({17, 18, 23, 25, 30, 31}),
+        vector<uint32_t>({18, 24, 31}),
+        vector<uint32_t>({19, 20, 27, 32, 33}),
+        vector<uint32_t>({20, 21, 26, 28, 33, 34}),
+        vector<uint32_t>({21, 22, 27, 29, 34, 35}),
+        vector<uint32_t>({22, 23, 28, 30, 35, 36}),
+        vector<uint32_t>({23, 24, 29, 31, 36, 37}),
+        vector<uint32_t>({24, 25, 30, 37, 38}),
+        vector<uint32_t>({26, 33, 39}),
+        vector<uint32_t>({26, 27, 32, 34, 39, 40}),
+        vector<uint32_t>({27, 28, 33, 35, 40, 41}),
+        vector<uint32_t>({28, 29, 34, 36, 41, 42}),
+        vector<uint32_t>({29, 30, 35, 37, 42, 43}),
+        vector<uint32_t>({30, 31, 36, 38, 43, 44}),
+        vector<uint32_t>({31, 37, 44}),
+        vector<uint32_t>({32, 33, 40}),
+        vector<uint32_t>({33, 34, 39, 41}),
+        vector<uint32_t>({34, 35, 40, 42}),
+        vector<uint32_t>({35, 36, 41, 43}),
+        vector<uint32_t>({36, 37, 42, 44}),
+        vector<uint32_t>({37, 38, 43})};
+
+    // A vector associating a cell index to the indices of its 2-range neighbours
+    vector<uint32_t> neighbours2[45] = {
+        vector<uint32_t>({2, 14}),
+        vector<uint32_t>({3, 13, 15}),
+        vector<uint32_t>({0, 4, 14, 16}),
+        vector<uint32_t>({1, 5, 15, 17}),
+        vector<uint32_t>({2, 16, 18}),
+        vector<uint32_t>({3, 17}),
+        vector<uint32_t>({8, 20}),
+        vector<uint32_t>({9, 19, 21}),
+        vector<uint32_t>({6, 10, 20, 22}),
+        vector<uint32_t>({7, 11, 21, 23}),
+        vector<uint32_t>({8, 12, 22, 24}),
+        vector<uint32_t>({9, 23, 25}),
+        vector<uint32_t>({10, 24}),
+        vector<uint32_t>({1, 15, 27}),
+        vector<uint32_t>({0, 2, 16, 26, 28}),
+        vector<uint32_t>({1, 3, 13, 17, 27, 29}),
+        vector<uint32_t>({2, 4, 14, 18, 28, 30}),
+        vector<uint32_t>({3, 5, 15, 29, 31}),
+        vector<uint32_t>({4, 16, 30}),
+        vector<uint32_t>({7, 21, 33}),
+        vector<uint32_t>({6, 8, 22, 32, 34}),
+        vector<uint32_t>({7, 9, 19, 23, 33, 35}),
+        vector<uint32_t>({8, 10, 20, 24, 34, 36}),
+        vector<uint32_t>({9, 11, 21, 25, 35, 37}),
+        vector<uint32_t>({10, 12, 22, 36, 38}),
+        vector<uint32_t>({11, 23, 37}),
+        vector<uint32_t>({14, 28, 40}),
+        vector<uint32_t>({13, 15, 29, 39, 41}),
+        vector<uint32_t>({14, 16, 26, 30, 40, 42}),
+        vector<uint32_t>({15, 17, 27, 31, 41, 43}),
+        vector<uint32_t>({16, 18, 28, 42, 44}),
+        vector<uint32_t>({17, 29, 43}),
+        vector<uint32_t>({20, 34}),
+        vector<uint32_t>({19, 21, 35}),
+        vector<uint32_t>({20, 22, 32, 36}),
+        vector<uint32_t>({21, 23, 33, 37}),
+        vector<uint32_t>({22, 24, 34, 38}),
+        vector<uint32_t>({23, 25, 35}),
+        vector<uint32_t>({24, 36}),
+        vector<uint32_t>({27, 41}),
+        vector<uint32_t>({26, 28, 42}),
+        vector<uint32_t>({27, 29, 39, 43}),
+        vector<uint32_t>({28, 30, 40, 44}),
+        vector<uint32_t>({29, 31, 41}),
+        vector<uint32_t>({30, 42})};
+
+    string rowLetters = "gfedcba";
+    
+    // Convert a char into the corresponding piece
+    std::unordered_map<char, uint8_t> charToPiece = {
+        {'-', 0x00U},
+        {'S', 0x01U},
+        {'P', 0x05U},
+        {'R', 0x09U},
+        {'W', 0x0DU},
+        {'s', 0x03U},
+        {'p', 0x07U},
+        {'r', 0x0BU},
+        {'w', 0x0FU}
+    };
+
+    // Convert a piece into the corresponding char
+    std::unordered_map<uint8_t, char> pieceToChar =
     {
-        int index;
+        {0x00U, '-'},
+        {0x01U, 'S'},
+        {0x05U, 'P'},
+        {0x09U, 'R'},
+        {0x0DU, 'W'},
+        {0x03U, 's'},
+        {0x07U, 'p'},
+        {0x0BU, 'r'},
+        {0x0FU, 'w'}
+    };
+
+    string invalidCellStringException = "Invalid character in coordinates string.";
+    string invalidMoveStringException = "Invalid move string.";
+    string invalidStateStringException = "Invalid state string.";
+
+    // Converts a (i, j) coordinate set to an index
+    uint32_t coordsToIndex(uint32_t i, uint32_t j)
+    {
+        uint32_t index;
         if (i % 2 == 0)
         {
             index = 13 * i / 2 + j;
@@ -21,21 +158,22 @@ namespace PijersiEngine
     }
 
     // Converts an index to a (i, j) coordinate set
-    void indexToCoords(int index, int *i, int *j)
+    Coords indexToCoords(uint32_t index)
     {
-        *i = 2 * (index / 13);
-        *j = index % 13;
-        if (*j > 5)
+        uint32_t i = 2 * (index / 13);
+        uint32_t j = index % 13;
+        if (j > 5)
         {
-            *j -= 6;
-            *i += 1;
+            j -= 6;
+            i += 1;
         }
+        return Coords(i, j);
     }
 
     // Converts an index to a line number
-    int indexToLine(int index)
+    uint32_t indexToLine(uint32_t index)
     {
-        int i = 2 * (index / 13);
+        uint32_t i = 2 * (index / 13);
         if ((index % 13) > 5)
         {
             i += 1;
@@ -43,92 +181,589 @@ namespace PijersiEngine
         return i;
     }
 
-    void _setState(uint8_t cells[45], const uint8_t newState[45])
+    inline uint32_t _concatenateMove(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd)
     {
+        return (indexStart) | (indexMid << 8) | (indexEnd << 16);
+    }
+
+    inline uint32_t _concatenateHalfMove(uint32_t halfMove, uint32_t indexEnd)
+    {
+        return halfMove | (indexEnd << 16);
+    }
+
+    inline uint32_t _concatenateVictory(uint32_t move)
+    {
+        return 0x80000000U | move;
+    }
+
+    // Converts a native index into a "a1" style string
+    string indexToString(uint32_t index)
+    {
+        Coords coords = indexToCoords(index);
+        string cellString = rowLetters[coords.first] + std::to_string(coords.second + 1);
+        return cellString;
+    }
+
+    // Converts a "a1" style string coordinate into an index
+    uint32_t stringToIndex(string cellString)
+    {
+        uint32_t i = 0xFFFFFFFFU;
+        uint32_t j = 0xFFFFFFFFU;
+        if (cellString.size() == 2)
+        {
+            switch (cellString[0])
+            {
+            case 'a':
+                i = 6;
+                break;
+            case 'b':
+                i = 5;
+                break;
+            case 'c':
+                i = 4;
+                break;
+            case 'd':
+                i = 3;
+                break;
+            case 'e':
+                i = 2;
+                break;
+            case 'f':
+                i = 1;
+                break;
+            case 'g':
+                i = 0;
+                break;
+            default:
+                throw std::invalid_argument(invalidCellStringException);
+            }
+            switch (cellString[1])
+            {
+            case '1':
+                j = 0;
+                break;
+            case '2':
+                j = 1;
+                break;
+            case '3':
+                j = 2;
+                break;
+            case '4':
+                j = 3;
+                break;
+            case '5':
+                j = 4;
+                break;
+            case '6':
+                j = 5;
+                break;
+            case '7':
+                j = 6;
+                break;
+            default:
+                throw std::invalid_argument(invalidCellStringException);
+            }
+        }
+        return coordsToIndex(i, j);
+    }
+
+    // Convert a native triple-index move into the string (a1-b1=c1 style) format.
+    string moveToString(uint32_t move, uint8_t cells[45])
+    {
+        uint32_t indexStart = move & 0x000000FFU;
+        uint32_t indexMid = (move >> 8) & 0x000000FFU;
+        uint32_t indexEnd = (move >> 16) & 0x000000FFU;
+
+        if (indexStart > 44)
+        {
+            return string("");
+        }
+
+        string moveString = indexToString(indexStart);
+
+        if (indexMid < 45)
+        {
+            if (indexMid == indexStart)
+            {
+                moveString += "-" + indexToString(indexEnd);
+            }
+            else if (cells[indexStart] >= 16)
+            {
+                if (cells[indexMid] != 0 && (cells[indexMid] & 2) == (cells[indexStart] & 2))
+                {
+                    moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                }
+                else
+                {
+                    moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+                }
+            }
+            else
+            {
+                moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+            }
+        }
+        else
+        {
+            if (cells[indexStart] >= 16)
+            {
+                moveString += "=" + indexToString(indexEnd);
+            }
+            else
+            {
+                moveString += "-" + indexToString(indexEnd);
+            }
+        }
+        return moveString;
+    }
+
+    // Converts a string (a1-b1=c1 style) move to the native triple-index format
+    uint32_t stringToMove(string moveString, uint8_t cells[45])
+    {
+        vector<uint32_t> move(3, 0x000000FF);
+        if (moveString.size() == 5)
+        {
+            move[0] = stringToIndex(moveString.substr(0, 2));
+            move[2] = stringToIndex(moveString.substr(3, 2));
+            if (moveString[2] == '-')
+            {
+                if (cells[move[0]] >= 16 || ((cells[move[0]] & 2) == (cells[move[1]] & 2)))
+                {
+                    move[1] = move[0];
+                }
+            }
+        }
+        else if (moveString.size() == 8)
+        {
+            move[0] = stringToIndex(moveString.substr(0, 2));
+            move[1] = stringToIndex(moveString.substr(3, 2));
+            move[2] = stringToIndex(moveString.substr(6, 2));
+        }
+        else
+        {
+            throw std::invalid_argument(invalidMoveStringException);
+        }
+        return _concatenateMove(move[0], move[1], move[2]);
+    }
+
+    string cellsToString(uint8_t cells[45])
+    {
+        string cellsString = "";
+        for (int i = 0; i < 7; i++)
+        {
+            int nColumns = (i % 2 == 0) ? 6 : 7;
+            int counter = 0;
+            for (int j = 0; j < nColumns; j++)
+            {
+                uint8_t piece = cells[coordsToIndex(i,j)];
+                if (piece == 0x00U)
+                {
+                    counter += 1;
+                }
+                else
+                {
+                    if (counter > 0)
+                    {
+                        cellsString += std::to_string(counter);
+                        counter = 0;
+                    }
+                    cellsString += Logic::pieceToChar[piece & 0x0FU];
+                    cellsString += Logic::pieceToChar[piece >> 4];
+                }
+            }
+            if (counter > 0)
+            {
+                cellsString += std::to_string(counter);
+            }
+            if (i < 6)
+            {
+                cellsString += '/';
+            }
+        }
+        return cellsString;
+    }
+
+    void stringToCells(string cellsString, uint8_t targetCells[45])
+    {
+        vector<string> cellLines = Utils::split(cellsString, "/");
+        if (cellLines.size() != 7)
+        {
+            throw std::invalid_argument(invalidStateStringException);
+        }
+        size_t cursor = 0;
+
+        uint8_t newCells[45];
         for (int k = 0; k < 45; k++)
         {
-            cells[k] = newState[k];
+            newCells[k] = 0;
+        }
+
+        for (size_t i = 0; i < cellLines.size(); i++)
+        {
+            size_t j = 0;
+            while (j < (cellLines[i].size()))
+            {
+                if (Logic::charToPiece.find(cellLines[i][j]) != Logic::charToPiece.end())
+                {
+                    newCells[cursor] = Logic::charToPiece[cellLines[i][j]] | (Logic::charToPiece[cellLines[i][j+1]] << 4);
+                    j +=2;
+                    cursor += 1;
+                }
+                else
+                {
+                    int jump = cellLines[i][j] - '0';
+                    j += 1;
+                    cursor += jump;
+                }
+            }
+        }
+
+        setState(targetCells, newCells);
+    }
+
+    // Returns the list of possible moves for a specific piece
+    uint64_t _countPieceMoves(uint32_t indexStart, uint8_t cells[45])
+    {
+        uint8_t movingPiece = cells[indexStart];
+
+        uint64_t count = 0ULL;
+
+        // If the piece is not a stack
+        if (movingPiece < 16)
+        {
+            // 1-range first action
+            for (uint32_t indexMid : neighbours[indexStart])
+            {
+                // stack, [1/2-range move] optional
+                if (isStackValid(movingPiece, indexMid, cells))
+                {
+                    // stack, 2-range move
+                    for (uint32_t indexEnd : neighbours2[indexMid])
+                    {
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack, 0/1-range move
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack only
+                    count++;
+                }
+                // 1-range move
+                if (isMoveValid(movingPiece, indexMid, cells))
+                {
+                    count++;
+                }
+            }
+        }
+        else
+        {
+            // 2 range first action
+            for (uint32_t indexMid : neighbours2[indexStart])
+            {
+                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                {
+                    // 2-range move, stack or unstack
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        // 2-range move, unstack
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+
+                        // 2-range move, stack
+                        if (isStackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // 2-range move
+                    count++;
+                }
+            }
+            // 1-range first action
+            for (uint32_t indexMid : neighbours[indexStart])
+            {
+                // 1-range move, [stack or unstack] optional
+                if (isMoveValid(movingPiece, indexMid, cells))
+                {
+
+                    // 1-range move, stack or unstack
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        // 1-range move, unstack
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+
+                        // 1-range move, stack
+                        if (isStackValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+                    // 1-range move, unstack on starting position
+                    count++;
+
+                    // 1-range move
+                    count++;
+                }
+                // stack, [1/2-range move] optional
+                if (isStackValid(movingPiece, indexMid, cells))
+                {
+                    // stack, 2-range move
+                    for (uint32_t indexEnd : neighbours2[indexMid])
+                    {
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack, 1-range move
+                    for (uint32_t indexEnd : neighbours[indexMid])
+                    {
+                        if (isMoveValid(movingPiece, indexEnd, cells))
+                        {
+                            count++;
+                        }
+                    }
+
+                    // stack only
+                    count++;
+                }
+
+                // unstack
+                if (isUnstackValid(movingPiece, indexMid, cells))
+                {
+                    // unstack only
+                    count++;
+                }
+            }
+        }
+
+        return count;
+    }
+
+    // Returns the number of possible moves for a player
+    uint64_t _countPlayerMoves(uint8_t player, uint8_t cells[45])
+    {
+        uint64_t count = 0ULL;
+        // Calculate possible moves
+        for (int index = 0; index < 45; index++)
+        {
+            if (cells[index] != 0)
+            {
+                // Choose pieces of the current player's colour
+                if ((cells[index] & 2) == (player << 1))
+                {
+                    count += _countPieceMoves(index, cells);
+                }
+            }
+        }
+        return count;
+    }
+
+    // Subroutine of the perft debug function that is ran by the main perft() function
+    uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        if (isWin(cells))
+        {
+            return 0ULL;
+        }
+        if (recursionDepth == 1)
+        {
+            return _countPlayerMoves(currentPlayer, cells);
+        }
+        // Get a vector of all the available moves for the current player
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
+
+        uint64_t sum = 0ULL;
+
+        uint8_t newCells[45];
+        for (size_t k = 0; k < nMoves; k++)
+        {
+            setState(newCells, cells);
+            playManual(moves[k], newCells);
+            sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+        }
+        return sum;
+    }
+
+    // Perft debug function to measure the number of leaf nodes (possible moves) at a given depth
+    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    {
+        if (recursionDepth == 0)
+        {
+            return 1ULL;
+        }
+        else if (isWin(cells))
+        {
+            return 0ULL;
+        }
+        else if (recursionDepth == 1)
+        {
+            return _perftIter(1, cells, currentPlayer);
+        }
+        else
+        {
+            // Get a vector of all the available moves for the current player
+            vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+            size_t nMoves = moves.size();
+
+            uint64_t sum = 0ULL;
+#pragma omp parallel for schedule(dynamic) reduction(+ \
+                                                     : sum)
+            for (size_t k = 0; k < nMoves; k++)
+            {
+                uint8_t newCells[45];
+                setState(newCells, cells);
+                playManual(moves[k], newCells);
+                sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+            }
+            return sum;
         }
     }
 
-    // Plays the selected move
-    void _play(int iStart, int jStart, int iMid, int jMid, int iEnd, int jEnd, uint8_t cells[45])
+    vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
     {
-        if (iStart < 0)
+        vector<string> results;
+        if (recursionDepth == 0 || isWin(cells))
+        {
+            return results;
+        }
+
+        results.reserve(256);
+
+        // Get a vector of all the available moves for the current player
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
+
+        // Converts all those moves to string format
+        for (size_t k = 0; k < nMoves; k++)
+        {
+            results.push_back(moveToString(moves[k], cells));
+        }
+
+        if (recursionDepth == 1)
+        {
+            return results;
+        }
+        else
+        {
+
+// Add the number of leaf nodes associated to the corresponding move
+#pragma omp parallel for schedule(dynamic)
+            for (size_t k = 0; k < nMoves; k++)
+            {
+                uint8_t newCells[45];
+                setState(newCells, cells);
+                playManual(moves[k], newCells);
+                results[k] += ": " + std::to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
+            }
+        }
+        return results;
+    }
+
+    // Copy the data from origin to target
+    void setState(uint8_t target[45], const uint8_t origin[45])
+    {
+        std::copy(origin, origin + 45, target);
+    }
+
+    // Plays the selected move
+    void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45])
+    {
+        if (indexStart > 44)
         {
             return;
         }
-        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
+        uint8_t movingPiece = cells[indexStart];
         if (movingPiece != 0)
         {
             // If there is no intermediate move
-            if (iMid < 0 || jMid < 0)
+            if (indexMid > 44)
             {
                 // Simple move
-                _move(iStart, jStart, iEnd, jEnd, cells);
+                move(indexStart, indexEnd, cells);
             }
             // There is an intermediate move
             else
             {
-                uint8_t midPiece = cells[coordsToIndex(iMid, jMid)];
-                uint8_t endPiece = cells[coordsToIndex(iEnd, jEnd)];
+                uint8_t midPiece = cells[indexMid];
+                uint8_t endPiece = cells[indexEnd];
                 // The piece at the mid coordinates is an ally : stack and move
-                if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (iMid != iStart || jMid != jStart))
+                if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (indexMid != indexStart))
                 {
-                    _stack(iStart, jStart, iMid, jMid, cells);
-                    _move(iMid, jMid, iEnd, jEnd, cells);
+                    stack(indexStart, indexMid, cells);
+                    move(indexMid, indexEnd, cells);
                 }
                 // The piece at the end coordinates is an ally : move and stack
                 else if (endPiece != 0 && (endPiece & 2) == (movingPiece & 2))
                 {
-                    _move(iStart, jStart, iMid, jMid, cells);
-                    _stack(iMid, jMid, iEnd, jEnd, cells);
+                    move(indexStart, indexMid, cells);
+                    stack(indexMid, indexEnd, cells);
                 }
                 // The end coordinates contain an enemy or no piece : move and unstack
                 else
                 {
-                    _move(iStart, jStart, iMid, jMid, cells);
-                    _unstack(iMid, jMid, iEnd, jEnd, cells);
+                    move(indexStart, indexMid, cells);
+                    unstack(indexMid, indexEnd, cells);
                 }
             }
         }
     }
 
-    void _playManual(int move[6], uint8_t cells[45])
+    void playManual(uint32_t move, uint8_t cells[45])
     {
-        _play(move[0], move[1], move[2], move[3], move[4], move[5], cells);
+        uint32_t indexStart = move & 0x000000FF;
+        uint32_t indexMid = (move >> 8) & 0x000000FF;
+        uint32_t indexEnd = (move >> 16) & 0x000000FF;
+        play(indexStart, indexMid, indexEnd, cells);
     }
 
-    vector<int> _ponderRandom(uint8_t cells[45], uint8_t currentPlayer)
+    // Generates a random move
+    uint32_t searchRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
-        vector<int> moves = _availablePlayerMoves(currentPlayer, cells);
+        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
 
         if (moves.size() > 0)
         {
-            uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
+            std::uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
 
-            int index = intDistribution(gen);
+            uint32_t index = intDistribution(RNG::gen);
 
-            vector<int>::const_iterator first = moves.begin() + 6 * index;
-            vector<int>::const_iterator last = moves.begin() + 6 * (index + 1);
-            vector<int> move(first, last);
-            return move;
+            return moves[index];
         }
-        return vector<int>({-1, -1, -1, -1, -1, -1});
+        return NULL_MOVE;
     }
 
-    vector<int> _playRandom(uint8_t cells[45], uint8_t currentPlayer)
+    // Plays a random move
+    uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
-        vector<int> move = _ponderRandom(cells, currentPlayer);
+        uint32_t move = searchRandom(cells, currentPlayer);
         // Apply move
-        _playManual(move.data(), cells);
+        playManual(move, cells);
 
         return move;
     }
 
     // Returns true if the board is in a winning position
-    bool _checkWin(const uint8_t cells[45])
+    bool isWin(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {
@@ -155,170 +790,176 @@ namespace PijersiEngine
         return false;
     }
 
-    // Returns the list of possible moves for a specific piece
-    vector<int> _availablePieceMoves(int iStart, int jStart, uint8_t cells[45])
+    uint8_t getWinningPlayer(const uint8_t cells[45])
     {
-        int indexStart = coordsToIndex(iStart, jStart);
+        for (int k = 0; k < 6; k++)
+        {
+            if (cells[k] != 0)
+            {
+                // If piece is White and not Wise
+                if ((cells[k] & 2) == 0 && (cells[k] & 12) != 12)
+                {
+                    return 0U;
+                }
+            }
+        }
+        for (int k = 39; k < 45; k++)
+        {
+            if (cells[k] != 0)
+            {
+                // If piece is Black and not Wise
+                if ((cells[k] & 2) == 2 && (cells[k] & 12) != 12)
+                {
+                    return 1U;
+                }
+            }
+        }
+        return 0xFFU;
+    }
 
+    // Returns the list of possible moves for a specific piece
+    vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
+    {
         uint8_t movingPiece = cells[indexStart];
 
-        vector<int> moves = vector<int>();
-        moves.reserve(128);
+        vector<uint32_t> moves = vector<uint32_t>();
+        moves.reserve(64);
 
         // If the piece is not a stack
         if (movingPiece < 16)
         {
             // 1-range first action
-            for (int indexMid : _neighbours(indexStart))
+            for (uint32_t indexMid : neighbours[indexStart])
             {
+                uint32_t halfMove = indexStart | (indexMid << 8);
                 // stack, [1/2-range move] optional
-                if (_isStackValid(movingPiece, indexMid, cells))
+                if (isStackValid(movingPiece, indexMid, cells))
                 {
-                    int iMid, jMid;
-                    indexToCoords(indexMid, &iMid, &jMid);
-
                     // stack, 2-range move
-                    for (int indexEnd : _neighbours2(indexMid))
+                    for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && _isMoveValid(movingPiece, indexEnd, cells)))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
                     // stack, 0/1-range move
-                    for (int indexEnd : _neighbours(indexMid))
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (_isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
+                        if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
                     // stack only
-                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
                 }
                 // 1-range move
-                if (_isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    int iEnd, jEnd;
-                    indexToCoords(indexMid, &iEnd, &jEnd);
-                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iEnd, jEnd});
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves.push_back(concatenatedMove);
                 }
             }
         }
         else
         {
             // 2 range first action
-            for (int indexMid : _neighbours2(indexStart))
+            for (uint32_t indexMid : neighbours2[indexStart])
             {
-                if (_isMove2Valid(movingPiece, indexStart, indexMid, cells))
+                uint32_t halfMove = indexStart | (indexMid << 8);
+                if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
-                    int iMid, jMid;
-                    indexToCoords(indexMid, &iMid, &jMid);
-
                     // 2-range move, stack or unstack
-                    for (int indexEnd : _neighbours(indexMid))
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 2-range move, unstack
-                        if (_isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
 
                         // 2-range move, stack
-                        if (_isStackValid(movingPiece, indexEnd, cells))
+                        if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
 
                     // 2-range move
-                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iMid, jMid});
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves.push_back(concatenatedMove);
                 }
             }
             // 1-range first action
-            for (int indexMid : _neighbours(indexStart))
+            for (uint32_t indexMid : neighbours[indexStart])
             {
-
+                uint32_t halfMove = indexStart | (indexMid << 8);
                 // 1-range move, [stack or unstack] optional
-                if (_isMoveValid(movingPiece, indexMid, cells))
+                if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    int iMid, jMid;
-                    indexToCoords(indexMid, &iMid, &jMid);
 
                     // 1-range move, stack or unstack
-                    for (int indexEnd : _neighbours(indexMid))
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
                         // 1-range move, unstack
-                        if (_isUnstackValid(movingPiece, indexEnd, cells))
+                        if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
 
                         // 1-range move, stack
-                        if (_isStackValid(movingPiece, indexEnd, cells))
+                        if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
                     // 1-range move, unstack on starting position
-                    moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iStart, jStart});
+                    moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
 
                     // 1-range move
-                    moves.insert(moves.end(), {iStart, jStart, -1, -1, iMid, jMid});
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves.push_back(concatenatedMove);
                 }
                 // stack, [1/2-range move] optional
-                if (_isStackValid(movingPiece, indexMid, cells))
+                if (isStackValid(movingPiece, indexMid, cells))
                 {
-                    int iMid, jMid;
-                    indexToCoords(indexMid, &iMid, &jMid);
-
                     // stack, 2-range move
-                    for (int indexEnd : _neighbours2(indexMid))
+                    for (uint32_t indexEnd : neighbours2[indexMid])
                     {
-                        if (_isMove2Valid(movingPiece, indexMid, indexEnd, cells))
+                        if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
                     // stack, 1-range move
-                    for (int indexEnd : _neighbours(indexMid))
+                    for (uint32_t indexEnd : neighbours[indexMid])
                     {
-                        if (_isMoveValid(movingPiece, indexEnd, cells))
+                        if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            int iEnd, jEnd;
-                            indexToCoords(indexEnd, &iEnd, &jEnd);
-                            moves.insert(moves.end(), {iStart, jStart, iMid, jMid, iEnd, jEnd});
+                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
+                            moves.push_back(concatenatedMove);
                         }
                     }
 
                     // stack only
-                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
                 }
 
                 // unstack
-                if (_isUnstackValid(movingPiece, indexMid, cells))
+                if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    int iMid, jMid;
-                    indexToCoords(indexMid, &iMid, &jMid);
-                    moves.insert(moves.end(), {iStart, jStart, iStart, jStart, iMid, jMid});
+                    uint32_t concatenatedMove = _concatenateMove(indexStart, indexStart, indexMid);
+                    moves.push_back(concatenatedMove);
                 }
             }
         }
@@ -326,22 +967,21 @@ namespace PijersiEngine
         return moves;
     }
 
-    vector<int> _availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    // Returns the list of possible moves for a player
+    vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45])
     {
-        vector<int> moves = vector<int>();
+        vector<uint32_t> moves = vector<uint32_t>();
         // Reserve space in vector for optimization purposes
-        moves.reserve(2048);
+        moves.reserve(512);
         // Calculate possible moves
-        for (int k = 0; k < 45; k++)
+        for (int index = 0; index < 45; index++)
         {
-            if (cells[k] != 0)
+            if (cells[index] != 0)
             {
                 // Choose pieces of the current player's colour
-                if ((cells[k] & 2) == (player << 1))
+                if ((cells[index] & 2) == (player << 1))
                 {
-                    int i, j;
-                    indexToCoords(k, &i, &j);
-                    vector<int> pieceMoves = _availablePieceMoves(i, j, cells);
+                    vector<uint32_t> pieceMoves = availablePieceMoves(index, cells);
                     moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
                 }
             }
@@ -349,12 +989,13 @@ namespace PijersiEngine
         return moves;
     }
 
-    bool _canTake(uint8_t source, uint8_t target)
+    // Returns whether a source piece can capture a target piece
+    bool canTake(uint8_t source, uint8_t target)
     {
         uint8_t sourceType = source & 12;
         uint8_t targetType = target & 12;
         // Scissors > Paper, Paper > Rock, Rock > Scissors
-        if (sourceType == 0 && targetType == 4 || sourceType == 4 && targetType == 8 || sourceType == 8 && targetType == 0)
+        if ((sourceType == 0 && targetType == 4) || (sourceType == 4 && targetType == 8) || (sourceType == 8 && targetType == 0))
         {
             return true;
         }
@@ -362,46 +1003,47 @@ namespace PijersiEngine
     }
 
     // Applies a move between chosen coordinates
-    void _move(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45])
+    void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         // Do nothing if start and end coordinate are identical
-        if (iStart != iEnd || jStart != jEnd)
+        if (indexStart != indexEnd)
         {
             // Move the piece to the target cell
-            cells[coordsToIndex(iEnd, jEnd)] = cells[coordsToIndex(iStart, jStart)];
+            cells[indexEnd] = cells[indexStart];
 
             // Set the starting cell as empty
-            cells[coordsToIndex(iStart, jStart)] = 0;
+            cells[indexStart] = 0;
         }
     }
 
     // Applies a stack between chosen coordinates
-    void _stack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45])
+    void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
-        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
-        uint8_t endPiece = cells[coordsToIndex(iEnd, jEnd)];
+        uint8_t movingPiece = cells[indexStart];
+        uint8_t endPiece = cells[indexEnd];
 
         // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
-        cells[coordsToIndex(iStart, jStart)] = (movingPiece >> 4);
+        cells[indexStart] = (movingPiece >> 4);
 
         // Move the top piece to the target cell and set its new bottom piece
-        cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15) + (endPiece << 4);
+        cells[indexEnd] = (movingPiece & 15) + (endPiece << 4);
     }
 
     // Applies an unstack between chosen coordinates
-    void _unstack(int iStart, int jStart, int iEnd, int jEnd, uint8_t cells[45])
+    void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
-        uint8_t movingPiece = cells[coordsToIndex(iStart, jStart)];
+        uint8_t movingPiece = cells[indexStart];
 
         // Leave the bottom piece in the starting cell
-        cells[coordsToIndex(iStart, jStart)] = (movingPiece >> 4);
+        cells[indexStart] = (movingPiece >> 4);
         // Remove the bottom piece from the moving piece
         // Move the top piece to the target cell
         // Will overwrite the eaten piece if there is one
-        cells[coordsToIndex(iEnd, jEnd)] = (movingPiece & 15);
+        cells[indexEnd] = (movingPiece & 15);
     }
 
-    bool _isMoveValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    // Returns whether a certain 1-range move is possible
+    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -410,7 +1052,7 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -418,7 +1060,8 @@ namespace PijersiEngine
         return true;
     }
 
-    bool _isMove2Valid(uint8_t movingPiece, int indexStart, int indexEnd, uint8_t cells[45])
+    // Returns whether a certain 2-range move is possible
+    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -432,7 +1075,7 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
@@ -440,7 +1083,8 @@ namespace PijersiEngine
         return true;
     }
 
-    bool _isStackValid(uint8_t movingPiece, int indexEnd, const uint8_t cells[45])
+    // Returns whether a certain stack action is possible
+    bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -457,7 +1101,8 @@ namespace PijersiEngine
         return false;
     }
 
-    bool _isUnstackValid(uint8_t movingPiece, int indexEnd, uint8_t cells[45])
+    // Returns whether a certain unstack action is possible
+    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -466,212 +1111,11 @@ namespace PijersiEngine
             {
                 return false;
             }
-            if (!_canTake(movingPiece, cells[indexEnd]))
+            if (!canTake(movingPiece, cells[indexEnd]))
             {
                 return false;
             }
         }
         return true;
     }
-
-    // Returns the 2-range neighbours of the designated cell
-    vector<int> _neighbours(int index)
-    {
-        switch (index)
-        {
-        case 0:
-            return vector<int>({1, 6, 7});
-        case 1:
-            return vector<int>({0, 2, 7, 8});
-        case 2:
-            return vector<int>({1, 3, 8, 9});
-        case 3:
-            return vector<int>({2, 4, 9, 10});
-        case 4:
-            return vector<int>({3, 5, 10, 11});
-        case 5:
-            return vector<int>({4, 11, 12});
-        case 6:
-            return vector<int>({0, 7, 13});
-        case 7:
-            return vector<int>({0, 1, 6, 8, 13, 14});
-        case 8:
-            return vector<int>({1, 2, 7, 9, 14, 15});
-        case 9:
-            return vector<int>({2, 3, 8, 10, 15, 16});
-        case 10:
-            return vector<int>({3, 4, 9, 11, 16, 17});
-        case 11:
-            return vector<int>({4, 5, 10, 12, 17, 18});
-        case 12:
-            return vector<int>({5, 11, 18});
-        case 13:
-            return vector<int>({6, 7, 14, 19, 20});
-        case 14:
-            return vector<int>({7, 8, 13, 15, 20, 21});
-        case 15:
-            return vector<int>({8, 9, 14, 16, 21, 22});
-        case 16:
-            return vector<int>({9, 10, 15, 17, 22, 23});
-        case 17:
-            return vector<int>({10, 11, 16, 18, 23, 24});
-        case 18:
-            return vector<int>({11, 12, 17, 24, 25});
-        case 19:
-            return vector<int>({13, 20, 26});
-        case 20:
-            return vector<int>({13, 14, 19, 21, 26, 27});
-        case 21:
-            return vector<int>({14, 15, 20, 22, 27, 28});
-        case 22:
-            return vector<int>({15, 16, 21, 23, 28, 29});
-        case 23:
-            return vector<int>({16, 17, 22, 24, 29, 30});
-        case 24:
-            return vector<int>({17, 18, 23, 25, 30, 31});
-        case 25:
-            return vector<int>({18, 24, 31});
-        case 26:
-            return vector<int>({19, 20, 27, 32, 33});
-        case 27:
-            return vector<int>({20, 21, 26, 28, 33, 34});
-        case 28:
-            return vector<int>({21, 22, 27, 29, 34, 35});
-        case 29:
-            return vector<int>({22, 23, 28, 30, 35, 36});
-        case 30:
-            return vector<int>({23, 24, 29, 31, 36, 37});
-        case 31:
-            return vector<int>({24, 25, 30, 37, 38});
-        case 32:
-            return vector<int>({26, 33, 39});
-        case 33:
-            return vector<int>({26, 27, 32, 34, 39, 40});
-        case 34:
-            return vector<int>({27, 28, 33, 35, 40, 41});
-        case 35:
-            return vector<int>({28, 29, 34, 36, 41, 42});
-        case 36:
-            return vector<int>({29, 30, 35, 37, 42, 43});
-        case 37:
-            return vector<int>({30, 31, 36, 38, 43, 44});
-        case 38:
-            return vector<int>({31, 37, 44});
-        case 39:
-            return vector<int>({32, 33, 40});
-        case 40:
-            return vector<int>({33, 34, 39, 41});
-        case 41:
-            return vector<int>({34, 35, 40, 42});
-        case 42:
-            return vector<int>({35, 36, 41, 43});
-        case 43:
-            return vector<int>({36, 37, 42, 44});
-        case 44:
-            return vector<int>({37, 38, 43});
-        default:
-            return vector<int>();
-        }
-    }
-
-    // Returns the 2-range neighbours of the designated cell
-    vector<int> _neighbours2(int index)
-    {
-        switch (index)
-        {
-        case 0:
-            return vector<int>({2, 14});
-        case 1:
-            return vector<int>({3, 13, 15});
-        case 2:
-            return vector<int>({0, 4, 14, 16});
-        case 3:
-            return vector<int>({1, 5, 15, 17});
-        case 4:
-            return vector<int>({2, 16, 18});
-        case 5:
-            return vector<int>({3, 17});
-        case 6:
-            return vector<int>({8, 20});
-        case 7:
-            return vector<int>({9, 19, 21});
-        case 8:
-            return vector<int>({6, 10, 20, 22});
-        case 9:
-            return vector<int>({7, 11, 21, 23});
-        case 10:
-            return vector<int>({8, 12, 22, 24});
-        case 11:
-            return vector<int>({9, 23, 25});
-        case 12:
-            return vector<int>({10, 24});
-        case 13:
-            return vector<int>({1, 15, 27});
-        case 14:
-            return vector<int>({0, 2, 16, 26, 28});
-        case 15:
-            return vector<int>({1, 3, 13, 17, 27, 29});
-        case 16:
-            return vector<int>({2, 4, 14, 18, 28, 30});
-        case 17:
-            return vector<int>({3, 5, 15, 29, 31});
-        case 18:
-            return vector<int>({4, 16, 30});
-        case 19:
-            return vector<int>({7, 21, 33});
-        case 20:
-            return vector<int>({6, 8, 22, 32, 34});
-        case 21:
-            return vector<int>({7, 9, 19, 23, 33, 35});
-        case 22:
-            return vector<int>({8, 10, 20, 24, 34, 36});
-        case 23:
-            return vector<int>({9, 11, 21, 25, 35, 37});
-        case 24:
-            return vector<int>({10, 12, 22, 36, 38});
-        case 25:
-            return vector<int>({11, 23, 37});
-        case 26:
-            return vector<int>({14, 28, 40});
-        case 27:
-            return vector<int>({13, 15, 29, 39, 41});
-        case 28:
-            return vector<int>({14, 16, 26, 30, 40, 42});
-        case 29:
-            return vector<int>({15, 17, 27, 31, 41, 43});
-        case 30:
-            return vector<int>({16, 18, 28, 42, 44});
-        case 31:
-            return vector<int>({17, 29, 43});
-        case 32:
-            return vector<int>({20, 34});
-        case 33:
-            return vector<int>({19, 21, 35});
-        case 34:
-            return vector<int>({20, 22, 32, 36});
-        case 35:
-            return vector<int>({21, 23, 33, 37});
-        case 36:
-            return vector<int>({22, 24, 34, 38});
-        case 37:
-            return vector<int>({23, 25, 35});
-        case 38:
-            return vector<int>({24, 36});
-        case 39:
-            return vector<int>({27, 41});
-        case 40:
-            return vector<int>({26, 28, 42});
-        case 41:
-            return vector<int>({27, 29, 39, 43});
-        case 42:
-            return vector<int>({28, 30, 40, 44});
-        case 43:
-            return vector<int>({29, 31, 41});
-        case 44:
-            return vector<int>({30, 42});
-        default:
-            return vector<int>();
-        }
-    }
-
 }

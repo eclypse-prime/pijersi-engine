@@ -1,23 +1,16 @@
 #ifndef BOARD_HPP
 #define BOARD_HPP
-#include <piece.hpp>
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <cstdint>
 
-using namespace std;
+#include <logic.hpp>
+#include <piece.hpp>
+
+#define MAX_DEPTH 10
 
 namespace PijersiEngine
 {
-
-
-    enum Algorithm
-    {
-        Minimax,
-        MCTS,
-        Random
-    };
-
     class Board
     {
     public:
@@ -25,33 +18,65 @@ namespace PijersiEngine
         Board(Board &board);
         // ~Board();
 
-        void playManual(vector<int> move);
-        vector<int> ponderAlphaBeta(int recursionDepth, bool random);
-        vector<int> playAlphaBeta(int recursionDepth = 3, bool random = true);
-        vector<int> playMCTS(int seconds = 10, int simulationsPerRollout = 3);
-        vector<int> ponderRandom();
-        vector<int> playRandom();
-        vector<int> ponderMCTS(int seconds, int simulationsPerRollout);
-        bool isMoveLegal(vector<int> move);
+        void playManual(std::vector<uint32_t> move);
+        void playManual(uint32_t move);
+        void playManual(std::string move);
+
+        // Depth limited search
+
+        uint32_t searchDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+        uint32_t playDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+
+        // Time limited search
+        
+        uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        
+        // Random search
+
+        uint32_t searchRandom();
+        uint32_t playRandom();
+
+        // uint32_t playMCTS(int seconds = 10, int simulationsPerRollout = 3);
+        // uint32_t ponderMCTS(int seconds, int simulationsPerRollout);
+        
+        std::string advice(int recursionDepth, bool random);
+        bool isMoveLegal(uint32_t move);
         int16_t evaluate();
+
         void setState(uint8_t newState[45]);
         uint8_t *getState();
+        
+        void setStringState(std::string stateString);
+        std::string getStringState();
+
         void init();
 
         uint8_t at(int i, int j);
         void print();
-        string toString();
+        std::string toString();
 
         bool checkWin();
+        bool checkDraw();
+        // TODO
+        bool checkStalemate();
+        uint8_t getWinner();
         int16_t getForecast();
         uint8_t currentPlayer = 0;
 
     private:
+        uint32_t countPieces();
+        void endTurn();
+
+        uint32_t lastPieceCount = 0;
+
         uint8_t cells[45];
         int16_t forecast = 0;
 
-        void addPiece(uint8_t piece, int i, int j);
+        uint32_t halfMoveCounter = 0;
+        uint32_t moveCounter = 1;
 
+        void addPiece(uint8_t piece, int i, int j);
     };
 
 }

@@ -2,26 +2,22 @@
 #define MCTS_HPP
 #include <vector>
 
-using namespace std;
-
-namespace PijersiEngine
+namespace PijersiEngine::MCTS
 {
-    float _UCT(float nodeWins, float nodeSimulations, float totalSimulations);
-
-    vector<int> _ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
+    uint32_t ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
 
     struct Node
     {
         uint8_t cells[45];
         uint8_t player;
         Node *parent;
-        vector<Node*> children;
-        vector<int> move;
+        std::vector<Node*> children;
+        uint32_t move;
 
         int visits = 0;
         int score = 0;
 
-        Node(Node *newParent, const vector<int> &newMove, uint8_t newPlayer);
+        Node(Node *newParent, const uint32_t &newMove, uint8_t newPlayer);
         ~Node();
 
         void expand();

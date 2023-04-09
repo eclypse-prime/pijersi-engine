@@ -6,7 +6,7 @@
 
 using namespace std;
 
-namespace PijersiEngine
+namespace PijersiEngine::NN
 {
     void cellsToInput(uint8_t cells[45], uint8_t currentPlayer, uint8_t input[720]);
     float _sigmoid(float input);
