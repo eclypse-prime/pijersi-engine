@@ -44,3 +44,6 @@ build/
 
 # Debug sources
 src/debug.cpp
+
+# Eigen
+include/Eigen
