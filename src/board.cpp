@@ -164,7 +164,9 @@ namespace PijersiEngine
     // Plays a random move and returns it
     uint32_t Board::playRandom()
     {
-        return Logic::playRandom(cells, currentPlayer);
+        uint32_t move = Logic::playRandom(cells, currentPlayer);
+        endTurn();
+        return move;
     }
 
     bool Board::isMoveLegal(uint32_t move)
