@@ -60,8 +60,8 @@ int main(int argc, char** argv)
                             move = board.searchDepth(k, true, move, UINT64_MAX, false);
                             string moveString = Logic::moveToString(move, board.getState());
                             auto end = steady_clock::now();
-                            int duration = duration_cast<milliseconds>(end - start).count();
-                            cout << "alphabeta depth " << k << " move: " << moveString << " duration: "<< duration << "ms" << endl;
+                            int duration = duration_cast<microseconds>(end - start).count();
+                            cout << "alphabeta depth " << k << " move: " << moveString << " duration: "<< (float)duration/1000 << "ms" << endl;
                         }
                         board.playManual(move);
                         board.print();
@@ -93,8 +93,8 @@ int main(int argc, char** argv)
                                 move = proposedMove;
                                 string moveString = Logic::moveToString(move, board.getState());
                                 auto end = steady_clock::now();
-                                int duration = duration_cast<milliseconds>(end - start).count();
-                                cout << "alphabeta depth " << depth << " move: " << moveString << " duration: "<< duration << "ms" << endl;
+                                int duration = duration_cast<microseconds>(end - start).count();
+                                cout << "alphabeta depth " << depth << " move: " << moveString << " duration: "<< (float)duration/1000 << "ms" << endl;
                                 depth += 1;
                             }
                         }
@@ -126,8 +126,8 @@ int main(int argc, char** argv)
                         auto start = steady_clock::now();
                         uint64_t result = Logic::perft(k, board.getState(), board.currentPlayer);
                         auto end = steady_clock::now();
-                        int duration = duration_cast<milliseconds>(end - start).count();
-                        cout << "perft depth " << k << " result: " << result << " duration: "<< duration << "ms" << endl;
+                        int duration = duration_cast<microseconds>(end - start).count();
+                        cout << "perft depth " << k << " result: " << result << " duration: "<< (float)duration/1000 << "ms" << endl;
                     }
                 }
             }
