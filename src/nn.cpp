@@ -12,7 +12,8 @@ namespace PijersiEngine::NN
 {
     input_t cellsToInput(uint8_t cells[45], uint8_t currentPlayer)
     {
-        input_t input = input_t::Zero();
+        input_t input(N_INPUTS, 1);
+        input.reserve(Eigen::VectorXi::Constant(1, 28));
         if (currentPlayer == 0)
         {
             for (int k = 0; k < 45; k++)
@@ -22,28 +23,28 @@ namespace PijersiEngine::NN
                     switch (cells[k] & 14)
                     {
                     case 0:
-                        input(k * 16) = 1;
+                        input.insert(k * 16, 0) = 1;
                         break;
                     case 4:
-                        input(k * 16 + 1) = 1;
+                        input.insert(k * 16 + 1, 0) = 1;
                         break;
                     case 8:
-                        input(k * 16 + 2) = 1;
+                        input.insert(k * 16 + 2, 0) = 1;
                         break;
                     case 12:
-                        input(k * 16 + 3) = 1;
+                        input.insert(k * 16 + 3, 0) = 1;
                         break;
                     case 2:
-                        input(k * 16 + 4) = 1;
+                        input.insert(k * 16 + 4, 0) = 1;
                         break;
                     case 6:
-                        input(k * 16 + 5) = 1;
+                        input.insert(k * 16 + 5, 0) = 1;
                         break;
                     case 10:
-                        input(k * 16 + 6) = 1;
+                        input.insert(k * 16 + 6, 0) = 1;
                         break;
                     case 14:
-                        input(k * 16 + 7) = 1;
+                        input.insert(k * 16 + 7, 0) = 1;
                         break;
                     }
                     if (cells[k] >= 16)
@@ -51,28 +52,28 @@ namespace PijersiEngine::NN
                         switch (cells[k] & 224)
                         {
                         case 0:
-                            input(k * 16 + 8) = 1;
+                            input.insert(k * 16 + 8, 0) = 1;
                             break;
                         case 64:
-                            input(k * 16 + 9) = 1;
+                            input.insert(k * 16 + 9, 0) = 1;
                             break;
                         case 128:
-                            input(k * 16 + 10) = 1;
+                            input.insert(k * 16 + 10, 0) = 1;
                             break;
                         case 192:
-                            input(k * 16 + 11) = 1;
+                            input.insert(k * 16 + 11, 0) = 1;
                             break;
                         case 32:
-                            input(k * 16 + 12) = 1;
+                            input.insert(k * 16 + 12, 0) = 1;
                             break;
                         case 96:
-                            input(k * 16 + 13) = 1;
+                            input.insert(k * 16 + 13, 0) = 1;
                             break;
                         case 160:
-                            input(k * 16 + 14) = 1;
+                            input.insert(k * 16 + 14, 0) = 1;
                             break;
                         case 224:
-                            input(k * 16 + 15) = 1;
+                            input.insert(k * 16 + 15, 0) = 1;
                             break;
                         }
                     }
@@ -88,28 +89,28 @@ namespace PijersiEngine::NN
                     switch (cells[44 - k] & 14)
                     {
                     case 2:
-                        input(k * 16) = 1;
+                        input.insert(k * 16, 0) = 1;
                         break;
                     case 6:
-                        input(k * 16 + 1) = 1;
+                        input.insert(k * 16 + 1, 0) = 1;
                         break;
                     case 10:
-                        input(k * 16 + 2) = 1;
+                        input.insert(k * 16 + 2, 0) = 1;
                         break;
                     case 14:
-                        input(k * 16 + 3) = 1;
+                        input.insert(k * 16 + 3, 0) = 1;
                         break;
                     case 0:
-                        input(k * 16 + 4) = 1;
+                        input.insert(k * 16 + 4, 0) = 1;
                         break;
                     case 4:
-                        input(k * 16 + 5) = 1;
+                        input.insert(k * 16 + 5, 0) = 1;
                         break;
                     case 8:
-                        input(k * 16 + 6) = 1;
+                        input.insert(k * 16 + 6, 0) = 1;
                         break;
                     case 12:
-                        input(k * 16 + 7) = 1;
+                        input.insert(k * 16 + 7, 0) = 1;
                         break;
                     }
                     if (cells[44 - k] >= 16)
@@ -117,28 +118,28 @@ namespace PijersiEngine::NN
                         switch (cells[k] & 224)
                         {
                         case 32:
-                            input(k * 16 + 8) = 1;
+                            input.insert(k * 16 + 8, 0) = 1;
                             break;
                         case 96:
-                            input(k * 16 + 9) = 1;
+                            input.insert(k * 16 + 9, 0) = 1;
                             break;
                         case 160:
-                            input(k * 16 + 10) = 1;
+                            input.insert(k * 16 + 10, 0) = 1;
                             break;
                         case 224:
-                            input(k * 16 + 11) = 1;
+                            input.insert(k * 16 + 11, 0) = 1;
                             break;
                         case 0:
-                            input(k * 16 + 12) = 1;
+                            input.insert(k * 16 + 12, 0) = 1;
                             break;
                         case 64:
-                            input(k * 16 + 13) = 1;
+                            input.insert(k * 16 + 13, 0) = 1;
                             break;
                         case 128:
-                            input(k * 16 + 14) = 1;
+                            input.insert(k * 16 + 14, 0) = 1;
                             break;
                         case 192:
-                            input(k * 16 + 15) = 1;
+                            input.insert(k * 16 + 15, 0) = 1;
                             break;
                         }
                     }

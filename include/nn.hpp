@@ -5,6 +5,7 @@
 #include <array>
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 
 #define N_INPUTS 720
 #define N_OUTPUTS_1 256
@@ -12,7 +13,7 @@
 #define N_OUTPUTS_3 32
 #define N_OUTPUTS_4 1
 
-typedef Eigen::Matrix<float, N_INPUTS, 1> input_t;
+typedef Eigen::SparseMatrix<float> input_t;
 
 typedef Eigen::Matrix<float, N_OUTPUTS_1, 1> output1_t;
 typedef Eigen::Matrix<float, N_OUTPUTS_2, 1> output2_t;
