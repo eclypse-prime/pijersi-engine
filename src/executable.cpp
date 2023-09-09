@@ -26,6 +26,7 @@ int main(int argc, char** argv)
     }
 
     Board board;
+    board.init();
 
     string stringState;
     string mode;
@@ -33,7 +34,6 @@ int main(int argc, char** argv)
 
     if (string(argv[1]) == "startpos")
     {
-        board.init();
         mode = argv[2];
         parameter = argv[3];
     }

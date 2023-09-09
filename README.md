@@ -9,10 +9,12 @@ The project contains:
 * The actual C++ engine
 * SWIG stuff to wrap the engine for C# 
 
+The engine is now powered by Gravity, a neural network evaluation function.
+
 ## Requirements
 
 * SWIG 4.0.2+
-* MinGW g++ 8.1.0+
+* MinGW g++ 12+
 
 This project has been built on Windows, but could be replicated on Linux by adjusting the build instructions in Makefile.
 

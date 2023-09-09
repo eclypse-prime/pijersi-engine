@@ -2,7 +2,6 @@
 #define NN_HPP
 #include <cstdint>
 #include <vector>
-#include <array>
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
@@ -50,42 +49,6 @@ namespace PijersiEngine::NN
     float _leakyRelu(float input);
     float _dLeakyRelu(float input);
 
-    // struct Layer
-    // {
-    //     float *weights = nullptr;
-    //     float *biases = nullptr;
-    //     int inputSize = 0;
-    //     int outputSize = 0;
-    //     bool activation = false;
-
-    //     Layer(int newInputSize, int newOutputSize, bool newUseActivation);
-    //     void load();
-    //     template <typename T>
-    //     void forward(T *input, float *output);
-    //     void update(float learningRate, float* weightError, float* biasError);
-    //     ~Layer();
-    // };
-
-    // struct DenseN_INPUTSx256 : Layer
-    // {
-    //     DenseN_INPUTSx256();
-    // };
-
-    // struct Dense256x32 : Layer
-    // {
-    //     Dense256x32();
-    // };
-
-    // struct Dense32x32 : Layer
-    // {
-    //     Dense32x32();
-    // };
-
-    // struct Dense32x1 : Layer
-    // {
-    //     Dense32x1();
-    // };
-
     struct Network
     {
         weights_t weights1;
@@ -103,6 +66,7 @@ namespace PijersiEngine::NN
         Network();
         void init();
         float forward(uint8_t cells[45], uint8_t currentPlayer);
+        void load();
     };
 
     struct Trainer

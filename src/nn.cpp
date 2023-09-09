@@ -1,15 +1,20 @@
 #include <algorithm>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include <iostream>
 #include <omp.h>
 
+#include <npy.hpp>
+
 #include <nn.hpp>
 #include <rng.hpp>
+#include <weights.hpp>
 
 namespace PijersiEngine::NN
 {
+    // Converts the board state to a one-hot encoded state. When the active player is black, the point of view is inverted via inverting the piece colours and axial symmetry.
     input_t cellsToInput(uint8_t cells[45], uint8_t currentPlayer)
     {
         input_t input(N_INPUTS, 1);
@@ -199,6 +204,19 @@ namespace PijersiEngine::NN
         output3 = output3.cwiseMax(0.0f);
         output4_t output4 = weights4 * output3 + bias4;
         return output4(0);
+    }
+
+    void Network::load()
+    {
+        weights1 = weights_t::Map(Weights::dense_w, N_OUTPUTS_1, N_INPUTS);
+        weights2 = weights_t::Map(Weights::dense_1_w, N_OUTPUTS_2, N_OUTPUTS_1);
+        weights3 = weights_t::Map(Weights::dense_2_w, N_OUTPUTS_3, N_OUTPUTS_2);
+        weights4 = weights_t::Map(Weights::dense_3_w, N_OUTPUTS_4, N_OUTPUTS_3);
+
+        bias1 = bias1_t::Map(Weights::dense_b, N_OUTPUTS_1, 1);
+        bias2 = bias2_t::Map(Weights::dense_1_b, N_OUTPUTS_2, 1);
+        bias3 = bias3_t::Map(Weights::dense_2_b, N_OUTPUTS_3, 1);
+        bias4 = bias4_t::Map(Weights::dense_3_b, N_OUTPUTS_4, 1);
     }
 
     Trainer::Trainer(int newBatchSize)
