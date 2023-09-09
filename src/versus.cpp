@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         {
             if (switchColours)
             {
-                if ((board.evaluate() > 0 && iter % 2 == 0) || (board.evaluate() < 0 && iter % 2 == 1))
+                if ((board.getWinner() == 0 && iter % 2 == 0) || (board.getWinner() == 1 && iter % 2 == 1))
                 {
                     wins ++;
                     std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
             }
             else
             {
-                if (board.evaluate() > 0)
+                if (board.getWinner() == 0 )
                 {
                     wins ++;
                     std::cout << "Engine 1 wins in " << moves << " moves" << std::endl;
