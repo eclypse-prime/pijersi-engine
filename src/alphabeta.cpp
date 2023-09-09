@@ -121,9 +121,8 @@ namespace PijersiEngine::AlphaBeta
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     // Add randomness to separate equal moves if parameter active
-                    // float salt = random ? RNG::distribution(RNG::gen) : 0.f;
-                    float salt = 0.f;
-                    float saltedScore = salt + (float)scores[k];
+                    float salt = random ? RNG::distribution(RNG::gen) : 0.f;
+                    float saltedScore = salt + scores[k];
                     if (saltedScore > maximum)
                     {
                         maximum = saltedScore;
