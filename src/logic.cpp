@@ -283,35 +283,27 @@ namespace PijersiEngine::Logic
 
         if (indexMid < 45)
         {
-            if (indexMid == indexStart)
-            {
-                moveString += "-" + indexToString(indexEnd);
-            }
-            else if (cells[indexStart] >= 16)
-            {
-                if (cells[indexMid] != 0 && (cells[indexMid] & 2) == (cells[indexStart] & 2))
+            if (indexStart == indexMid) {
+                if (cells[indexStart] < 16)
                 {
-                    moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                    moveString += indexToString(indexEnd);
                 }
                 else
                 {
-                    moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+                    moveString += indexToString(indexStart) + indexToString(indexEnd);
                 }
             }
             else
             {
-                moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                moveString += indexToString(indexMid) + indexToString(indexEnd);
             }
         }
         else
         {
+            moveString += indexToString(indexEnd);
             if (cells[indexStart] >= 16)
             {
-                moveString += "=" + indexToString(indexEnd);
-            }
-            else
-            {
-                moveString += "-" + indexToString(indexEnd);
+                moveString += indexToString(indexEnd);
             }
         }
         return moveString;
