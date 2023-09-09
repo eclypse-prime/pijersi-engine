@@ -22,6 +22,8 @@ using std::chrono::time_point;
 
 namespace PijersiEngine::AlphaBeta
 {
+    // The network for NN eval
+    NN::Network network;
 
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
@@ -53,21 +55,21 @@ namespace PijersiEngine::AlphaBeta
                 size_t index = 0;
 
                 // Initializing scores array
-                int16_t *scores = new int16_t[nMoves];
+                float *scores = new float[nMoves];
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    scores[k] = INT16_MIN;
+                    scores[k] = -FLT_MAX;
                 }
 
                 // Cutoffs will happen on winning moves
-                int16_t alpha = -1500;
-                int16_t beta = 1500;
+                float alpha = -1.5;
+                float beta = 1.5;
 
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
 
                 // Search the first move first (Principal Variation)
-                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
+                scores[0] = -evaluateMoveParallelNN(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
                 if (scores[0] > alpha)
                 {
                     alpha = scores[0];
@@ -77,7 +79,7 @@ namespace PijersiEngine::AlphaBeta
                     cut = true;
                 }
                 // Evaluate possible moves
-                #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
+                #pragma omp parallel for schedule(dynamic) shared (alpha)
                 for (size_t k = 1; k < nMoves; k++)
                 {
                     if (cut)
@@ -86,12 +88,12 @@ namespace PijersiEngine::AlphaBeta
                     }
 
                     // Search with a null window
-                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                    scores[k] = -evaluateMoveNN(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
 
                     // If fail high, do the search with the full window
                     if (alpha < scores[k] && scores[k] < beta)
                     {
-                        scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                        scores[k] = -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
                     }
 
                     // Update alpha
@@ -119,7 +121,8 @@ namespace PijersiEngine::AlphaBeta
                 for (size_t k = 0; k < nMoves; k++)
                 {
                     // Add randomness to separate equal moves if parameter active
-                    float salt = random ? RNG::distribution(RNG::gen) : 0.f;
+                    // float salt = random ? RNG::distribution(RNG::gen) : 0.f;
+                    float salt = 0.f;
                     float saltedScore = salt + (float)scores[k];
                     if (saltedScore > maximum)
                     {
@@ -359,6 +362,15 @@ namespace PijersiEngine::AlphaBeta
         return previousScore;
     }
 
+    // Evaluation function for terminal nodes (depth 0)
+    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    {
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
+
+        return updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+    }
+
     // Evaluates a move by calculating the possible subsequent moves recursively
     int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
@@ -515,12 +527,115 @@ namespace PijersiEngine::AlphaBeta
         return score;
     }
 
-    // Evaluation function for terminal nodes (depth 0)
-    int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    // Evaluates a move by calculating the possible subsequent moves recursively
+    float evaluateMoveNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
+        // Create a new board on which the move will be played
+        uint8_t newCells[45];
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);
 
-        return updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        // Stop the recursion if a winning position is achieved
+        if (Logic::isWin(newCells))
+        {
+            return -2;
+        }
+        if (recursionDepth <= 0)
+        {
+            return evaluatePositionNN(newCells, currentPlayer);
+        }
+
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
+
+        float score = -FLT_MAX;
+
+        // Return a minimal score if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
+
+        // Evaluate available moves and find the best one
+        if (moves.size() > 0)
+        {
+            for (size_t k = 0; k < nMoves; k++)
+            {
+                score = max(score, -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));
+                alpha = max(alpha, score);
+                if (alpha > beta)
+                {
+                    break;
+                }
+            }
+        }
+
+        return score;
+    }
+
+    // Evaluates a move by calculating the possible subsequent moves recursively
+    float evaluateMoveParallelNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    {
+        // Create a new board on which the move will be played
+        uint8_t newCells[45];
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
+
+        // Stop the recursion if a winning position is achieved
+        if (Logic::isWin(newCells))
+        {
+            return -2;
+        }
+        if (recursionDepth <= 0)
+        {
+            return evaluatePositionNN(newCells, currentPlayer);
+        }
+
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves.size();
+
+        float score = -FLT_MAX;
+
+        // Return a minimal score if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return score;
+        }
+
+        // Evaluate available moves and find the best one
+        if (moves.size() > 0)
+        {
+            bool cut = false;
+            #pragma omp parallel for schedule(dynamic) shared(alpha)
+            for (size_t k = 0; k < nMoves; k++)
+            {
+                if (cut)
+                {
+                    continue;
+                }
+                float eval = -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                #pragma omp atomic compare
+                if (eval > score)
+                {
+                    score = eval;
+                }
+                #pragma omp atomic compare
+                if (score > alpha)
+                {
+                    alpha = score;
+                }
+                if (alpha > beta)
+                {
+                    cut = true;
+                }
+            }
+        }
+
+        return score;
+    }
+
+    inline float evaluatePositionNN(uint8_t cells[45], uint8_t currentPlayer)
+    {
+        return network.forward(cells, currentPlayer);
     }
 }
