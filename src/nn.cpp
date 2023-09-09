@@ -1,15 +1,19 @@
 #include <algorithm>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include <iostream>
 #include <omp.h>
+
+#include <npy.hpp>
 
 #include <nn.hpp>
 #include <rng.hpp>
 
 namespace PijersiEngine::NN
 {
+    // Converts the board state to a one-hot encoded state. When the active player is black, the point of view is inverted via inverting the piece colours and axial symmetry.
     input_t cellsToInput(uint8_t cells[45], uint8_t currentPlayer)
     {
         input_t input(N_INPUTS, 1);
@@ -199,6 +203,18 @@ namespace PijersiEngine::NN
         output3 = output3.cwiseMax(0.0f);
         output4_t output4 = weights4 * output3 + bias4;
         return output4(0);
+    }
+
+    void Network::load(std::string folderPath)
+    {
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_w.npy", weights1.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_1_w.npy", weights2.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_2_w.npy", weights3.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_3_w.npy", weights4.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_b.npy", bias1.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_1_b.npy", bias2.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_2_b.npy", bias3.data());
+        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_3_b.npy", bias4.data());
     }
 
     Trainer::Trainer(int newBatchSize)
