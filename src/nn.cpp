@@ -10,6 +10,7 @@
 
 #include <nn.hpp>
 #include <rng.hpp>
+#include <weights.hpp>
 
 namespace PijersiEngine::NN
 {
@@ -205,16 +206,17 @@ namespace PijersiEngine::NN
         return output4(0);
     }
 
-    void Network::load(std::string folderPath)
+    void Network::load()
     {
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_w.npy", weights1.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_1_w.npy", weights2.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_2_w.npy", weights3.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_3_w.npy", weights4.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_b.npy", bias1.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_1_b.npy", bias2.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_2_b.npy", bias3.data());
-        npy::LoadArrayFromNumpyToRawData(folderPath + "/dense_3_b.npy", bias4.data());
+        weights1 = weights_t::Map(Weights::dense_w, N_OUTPUTS_1, N_INPUTS);
+        weights2 = weights_t::Map(Weights::dense_1_w, N_OUTPUTS_2, N_OUTPUTS_1);
+        weights3 = weights_t::Map(Weights::dense_2_w, N_OUTPUTS_3, N_OUTPUTS_2);
+        weights4 = weights_t::Map(Weights::dense_3_w, N_OUTPUTS_4, N_OUTPUTS_3);
+
+        bias1 = bias1_t::Map(Weights::dense_b, N_OUTPUTS_1, 1);
+        bias2 = bias2_t::Map(Weights::dense_1_b, N_OUTPUTS_2, 1);
+        bias3 = bias3_t::Map(Weights::dense_2_b, N_OUTPUTS_3, 1);
+        bias4 = bias4_t::Map(Weights::dense_3_b, N_OUTPUTS_4, 1);
     }
 
     Trainer::Trainer(int newBatchSize)

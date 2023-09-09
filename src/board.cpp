@@ -301,6 +301,9 @@ namespace PijersiEngine
         moveCounter = 1;
 
         lastPieceCount = countPieces();
+
+        // Init eval NN
+        AlphaBeta::network.load();
     }
 
     // Prints the board

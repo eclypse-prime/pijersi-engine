@@ -66,7 +66,7 @@ namespace PijersiEngine::NN
         Network();
         void init();
         float forward(uint8_t cells[45], uint8_t currentPlayer);
-        void load(std::string folderPath);
+        void load();
     };
 
     struct Trainer
