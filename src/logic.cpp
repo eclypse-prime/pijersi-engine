@@ -360,8 +360,16 @@ namespace PijersiEngine::Logic
                         cellsString += std::to_string(counter);
                         counter = 0;
                     }
-                    cellsString += Logic::pieceToChar[piece & 0x0FU];
-                    cellsString += Logic::pieceToChar[piece >> 4];
+                    if (piece > 16)
+                    {
+                        cellsString += Logic::pieceToChar[piece >> 4];
+                        cellsString += Logic::pieceToChar[piece & 0x0FU];
+                    }
+                    else
+                    {
+                        cellsString += Logic::pieceToChar[piece & 0x0FU];
+                        cellsString += '-';
+                    }
                 }
             }
             if (counter > 0)
@@ -398,8 +406,15 @@ namespace PijersiEngine::Logic
             {
                 if (Logic::charToPiece.find(cellLines[i][j]) != Logic::charToPiece.end())
                 {
-                    newCells[cursor] = Logic::charToPiece[cellLines[i][j]] | (Logic::charToPiece[cellLines[i][j+1]] << 4);
-                    j +=2;
+                    if (cellLines[i][j+1] != '-')
+                    {
+                        newCells[cursor] = Logic::charToPiece[cellLines[i][j+1]] | (Logic::charToPiece[cellLines[i][j]] << 4);
+                    }
+                    else
+                    {
+                        newCells[cursor] = Logic::charToPiece[cellLines[i][j]];
+                    }
+                    j += 2;
                     cursor += 1;
                 }
                 else
