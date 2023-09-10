@@ -743,7 +743,7 @@ namespace PijersiEngine::Logic
 
         if (moves.size() > 0)
         {
-            std::uniform_int_distribution<int> intDistribution(0, moves.size() / 6 - 1);
+            std::uniform_int_distribution<int> intDistribution(0, moves.size() - 1);
 
             uint32_t index = intDistribution(RNG::gen);
 
