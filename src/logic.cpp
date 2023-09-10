@@ -313,23 +313,24 @@ namespace PijersiEngine::Logic
     uint32_t stringToMove(string moveString, uint8_t cells[45])
     {
         vector<uint32_t> move(3, 0x000000FF);
-        if (moveString.size() == 5)
+        if (moveString.size() == 4)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[2] = stringToIndex(moveString.substr(3, 2));
-            if (moveString[2] == '-')
+            move[2] = stringToIndex(moveString.substr(2, 2));
+            if (cells[move[2]] != 0 && ((cells[move[0]] & 2) == (cells[move[2]] & 2)))
             {
-                if (cells[move[0]] >= 16 || ((cells[move[0]] & 2) == (cells[move[1]] & 2)))
-                {
-                    move[1] = move[0];
-                }
+                move[1] = move[0];
             }
         }
-        else if (moveString.size() == 8)
+        else if (moveString.size() == 6)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[1] = stringToIndex(moveString.substr(3, 2));
-            move[2] = stringToIndex(moveString.substr(6, 2));
+            move[1] = stringToIndex(moveString.substr(2, 2));
+            move[2] = stringToIndex(moveString.substr(4, 2));
+            if (move[1] == move[2])
+            {
+                move[1] = 0x000000FF;
+            }
         }
         else
         {
