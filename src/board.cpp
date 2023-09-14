@@ -303,7 +303,7 @@ namespace PijersiEngine
         lastPieceCount = countPieces();
 
         // Init eval NN
-        AlphaBeta::network.load();
+        // AlphaBeta::network.load();
     }
 
     // Prints the board

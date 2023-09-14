@@ -55,6 +55,119 @@ namespace PijersiEngine::AlphaBeta
                 size_t index = 0;
 
                 // Initializing scores array
+                int16_t *scores = new int16_t[nMoves];
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    scores[k] = INT16_MIN;
+                }
+
+                // Cutoffs will happen on winning moves
+                int16_t alpha = -1500;
+                int16_t beta = 1500;
+
+                // This will stop iteration if there is a cutoff
+                bool cut = false;
+
+                // Search the first move first (Principal Variation)
+                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
+                if (scores[0] > alpha)
+                {
+                    alpha = scores[0];
+                }
+                if (alpha > beta)
+                {
+                    cut = true;
+                }
+                // Evaluate possible moves
+                #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
+                for (size_t k = 1; k < nMoves; k++)
+                {
+                    if (cut)
+                    {
+                        continue;
+                    }
+
+                    // Search with a null window
+                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+
+                    // If fail high, do the search with the full window
+                    if (alpha < scores[k] && scores[k] < beta)
+                    {
+                        scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                    }
+
+                    // Update alpha
+                    #pragma omp atomic compare
+                    if (scores[k] > alpha)
+                    {
+                        alpha = scores[k];
+                    }
+
+                    // Cutoff
+                    if (alpha > beta)
+                    {
+                        cut = true;
+                    }
+                }
+
+                // Return a null move if time is elapsed
+                if (steady_clock::now() > finishTime)
+                {
+                    return NULL_MOVE;
+                }
+
+                // Find best move
+                float maximum = -FLT_MAX;
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    // Add randomness to separate equal moves if parameter active
+                    float salt = random ? RNG::distribution(RNG::gen) : 0.f;
+                    float saltedScore = salt + (float)scores[k];
+                    if (saltedScore > maximum)
+                    {
+                        maximum = saltedScore;
+                        index = k;
+                    }
+                }
+
+                delete scores;
+
+                return moves[index];
+            }
+        }
+        return NULL_MOVE;
+    }
+
+    /* Calculates a move using alphabeta minimax algorithm of chosen depth.
+    If a finish time is provided, it will search until that time point is reached.
+    In that case, the function will return a null move. */
+    uint32_t ponderAlphaBetaNN(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime)
+    {
+
+        // Get a vector of all the available moves for the current player
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves.size();
+
+        // Return a null move if time is elapsed
+        if (steady_clock::now() > finishTime)
+        {
+            return NULL_MOVE;
+        }
+
+        if (nMoves > 0)
+        {
+            if (recursionDepth > 0)
+            {
+
+                // The Principal Variation is the first move to be searched
+                if (principalVariation != NULL_MOVE)
+                {
+                    Utils::sortPrincipalVariation(moves, principalVariation);
+                }
+
+                size_t index = 0;
+
+                // Initializing scores array
                 float *scores = new float[nMoves];
                 for (size_t k = 0; k < nMoves; k++)
                 {
@@ -62,8 +175,8 @@ namespace PijersiEngine::AlphaBeta
                 }
 
                 // Cutoffs will happen on winning moves
-                float alpha = -1.5;
-                float beta = 1.5;
+                float alpha = -0.9;
+                float beta = 0.9;
 
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
@@ -164,6 +277,7 @@ namespace PijersiEngine::AlphaBeta
         {
             score = score * 2 - 3 * ((piece & 2) - 1);
         }
+        score *= (piece & 1);
         return score;
     }
 
@@ -362,12 +476,106 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
     {
-        Logic::setState(newCells, cells);
-        Logic::playManual(move, newCells);
+        uint32_t indexStart = move & 0x000000FF;
+        uint32_t indexMid = (move >> 8) & 0x000000FF;
+        uint32_t indexEnd = (move >> 16) & 0x000000FF;
 
-        return updatePositionEval(previousScore, previousPieceScores, cells, newCells);
+        if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+        {
+            return -2048;
+        }
+
+        if (indexMid > 44)
+        {
+            // Starting cell
+            previousScore -= previousPieceScores[indexStart];
+
+            // Ending cell
+            previousScore -= previousPieceScores[indexEnd];
+            previousScore += evaluatePiece(cells[indexStart], Logic::indexToLine(indexEnd));
+        }
+        else
+        {
+            uint8_t startPiece = cells[indexStart];
+            uint8_t midPiece = cells[indexMid];
+            uint8_t endPiece = cells[indexEnd];
+            // The piece at the mid coordinates is an ally : stack and move
+            if (midPiece != 0 && (midPiece & 2) == (startPiece & 2) && (indexMid != indexStart))
+            {
+                endPiece = (startPiece & 15) + (midPiece << 4);
+                startPiece = (startPiece >> 4);
+                midPiece = 0;
+
+                // Starting cell
+                previousScore -= previousPieceScores[indexStart];
+                previousScore += evaluatePiece(startPiece, Logic::indexToLine(indexStart));
+
+                // Middle cell
+                previousScore -= previousPieceScores[indexMid];
+                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+
+                // Ending cell
+                if (indexStart != indexEnd)
+                {
+                    previousScore -= previousPieceScores[indexEnd];
+                }
+                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+            }
+            // The piece at the end coordinates is an ally : move and stack
+            else if (endPiece != 0 && (endPiece & 2) == (startPiece & 2))
+            {
+                midPiece = startPiece;
+                startPiece = 0;
+                endPiece = (midPiece & 15) + (endPiece << 4);
+                if (indexStart == indexEnd)
+                {
+                    endPiece = (midPiece & 15);
+                }
+                midPiece = (midPiece >> 4);
+
+                // Starting cell
+                if (indexStart != indexMid)
+                {
+                    previousScore -= previousPieceScores[indexStart];
+                }
+
+                // Middle cell
+                previousScore -= previousPieceScores[indexMid];
+                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+
+                // Ending cell
+                if (indexStart != indexEnd)
+                {
+                    previousScore -= previousPieceScores[indexEnd];
+                }
+                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+            }
+            // The end coordinates contain an enemy or no piece : move and unstack
+            else
+            {
+                midPiece = startPiece;
+                startPiece = 0;
+                endPiece = (midPiece & 15);
+                midPiece = (midPiece >> 4);
+                // Starting cell
+                if (indexStart != indexMid)
+                {
+                    previousScore -= previousPieceScores[indexStart];
+                }
+
+                // Middle cell
+                previousScore -= previousPieceScores[indexMid];
+                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+
+                // Ending cell
+                previousScore -= previousPieceScores[indexEnd];
+                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+            }
+        }
+
+        return (currentPlayer == 0) ? previousScore : -previousScore;
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
@@ -427,12 +635,7 @@ namespace PijersiEngine::AlphaBeta
                 int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
-                    if (currentPlayer == 1)
-                    {
-                        evaluation = -evaluation;
-                    }
-                    score = max(score, evaluation);
+                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, cellsBuffer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -508,12 +711,7 @@ namespace PijersiEngine::AlphaBeta
                 int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t evaluation = evaluateMoveTerminal(moves[k], newCells, cellsBuffer, previousScore, previousPieceScores);
-                    if (currentPlayer == 1)
-                    {
-                        evaluation = -evaluation;
-                    }
-                    score = max(score, evaluation);
+                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, cellsBuffer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
