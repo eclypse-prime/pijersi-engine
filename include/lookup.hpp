@@ -107,7 +107,7 @@ namespace PijersiEngine::Lookup
     };
 
     // Associates a piece's uint8_t representation to an index that can be used in other lookup tables
-    const size_t pieceToIndex[] {
+    const size_t pieceToIndex[256] {
         34,
         13,
         34,
