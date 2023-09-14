@@ -1,4 +1,53 @@
+"""Generates the code that uses a lookup table to find a piece's score its type, colour, and position."""
+
 conversion = {'S':1, 'P': 5, 'R': 9, 'W': 13, 's': 3, 'p': 7, 'r': 11, 'w': 15}
+
+index_to_line = [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2,
+        2,
+        2,
+        2,
+        2,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        6,
+        6,
+        6,
+        6,
+        6,
+        6]
 
 def piece_to_int(piece: str):
     if len(piece) == 1:
@@ -12,11 +61,11 @@ def evaluate_piece(piece, i):
         if piece[0] in ['S', 'P', 'R']:
             score = 15 - i
             if i == 0:
-                score *= 100
+                score *= 256
         else:
             score = -9 - i
             if i == 6:
-                score *= 100
+                score *= 256
     
     elif piece[0] == 'W':
         score = 8
@@ -52,35 +101,12 @@ for top in ['s', 'p', 'r', 'w']:
 
 pieces += ['s', 'p', 'r', 'w']
 
-
-# print("        switch (i)")
-# print("        {")
-# for i in range(7):
-#     print(f"        case {i}:")
-#     print(f"            switch (piece)")
-#     print("            {")
-#     for piece in pieces:
-#         print(f"            case {piece_to_int(piece)}:")
-#         print(f"                return {evaluate_piece(piece, i)};")
-#     print(f"            default:")
-#     print(f"                return 0;")
-#     print("            }")
-# print(f"        default:")
-# print(f"            return 0;")
-# print("        }")
-
-print(f"        switch (piece)")
-print("        {")
+print("    int16_t pieceScores[1575] {")
 for piece in pieces:
-    print(f"            case {piece_to_int(piece)}:")
-    print("            switch (i)")
-    print("            {")
-    for i in range(7):
-        print(f"            case {i}:")
-        print(f"                return {evaluate_piece(piece, i)};")
-    print(f"            default:")
-    print(f"                return 0;")
-    print("            }")
-print(f"        default:")
-print(f"            return 0;")
-print("        }")
+    for i in range(45):
+        score = evaluate_piece(piece, index_to_line[i])
+        print(f"        {score},")
+for i in range(44):
+    print("        0,")
+print("        0")
+print("    };")

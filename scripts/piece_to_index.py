@@ -1,3 +1,5 @@
+"""Generates the code that uses a lookup table to convert a piece's uint8_t representation to an index so it can be used by other lookup tables."""
+
 conversion = {'S':1, 'P': 5, 'R': 9, 'W': 13, 's': 3, 'p': 7, 'r': 11, 'w': 15}
 
 def piece_to_int(piece: str):
@@ -34,7 +36,7 @@ for piece in pieces:
     indices[piece_to_int(piece)] = n
     n += 1
 
-print("    size_t pieceToIndex[] {")
+print("    size_t pieceToIndex[256] {")
 for i in range(256):
     if i in indices:
         print(f"        {indices[i]}", end='')
@@ -44,4 +46,4 @@ for i in range(256):
         print(",")
     else:
         print()
-print("    }")
+print("    };")
