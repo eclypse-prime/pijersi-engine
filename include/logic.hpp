@@ -12,10 +12,11 @@ namespace PijersiEngine::Logic
 {
     using Coords = std::pair<uint32_t,uint32_t>;
 
+    // TODO: convert and move to lookup
     uint32_t coordsToIndex(uint32_t i, uint32_t j);
     Coords indexToCoords(uint32_t index);
-    uint32_t indexToLine(uint32_t index);
-    
+    extern uint32_t indexToLine[45];
+
     extern std::unordered_map<uint8_t, char> pieceToChar;
     extern std::unordered_map<char, uint8_t> charToPiece;
 

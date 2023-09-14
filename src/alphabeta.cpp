@@ -10,6 +10,7 @@
 
 #include <alphabeta.hpp>
 #include <logic.hpp>
+#include <lookup.hpp>
 #include <rng.hpp>
 #include <utils.hpp>
 
@@ -251,11 +252,11 @@ namespace PijersiEngine::AlphaBeta
         return NULL_MOVE;
     }
 
-    // Evaluate piece according to its position, colour and type
-    inline int16_t evaluatePiece(uint8_t piece, uint32_t i)
+    // Evaluate piece according to its position, colour and type, unused method
+    inline int16_t evaluatePieceManual(uint8_t piece, uint32_t i)
     {
-
         int16_t score;
+
         // If the piece isn't Wise
         if ((piece & 12) != 12)
         {
@@ -278,61 +279,22 @@ namespace PijersiEngine::AlphaBeta
             score = score * 2 - 3 * ((piece & 2) - 1);
         }
         score *= (piece & 1);
+
         return score;
+    }
+    // Evaluate piece according to its position, colour and type, uses lookup table for speed
+    inline int16_t evaluatePiece(uint8_t piece, uint32_t index)
+    {
+        return Lookup::pieceScores[Lookup::pieceToIndex[piece] * 45 + index];
     }
 
     // Evaluates the board
     int16_t evaluatePosition(uint8_t cells[45])
     {
         int16_t score = 0;
-        for (int k = 0; k < 6; k++)
+        for (int k = 0; k < 45; k++)
         {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 0);
-            }
-        }
-        for (int k = 6; k < 13; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 1);
-            }
-        }
-        for (int k = 13; k < 19; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 2);
-            }
-        }
-        for (int k = 19; k < 26; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 3);
-            }
-        }
-        for (int k = 26; k < 32; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 4);
-            }
-        }
-        for (int k = 32; k < 39; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 5);
-            }
-        }
-        for (int k = 39; k < 45; k++)
-        {
-            if (cells[k] != 0)
-            {
-                score += evaluatePiece(cells[k], 6);
-            }
+            score += evaluatePiece(cells[k], k);
         }
         return score;
     }
@@ -340,68 +302,11 @@ namespace PijersiEngine::AlphaBeta
     int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
     {
         int16_t totalScore = 0;
-        for (int k = 0; k < 6; k++)
+        for (int k = 0; k < 45; k++)
         {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 0);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 6; k < 13; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 1);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 13; k < 19; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 2);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 19; k < 26; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 3);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 26; k < 32; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 4);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 32; k < 39; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 5);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
-        }
-        for (int k = 39; k < 45; k++)
-        {
-            if (cells[k] != 0)
-            {
-                int score = evaluatePiece(cells[k], 6);
-                pieceScores[k] = score;
-                totalScore += score;
-            }
+            int score = evaluatePiece(cells[k], k);
+            pieceScores[k] = score;
+            totalScore += score;
         }
         return totalScore;
     }
@@ -494,7 +399,7 @@ namespace PijersiEngine::AlphaBeta
 
             // Ending cell
             previousScore -= previousPieceScores[indexEnd];
-            previousScore += evaluatePiece(cells[indexStart], Logic::indexToLine(indexEnd));
+            previousScore += evaluatePiece(cells[indexStart], indexEnd);
         }
         else
         {
@@ -510,18 +415,18 @@ namespace PijersiEngine::AlphaBeta
 
                 // Starting cell
                 previousScore -= previousPieceScores[indexStart];
-                previousScore += evaluatePiece(startPiece, Logic::indexToLine(indexStart));
+                previousScore += evaluatePiece(startPiece, indexStart);
 
                 // Middle cell
                 previousScore -= previousPieceScores[indexMid];
-                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+                previousScore += evaluatePiece(midPiece, indexMid);
 
                 // Ending cell
                 if (indexStart != indexEnd)
                 {
                     previousScore -= previousPieceScores[indexEnd];
                 }
-                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+                previousScore += evaluatePiece(endPiece, indexEnd);
             }
             // The piece at the end coordinates is an ally : move and stack
             else if (endPiece != 0 && (endPiece & 2) == (startPiece & 2))
@@ -543,14 +448,14 @@ namespace PijersiEngine::AlphaBeta
 
                 // Middle cell
                 previousScore -= previousPieceScores[indexMid];
-                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+                previousScore += evaluatePiece(midPiece, indexMid);
 
                 // Ending cell
                 if (indexStart != indexEnd)
                 {
                     previousScore -= previousPieceScores[indexEnd];
                 }
-                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+                previousScore += evaluatePiece(endPiece, indexEnd);
             }
             // The end coordinates contain an enemy or no piece : move and unstack
             else
@@ -567,11 +472,11 @@ namespace PijersiEngine::AlphaBeta
 
                 // Middle cell
                 previousScore -= previousPieceScores[indexMid];
-                previousScore += evaluatePiece(midPiece, Logic::indexToLine(indexMid));
+                previousScore += evaluatePiece(midPiece, indexMid);
 
                 // Ending cell
                 previousScore -= previousPieceScores[indexEnd];
-                previousScore += evaluatePiece(endPiece, Logic::indexToLine(indexEnd));
+                previousScore += evaluatePiece(endPiece, indexEnd);
             }
         }
 
