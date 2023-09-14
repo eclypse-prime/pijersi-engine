@@ -26,14 +26,22 @@ for top in ['s', 'p', 'r', 'w']:
 
 pieces += ['s', 'p', 'r', 'w']
 
-n = 0
 
-print(f"        switch (piece)")
-print("        {")
+indices = {}
+
+n = 0
 for piece in pieces:
-    print(f"        case {piece_to_int(piece)}:")
-    print(f"            return hashKeys[{n*45}+index];")
+    indices[piece_to_int(piece)] = n
     n += 1
-print(f"        default:")
-print(f"            return 0;")
-print("        }")
+
+print("    size_t pieceToIndex[] {")
+for i in range(256):
+    if i in indices:
+        print(f"        {indices[i]}", end='')
+    else:
+        print("        34", end='')
+    if i != 255:
+        print(",")
+    else:
+        print()
+print("    }")
