@@ -328,53 +328,11 @@ namespace PijersiEngine::AlphaBeta
     // This will only evaluate the pieces that have changed.
     int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
-        for (int k = 0; k < 6; k++)
+        for (int k = 0; k < 45; k++)
         {
             if (cells[k] != previousCells[k])
             {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 0);
-            }
-        }
-        for (int k = 6; k < 13; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 1);
-            }
-        }
-        for (int k = 13; k < 19; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 2);
-            }
-        }
-        for (int k = 19; k < 26; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 3);
-            }
-        }
-        for (int k = 26; k < 32; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 4);
-            }
-        }
-        for (int k = 32; k < 39; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 5);
-            }
-        }
-        for (int k = 39; k < 45; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], 6);
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], k);
             }
         }
         return previousScore;
