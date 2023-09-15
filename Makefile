@@ -1,6 +1,6 @@
 INCLUDE=-Iinclude
 HEADERS=include/alphabeta.hpp include/board.hpp include/hash.hpp include/logic.hpp include/nn.hpp include/piece.hpp include/rng.hpp include/utils.hpp include/weights.hpp include/npy.hpp
-FLAGS=-Wall -flto -O3 -fopenmp -march=native -static
+FLAGS=-Wall -flto=auto -O3 -fopenmp -march=native
 SRC=src/alphabeta.cpp src/board.cpp src/hash.cpp src/logic.cpp src/nn.cpp src/rng.cpp src/utils.cpp
 OBJ=src/alphabeta.o src/board.o src/hash.o src/logic.o src/nn.o src/rng.o src/utils.o
 CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
