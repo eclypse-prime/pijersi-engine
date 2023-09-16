@@ -9,8 +9,6 @@ The project contains:
 * The actual C++ engine
 * SWIG stuff to wrap the engine for C# 
 
-The engine is now powered by Gravity, a neural network evaluation function.
-
 ## Requirements
 
 * SWIG 4.0.2+
