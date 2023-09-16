@@ -18,36 +18,6 @@ using std::vector;
 
 using namespace PijersiEngine;
 
-uint32_t ugiStringToMove(string ugiMoveString, Board board)
-{
-    if (ugiMoveString.size() != 6 && ugiMoveString.size() != 4)
-    {
-        throw std::invalid_argument("Invalid UGI move string.");
-    }
-
-    // One piece action
-    if (ugiMoveString.size() == 4)
-    {
-
-    }
-}
-
-string ugiMoveToString(uint32_t move, Board board)
-{
-    uint32_t indexStart = move & 0x000000FFU;
-    uint32_t indexMid = (move >> 8) & 0x000000FFU;
-    uint32_t indexEnd = (move >> 16) & 0x000000FFU;
-
-    if (indexStart > 44)
-    {
-        return string("");
-    }
-
-    string ugiMoveString = Logic::indexToString(indexStart);
-    
-    return string("");
-}
-
 int main(int argc, char** argv)
 {
     Board board;
@@ -77,6 +47,7 @@ int main(int argc, char** argv)
             }
             else if (command == "isready")
             {
+                board.init();
                 cout << "readyok" << endl;
             }
             else if (command == "go")
@@ -90,15 +61,15 @@ int main(int argc, char** argv)
                         int depth = stoi(parameter);
                         if (depth >= 1)
                         {
-                            uint32_t move;
+                            uint32_t move = NULL_MOVE;
                             for (int k = 1; k <= depth; k++)
                             {
                                 auto start = steady_clock::now();
-                                move = board.searchDepth(k, true);
+                                move = board.searchDepth(k, true, move, UINT64_MAX, false);
                                 string moveString = Logic::moveToString(move, board.getState());
                                 auto end = steady_clock::now();
-                                int duration = duration_cast<milliseconds>(end - start).count();
-                                cout << "info depth " << k << " seldepth " << k << " pv " << moveString << endl;
+                                float duration = ((float)duration_cast<microseconds>(end - start).count()) / 1000;
+                                cout << "info depth " << k << " seldepth " << k << " time " << duration << " pv " << moveString << endl;
                             }
                             cout << "bestmove " << Logic::moveToString(move, board.getState()) << endl;
                             board.playManual(move);
@@ -112,18 +83,19 @@ int main(int argc, char** argv)
                         {
                             uint32_t move = NULL_MOVE;
                             int depth = 1;
-                            while (steady_clock::now() < finishTime)
+                            while (steady_clock::now() < finishTime && depth <= MAX_DEPTH)
                             {
+                                // TODO: bug when 1ms
                                 uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
                                 auto start = steady_clock::now();
                                 uint32_t proposedMove = board.searchDepth(depth, true, move, remainingTimeMilliseconds, false);
-                                auto end = steady_clock::now();
                                 if (proposedMove != NULL_MOVE)
                                 {
                                     move = proposedMove;
                                     string moveString = Logic::moveToString(move, board.getState());
-                                    int duration = duration_cast<milliseconds>(end - start).count();
-                                    cout << "info depth " << depth << " seldepth " << depth << " pv " << moveString << endl;
+                                    auto end = steady_clock::now();
+                                    float duration = ((float)duration_cast<microseconds>(end - start).count()) / 1000;
+                                    cout << "info depth " << depth << " seldepth " << depth << " time " << duration << " pv " << moveString << endl;
                                     depth += 1;
                                 }
                             }
@@ -142,14 +114,75 @@ int main(int argc, char** argv)
                 if (words.size() >= 2)
                 {
                     string mode = words[1];
-                    if (words.size() >= 3)
+                    if (mode == "fen")
                     {
-                        string parameter = words[2];
-                        
-                        if (mode == "fen")
+                        if (words.size() >= 3)
                         {
+                            string parameter = words[2];
                             // TODO: need to update stringstate for ugi
                             board.setStringState(parameter);
+                            if (words.size() >= 4 && words[3] == "moves")
+                            {
+                                for (size_t k = 4; k < words.size(); k++)
+                                {
+                                    board.playManual(words[k]);
+                                }
+                            }
+                        }
+                    }
+                    else if (mode == "startpos")
+                    {
+                        board.init();
+                        if (words.size() >= 3 && words[2] == "moves")
+                        {
+                            for (size_t k = 3; k < words.size(); k++)
+                            {
+                                board.playManual(words[k]);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (command == "query")
+            {
+                if (words.size() >= 2)
+                {
+                    string mode = words[1];
+                    if (mode == "gameover")
+                    {
+                        if (board.checkWin() || board.checkDraw() || board.checkStalemate())
+                        {
+                            cout << "response true" << endl;
+                        }
+                        else
+                        {
+                            cout << "response false" << endl;
+                        }
+                    }
+                    else if (mode == "p1turn")
+                    {
+                        cout << "response " << ((board.currentPlayer == 0) ? "true" : "false") << endl;
+                    }
+                    else if (mode == "result")
+                    {
+                        if (board.checkWin())
+                        {
+                            if (board.getWinner() == 0)
+                            {
+                                cout << "response p1win" << endl;
+                            }
+                            else
+                            {
+                                cout << "response p2win" << endl;
+                            }
+                        }
+                        else if (board.checkDraw())
+                        {
+                            cout << "response draw" << endl;
+                        }
+                        else
+                        {
+                            cout << "response none" << endl;
                         }
                     }
                 }
