@@ -225,35 +225,27 @@ namespace PijersiEngine::Logic
 
         if (indexMid < 45)
         {
-            if (indexMid == indexStart)
-            {
-                moveString += "-" + indexToString(indexEnd);
-            }
-            else if (cells[indexStart] >= 16)
-            {
-                if (cells[indexMid] != 0 && (cells[indexMid] & 2) == (cells[indexStart] & 2))
+            if (indexStart == indexMid) {
+                if (cells[indexStart] < 16)
                 {
-                    moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                    moveString += indexToString(indexEnd);
                 }
                 else
                 {
-                    moveString += "=" + indexToString(indexMid) + "-" + indexToString(indexEnd);
+                    moveString += indexToString(indexStart) + indexToString(indexEnd);
                 }
             }
             else
             {
-                moveString += "-" + indexToString(indexMid) + "=" + indexToString(indexEnd);
+                moveString += indexToString(indexMid) + indexToString(indexEnd);
             }
         }
         else
         {
+            moveString += indexToString(indexEnd);
             if (cells[indexStart] >= 16)
             {
-                moveString += "=" + indexToString(indexEnd);
-            }
-            else
-            {
-                moveString += "-" + indexToString(indexEnd);
+                moveString += indexToString(indexEnd);
             }
         }
         return moveString;
@@ -263,23 +255,24 @@ namespace PijersiEngine::Logic
     uint32_t stringToMove(string moveString, uint8_t cells[45])
     {
         vector<uint32_t> move(3, 0x000000FF);
-        if (moveString.size() == 5)
+        if (moveString.size() == 4)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[2] = stringToIndex(moveString.substr(3, 2));
-            if (moveString[2] == '-')
+            move[2] = stringToIndex(moveString.substr(2, 2));
+            if (cells[move[2]] != 0 && ((cells[move[0]] & 2) == (cells[move[2]] & 2)))
             {
-                if (cells[move[0]] >= 16 || ((cells[move[0]] & 2) == (cells[move[1]] & 2)))
-                {
-                    move[1] = move[0];
-                }
+                move[1] = move[0];
             }
         }
-        else if (moveString.size() == 8)
+        else if (moveString.size() == 6)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[1] = stringToIndex(moveString.substr(3, 2));
-            move[2] = stringToIndex(moveString.substr(6, 2));
+            move[1] = stringToIndex(moveString.substr(2, 2));
+            move[2] = stringToIndex(moveString.substr(4, 2));
+            if (move[1] == move[2])
+            {
+                move[1] = 0x000000FF;
+            }
         }
         else
         {
@@ -309,8 +302,16 @@ namespace PijersiEngine::Logic
                         cellsString += std::to_string(counter);
                         counter = 0;
                     }
-                    cellsString += Logic::pieceToChar[piece & 0x0FU];
-                    cellsString += Logic::pieceToChar[piece >> 4];
+                    if (piece > 16)
+                    {
+                        cellsString += Logic::pieceToChar[piece >> 4];
+                        cellsString += Logic::pieceToChar[piece & 0x0FU];
+                    }
+                    else
+                    {
+                        cellsString += Logic::pieceToChar[piece & 0x0FU];
+                        cellsString += '-';
+                    }
                 }
             }
             if (counter > 0)
@@ -347,8 +348,15 @@ namespace PijersiEngine::Logic
             {
                 if (Logic::charToPiece.find(cellLines[i][j]) != Logic::charToPiece.end())
                 {
-                    newCells[cursor] = Logic::charToPiece[cellLines[i][j]] | (Logic::charToPiece[cellLines[i][j+1]] << 4);
-                    j +=2;
+                    if (cellLines[i][j+1] != '-')
+                    {
+                        newCells[cursor] = Logic::charToPiece[cellLines[i][j+1]] | (Logic::charToPiece[cellLines[i][j]] << 4);
+                    }
+                    else
+                    {
+                        newCells[cursor] = Logic::charToPiece[cellLines[i][j]];
+                    }
+                    j += 2;
                     cursor += 1;
                 }
                 else
