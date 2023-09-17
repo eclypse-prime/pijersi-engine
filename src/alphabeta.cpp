@@ -339,7 +339,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluation function for terminal nodes (depth 0)
-    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, uint8_t newCells[45], int16_t previousScore, int16_t previousPieceScores[45])
+    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int16_t previousScore, int16_t previousPieceScores[45])
     {
         uint32_t indexStart = move & 0x000000FF;
         uint32_t indexMid = (move >> 8) & 0x000000FF;
@@ -493,12 +493,11 @@ namespace PijersiEngine::AlphaBeta
             }
             else
             {
-                uint8_t cellsBuffer[45];
                 int16_t previousPieceScores[45] = {0};
                 int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, cellsBuffer, previousScore, previousPieceScores));
+                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -569,12 +568,11 @@ namespace PijersiEngine::AlphaBeta
             }
             else
             {
-                uint8_t cellsBuffer[45];
                 int16_t previousPieceScores[45] = {0};
                 int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, cellsBuffer, previousScore, previousPieceScores));
+                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
