@@ -75,6 +75,7 @@ namespace PijersiEngine::Logic
         return Coords(i, j);
     }
 
+    // Converts a cell index to its associated row index
     uint32_t indexToLine[] = {
         0,
         0,
@@ -255,7 +256,7 @@ namespace PijersiEngine::Logic
     uint32_t stringToMove(string moveString, uint8_t cells[45])
     {
         vector<uint32_t> move(3, 0x000000FF);
-        if (moveString.size() == 4)
+        if (moveString.size() == 4 || (moveString.size() == 6 && moveString[4] == '-'))
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
             move[2] = stringToIndex(moveString.substr(2, 2));

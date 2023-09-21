@@ -253,6 +253,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluate piece according to its position, colour and type, unused method
+    [[deprecated("slower performance than current implementation")]]
     inline int16_t evaluatePieceManual(uint8_t piece, uint32_t i)
     {
         int16_t score;
@@ -282,13 +283,16 @@ namespace PijersiEngine::AlphaBeta
 
         return score;
     }
+
     // Evaluate piece according to its position, colour and type, uses lookup table for speed
+    [[nodiscard]]
     inline int16_t evaluatePiece(uint8_t piece, uint32_t index)
     {
         return Lookup::pieceScores[Lookup::pieceToIndex[piece] * 45 + index];
     }
 
     // Evaluates the board
+    [[nodiscard]]
     int16_t evaluatePosition(uint8_t cells[45])
     {
         int16_t score = 0;
@@ -299,6 +303,7 @@ namespace PijersiEngine::AlphaBeta
         return score;
     }
 
+    [[nodiscard]]
     int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
     {
         int16_t totalScore = 0;
@@ -312,6 +317,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Update a piece's score according to its last measured score, returns the difference between its current and last score
+    [[nodiscard]]
     int16_t updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
     {
         if (piece == 0)
@@ -326,6 +332,8 @@ namespace PijersiEngine::AlphaBeta
 
     // Update the position's score according to the last measured position and score.
     // This will only evaluate the pieces that have changed.
+    [[nodiscard]]
+    [[deprecated("slower than current method")]]
     int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
         for (int k = 0; k < 45; k++)
@@ -339,6 +347,8 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluation function for terminal nodes (depth 0)
+    // TODO: possible optims
+    [[nodiscard]]
     inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int16_t previousScore, int16_t previousPieceScores[45])
     {
         uint32_t indexStart = move & 0x000000FF;
@@ -469,21 +479,27 @@ namespace PijersiEngine::AlphaBeta
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
-
-            // if (allowNullMove && recursionDepth >= 4)
-            // {
-            //     score = -evaluateMove(NULL_MOVE, recursionDepth - 3, -beta, -beta + 1, newCells, 1 - currentPlayer, finishTime, false);
-            //     if (score >= beta)
-            //     {
-            //         return beta;
-            //     }
-            // }
-
             if (recursionDepth > 1)
             {
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));
+                    int16_t eval = INT16_MIN;
+                    if (k==0)
+                    {
+                        eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                    }
+                    else
+                    {
+                        // Search with a null window
+                        eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+
+                        // If fail high, do the search with the full window
+                        if (alpha < eval && eval < beta)
+                        {
+                            eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                        }
+                    }
+                    score = max(score, eval);
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
