@@ -6,6 +6,7 @@
 #include <chrono>
 
 #include <board.hpp>
+#include <alphabeta.hpp>
 #include <logic.hpp>
 #include <utils.hpp>
 
@@ -38,6 +39,10 @@ int main(int argc, char** argv)
             if (command == "quit")
             {
                 quit = true;
+            }
+            else if (command == "uginewgame")
+            {
+                board.init();
             }
             else if (command == "ugi")
             {
@@ -85,12 +90,10 @@ int main(int argc, char** argv)
                             int depth = 1;
                             while (steady_clock::now() < finishTime && depth <= MAX_DEPTH)
                             {
-                                // TODO: bug when 1ms
-                                uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
-                                auto start = steady_clock::now();
-                                uint32_t proposedMove = board.searchDepth(depth, true, move, remainingTimeMilliseconds, false);
+                                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, true, board.getState(), board.currentPlayer, move, finishTime);
                                 if (proposedMove != NULL_MOVE)
                                 {
+                                    auto start = steady_clock::now();
                                     move = proposedMove;
                                     string moveString = Logic::moveToString(move, board.getState());
                                     auto end = steady_clock::now();
@@ -105,6 +108,10 @@ int main(int argc, char** argv)
                                 cout << "bestmove " << moveString << endl;
                                 board.playManual(move);
                             }
+                            else
+                            {
+                                cout << "wtf" << endl;
+                            }
                         }
                     }
                 }
@@ -116,14 +123,13 @@ int main(int argc, char** argv)
                     string mode = words[1];
                     if (mode == "fen")
                     {
-                        if (words.size() >= 3)
+                        if (words.size() >= 6)
                         {
-                            string parameter = words[2];
-                            // TODO: need to update stringstate for ugi
-                            board.setStringState(parameter);
-                            if (words.size() >= 4 && words[3] == "moves")
+                            string stringState = words[2] + " " + words[3] + " " + words[4] + " " + words[5];
+                            board.setStringState(stringState);
+                            if (words.size() >= 7 && words[6] == "moves")
                             {
-                                for (size_t k = 4; k < words.size(); k++)
+                                for (size_t k = 7; k < words.size(); k++)
                                 {
                                     board.playManual(words[k]);
                                 }
