@@ -33,6 +33,11 @@ namespace PijersiEngine::Utils
         return str;
     }
 
+    void doubleSort(int16_t scores[], std::vector<uint32_t>& moves)
+    {
+        throw;
+    }
+
     void sortPrincipalVariation(vector<uint32_t>& moves, uint32_t principalVariation)
     {
         bool sorted = false;

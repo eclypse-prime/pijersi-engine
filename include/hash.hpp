@@ -1,6 +1,7 @@
 #ifndef HASH_HPP
 #define HASH_HPP
 
+#include <cstdint>
 #include <list>
 #include <unordered_map>
 #include <assert.h>
@@ -11,6 +12,7 @@ namespace PijersiEngine::Hash
     void hashInit();
     uint64_t hash(uint8_t cells[45], int recursionDepth);
 
+    // StackOverflow
     template <class KEY_T, class VAL_T> class LRUCache{
     private:
         std::list<std::pair<KEY_T,VAL_T> > item_list;
