@@ -3,6 +3,7 @@
 %{
     #include <board.hpp>
     #include <piece.hpp>
+    #include <logic.hpp>
     using namespace PijersiEngine;
 %}
 
@@ -18,3 +19,4 @@ namespace std {
 
 %include <board.hpp>
 %include <piece.hpp>
+%include <logic.hpp>
