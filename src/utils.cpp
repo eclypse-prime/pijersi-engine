@@ -3,6 +3,8 @@
 #include <vector>
 #include <string>
 
+#include <iostream>
+
 #include <logic.hpp>
 #include <utils.hpp>
 
@@ -11,15 +13,31 @@ using std::vector;
 
 namespace PijersiEngine::Utils
 {
-    vector<string> split(string str, string token){
-        vector<string>result;
-        while(str.size()){
+    class sort_indices
+    {
+    private:
+        int16_t *mparr;
+
+    public:
+        sort_indices(int16_t *parr) : mparr(parr) {}
+        bool operator()(size_t i, size_t j) const { return mparr[i] > mparr[j]; }
+    };
+
+    vector<string> split(string str, string token)
+    {
+        vector<string> result;
+        while (str.size())
+        {
             size_t index = str.find(token);
-            if(index!=string::npos){
-                result.push_back(str.substr(0,index));
-                str = str.substr(index+token.size());
-                if(str.size()==0)result.push_back(str);
-            }else{
+            if (index != string::npos)
+            {
+                result.push_back(str.substr(0, index));
+                str = str.substr(index + token.size());
+                if (str.size() == 0)
+                    result.push_back(str);
+            }
+            else
+            {
                 result.push_back(str);
                 str = "";
             }
@@ -33,12 +51,16 @@ namespace PijersiEngine::Utils
         return str;
     }
 
-    void doubleSort(int16_t scores[], std::vector<uint32_t>& moves)
+    void doubleSort(int16_t* scores, size_t* indices, size_t nMoves)
     {
-        throw;
+        for (size_t k = 0; k < nMoves; k++)
+        {
+            indices[k] = k;
+        }
+        std::sort(indices, indices + nMoves, sort_indices(scores));
     }
 
-    void sortPrincipalVariation(vector<uint32_t>& moves, uint32_t principalVariation)
+    void sortPrincipalVariation(vector<uint32_t> &moves, uint32_t principalVariation)
     {
         bool sorted = false;
         size_t index = 0;

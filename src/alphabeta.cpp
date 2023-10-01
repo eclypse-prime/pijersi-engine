@@ -29,7 +29,7 @@ namespace PijersiEngine::AlphaBeta
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime)
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int16_t* lastScores)
     {
 
         // Get a vector of all the available moves for the current player
@@ -47,10 +47,18 @@ namespace PijersiEngine::AlphaBeta
             if (recursionDepth > 0)
             {
 
-                // The Principal Variation is the first move to be searched
-                if (principalVariation != NULL_MOVE)
+                // // The Principal Variation is the first move to be searched
+                // if (principalVariation != NULL_MOVE)
+                // {
+                //     Utils::sortPrincipalVariation(moves, principalVariation);
+                // }
+                size_t *indices = new size_t[nMoves];
+                for (size_t k = 0; k < nMoves; k++){
+                    indices[k] = k;
+                }
+                if (lastScores != nullptr || recursionDepth == 1)
                 {
-                    Utils::sortPrincipalVariation(moves, principalVariation);
+                    Utils::doubleSort(lastScores, indices, nMoves);
                 }
 
                 size_t index = 0;
@@ -70,10 +78,10 @@ namespace PijersiEngine::AlphaBeta
                 bool cut = false;
 
                 // Search the first move first (Principal Variation)
-                scores[0] = -evaluateMoveParallel(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
-                if (scores[0] > alpha)
+                scores[indices[0]] = -evaluateMoveParallel(moves[indices[0]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
+                if (scores[indices[0]] > alpha)
                 {
-                    alpha = scores[0];
+                    alpha = scores[indices[0]];
                 }
                 if (alpha > beta)
                 {
@@ -89,19 +97,19 @@ namespace PijersiEngine::AlphaBeta
                     }
 
                     // Search with a null window
-                    scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                    scores[indices[k]] = -evaluateMove(moves[indices[k]], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
 
                     // If fail high, do the search with the full window
-                    if (alpha < scores[k] && scores[k] < beta)
+                    if (alpha < scores[indices[k]] && scores[indices[k]] < beta)
                     {
-                        scores[k] = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                        scores[indices[k]] = -evaluateMove(moves[indices[k]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
                     }
 
                     // Update alpha
                     #pragma omp atomic compare
-                    if (scores[k] > alpha)
+                    if (scores[indices[k]] > alpha)
                     {
-                        alpha = scores[k];
+                        alpha = scores[indices[k]];
                     }
 
                     // Cutoff
@@ -129,6 +137,10 @@ namespace PijersiEngine::AlphaBeta
                         maximum = saltedScore;
                         index = k;
                     }
+                }
+                for (size_t k = 0; k < nMoves; k++)
+                {
+                    lastScores[k] = scores[k];
                 }
 
                 delete scores;

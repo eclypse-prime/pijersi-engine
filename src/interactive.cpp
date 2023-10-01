@@ -5,6 +5,7 @@
 #include <vector>
 #include <chrono>
 
+#include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
 #include <utils.hpp>
@@ -54,10 +55,12 @@ int main(int argc, char** argv)
                     if (recursionDepth >= 1)
                     {
                         uint32_t move = NULL_MOVE;
+                        size_t nMoves = Logic::availablePlayerMoves(board.currentPlayer, board.getState()).size();
+                        int16_t *scores = new int16_t[nMoves];
                         for (int k = 1; k <= recursionDepth; k++)
                         {
                             auto start = steady_clock::now();
-                            move = board.searchDepth(k, true, move, UINT64_MAX, false);
+                            move = AlphaBeta::ponderAlphaBeta(k, false, board.getState(), board.currentPlayer, move, time_point<steady_clock>::max(), scores);
                             string moveString = Logic::moveToString(move, board.getState());
                             auto end = steady_clock::now();
                             int duration = duration_cast<microseconds>(end - start).count();
