@@ -66,42 +66,25 @@ int main(int argc, char** argv)
                         int depth = stoi(parameter);
                         if (depth >= 1)
                         {
-                            uint32_t move = NULL_MOVE;
-                            for (int k = 1; k <= depth; k++)
+                            uint32_t move = board.searchDepth(depth, true);
+                            if (move != NULL_MOVE)
                             {
-                                auto start = steady_clock::now();
-                                move = board.searchDepth(k, true, move, UINT64_MAX, false);
                                 string moveString = Logic::moveToString(move, board.getState());
-                                auto end = steady_clock::now();
-                                float duration = ((float)duration_cast<microseconds>(end - start).count()) / 1000;
-                                cout << "info depth " << k << " seldepth " << k << " time " << duration << " pv " << moveString << endl;
+                                cout << "bestmove " << Logic::moveToString(move, board.getState()) << endl;
+                                board.playManual(move);
                             }
-                            cout << "bestmove " << Logic::moveToString(move, board.getState()) << endl;
-                            board.playManual(move);
+                            else
+                            {
+                                cout << "wtf" << endl;
+                            }
                         }
                     }
                     else if (mode == "movetime")
                     {
                         int durationMilliseconds = stoi(parameter);
-                        time_point<steady_clock> finishTime = steady_clock::now() + milliseconds(durationMilliseconds);
                         if (durationMilliseconds >= 0)
                         {
-                            uint32_t move = NULL_MOVE;
-                            int depth = 1;
-                            while (steady_clock::now() < finishTime && depth <= MAX_DEPTH)
-                            {
-                                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, true, board.getState(), board.currentPlayer, move, finishTime);
-                                if (proposedMove != NULL_MOVE)
-                                {
-                                    auto start = steady_clock::now();
-                                    move = proposedMove;
-                                    string moveString = Logic::moveToString(move, board.getState());
-                                    auto end = steady_clock::now();
-                                    float duration = ((float)duration_cast<microseconds>(end - start).count()) / 1000;
-                                    cout << "info depth " << depth << " seldepth " << depth << " time " << duration << " pv " << moveString << endl;
-                                    depth += 1;
-                                }
-                            }
+                            uint32_t move = board.searchTime(true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.getState());
