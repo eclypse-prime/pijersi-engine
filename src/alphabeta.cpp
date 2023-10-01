@@ -77,8 +77,8 @@ namespace PijersiEngine::AlphaBeta
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
 
-                // Search the first move first (Principal Variation)
-                scores[indices[0]] = -evaluateMoveParallel(moves[indices[0]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
+                /* Search the first move first (Principal Variation), basic YBW parallel search, disabled, perf too low */
+                /*scores[indices[0]] = -evaluateMoveParallel(moves[indices[0]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
                 if (scores[indices[0]] > alpha)
                 {
                     alpha = scores[indices[0]];
@@ -86,10 +86,10 @@ namespace PijersiEngine::AlphaBeta
                 if (alpha > beta)
                 {
                     cut = true;
-                }
+                }*/
                 // Evaluate possible moves
                 #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
-                for (size_t k = 1; k < nMoves; k++)
+                for (size_t k = 0; k < nMoves; k++)
                 {
                     if (cut)
                     {

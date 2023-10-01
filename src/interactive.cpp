@@ -54,23 +54,15 @@ int main(int argc, char** argv)
                     int recursionDepth = stoi(parameter);
                     if (recursionDepth >= 1)
                     {
-                        uint32_t move = NULL_MOVE;
-                        size_t nMoves = Logic::availablePlayerMoves(board.currentPlayer, board.getState()).size();
-                        int16_t *scores = new int16_t[nMoves];
-                        for (int k = 1; k <= recursionDepth; k++)
+                        uint32_t move = board.searchDepth(recursionDepth, true, NULL_MOVE);
+                        if (move != NULL_MOVE)
                         {
-                            auto start = steady_clock::now();
-                            move = AlphaBeta::ponderAlphaBeta(k, false, board.getState(), board.currentPlayer, move, time_point<steady_clock>::max(), scores);
-                            string moveString = Logic::moveToString(move, board.getState());
-                            auto end = steady_clock::now();
-                            int duration = duration_cast<microseconds>(end - start).count();
-                            cout << "alphabeta depth " << k << " move: " << moveString << " duration: "<< (float)duration/1000 << "ms" << endl;
-                        }
-                        board.playManual(move);
-                        board.print();
-                        if (board.checkWin())
-                        {
-                            cout << "\n--- Game ended ---\n" << endl;
+                            board.playManual(move);
+                            board.print();
+                            if (board.checkWin())
+                            {
+                                cout << "\n--- Game ended ---\n" << endl;
+                            }
                         }
                     }
                 }
@@ -84,26 +76,9 @@ int main(int argc, char** argv)
                     time_point<steady_clock> finishTime = steady_clock::now() + milliseconds(durationMilliseconds);
                     if (durationMilliseconds >= 0)
                     {
-                        uint32_t move = NULL_MOVE;
-                        int depth = 1;
-                        while (steady_clock::now() < finishTime && depth <= MAX_DEPTH)
-                        {
-                            uint64_t remainingTimeMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(finishTime - std::chrono::steady_clock::now()).count();
-                            auto start = steady_clock::now();
-                            uint32_t proposedMove = board.searchDepth(depth, true, move, remainingTimeMilliseconds, false);
-                            if (proposedMove != NULL_MOVE)
-                            {
-                                move = proposedMove;
-                                string moveString = Logic::moveToString(move, board.getState());
-                                auto end = steady_clock::now();
-                                int duration = duration_cast<microseconds>(end - start).count();
-                                cout << "alphabeta depth " << depth << " move: " << moveString << " duration: "<< (float)duration/1000 << "ms" << endl;
-                                depth += 1;
-                            }
-                        }
+                        uint32_t move = board.searchTime(true, durationMilliseconds);
                         if (move != NULL_MOVE)
                         {
-                            cout << "best move chosen at depth " << depth-1 << endl;
                             board.playManual(move);
                             board.print();
                             if (board.checkWin())

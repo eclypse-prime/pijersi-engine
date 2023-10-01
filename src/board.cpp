@@ -11,6 +11,7 @@
 #include <rng.hpp>
 #include <utils.hpp>
 
+using namespace std::chrono;
 using std::cout;
 using std::endl;
 using std::string;
@@ -100,12 +101,19 @@ namespace PijersiEngine
         uint32_t move = NULL_MOVE;
         if (iterative)
         {
+            size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
+            int16_t *scores = new int16_t[nMoves];
             for (int depth = 1; depth <= recursionDepth; depth++)
             {
-                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime);
+                auto start = steady_clock::now();
+                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime, scores);
+                auto end = steady_clock::now();
+                string moveString = Logic::moveToString(proposedMove, cells);
+                float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
                 if (proposedMove != NULL_MOVE)
                 {
                     move = proposedMove;
+                    cout << "info depth " << depth << " seldepth " << recursionDepth << " time " << duration << " pv " << moveString << endl;
                 }
             }
         }
@@ -142,13 +150,20 @@ namespace PijersiEngine
         finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
 
         uint32_t move = NULL_MOVE;
+        size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
+        int16_t *scores = new int16_t[nMoves];
 
         while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
-            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime);
+            auto start = steady_clock::now();
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime, scores);
+            auto end = steady_clock::now();
+            string moveString = Logic::moveToString(proposedMove, cells);
+            float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (proposedMove != NULL_MOVE)
             {
                 move = proposedMove;
+                cout << "info depth " << recursionDepth << " seldepth " << recursionDepth << " time " << duration << " pv " << moveString << endl;
             }
             recursionDepth += 1;
         }
