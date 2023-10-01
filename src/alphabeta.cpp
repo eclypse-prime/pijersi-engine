@@ -138,9 +138,12 @@ namespace PijersiEngine::AlphaBeta
                         index = k;
                     }
                 }
-                for (size_t k = 0; k < nMoves; k++)
+                if (lastScores != nullptr)
                 {
-                    lastScores[k] = scores[k];
+                    for (size_t k = 0; k < nMoves; k++)
+                    {
+                        lastScores[k] = scores[k];
+                    }
                 }
 
                 delete scores;
