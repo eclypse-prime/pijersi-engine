@@ -7,6 +7,7 @@
 
 #include <alphabeta.hpp>
 #include <board.hpp>
+#include <hash.hpp>
 #include <logic.hpp>
 #include <rng.hpp>
 #include <utils.hpp>
@@ -301,6 +302,8 @@ namespace PijersiEngine
         moveCounter = 1;
 
         lastPieceCount = countPieces();
+
+        Hash::hashInit();
 
         // Init eval NN
         // AlphaBeta::network.load();

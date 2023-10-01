@@ -9,6 +9,7 @@
 #include <omp.h>
 
 #include <alphabeta.hpp>
+#include <hash.hpp>
 #include <logic.hpp>
 #include <lookup.hpp>
 #include <rng.hpp>
@@ -88,6 +89,7 @@ namespace PijersiEngine::AlphaBeta
                     cut = true;
                 }
                 // Evaluate possible moves
+                // #pragma omp parallel shared (alpha) if (recursionDepth > 1)
                 #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
                 for (size_t k = 1; k < nMoves; k++)
                 {
@@ -488,6 +490,18 @@ namespace PijersiEngine::AlphaBeta
             return score;
         }
 
+        uint32_t hashKey = Hash::hash(newCells, recursionDepth);
+        uint64_t hashKeyValue = Hash::hashTable[hashKey & Hash::hashMap];
+        uint32_t hashSaltedKey = hashKeyValue >> 32;
+        uint32_t hashValue = hashKeyValue & 0xFFFFFFFF;
+        if ((hashSaltedKey ^ hashValue) == hashKey)
+        {
+            if (((hashValue >> 16) & 0xFFU) == recursionDepth)
+            {
+                return (int16_t)(hashValue & 0xFFFFU);
+            }
+        }
+
         // Evaluate available moves and find the best one
         if (moves.size() > 0)
         {
@@ -534,6 +548,11 @@ namespace PijersiEngine::AlphaBeta
                 }
             }
         }
+
+        uint32_t newHashValue = (score & 0xFFFFU) | ((uint64_t)(recursionDepth << 16) & 0xFF0000U);
+        uint32_t newHashSaltedKey = newHashValue ^ hashKey;
+        uint64_t newHashKeyValue = newHashValue | ((uint64_t)newHashSaltedKey << 32);
+        Hash::hashTable[hashKey & Hash::hashMap] = newHashKeyValue;
 
         return score;
     }
