@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                     int recursionDepth = stoi(parameter);
                     if (recursionDepth >= 1)
                     {
-                        uint32_t move = board.searchDepth(recursionDepth, true, NULL_MOVE);
+                        uint32_t move = board.searchDepth(recursionDepth, true);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
@@ -73,7 +73,6 @@ int main(int argc, char** argv)
                 {
                     string parameter = words[1];
                     int durationMilliseconds = stoi(parameter);
-                    time_point<steady_clock> finishTime = steady_clock::now() + milliseconds(durationMilliseconds);
                     if (durationMilliseconds >= 0)
                     {
                         uint32_t move = board.searchTime(true, durationMilliseconds);
