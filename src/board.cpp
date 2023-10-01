@@ -119,7 +119,15 @@ namespace PijersiEngine
         }
         else
         {
+            auto start = steady_clock::now();
             move = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, principalVariation, finishTime);
+            auto end = steady_clock::now();
+            string moveString = Logic::moveToString(move, cells);
+            float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
+            if (move != NULL_MOVE)
+            {
+                cout << "info depth " << recursionDepth << " seldepth " << recursionDepth << " time " << duration << " pv " << moveString << endl;
+            }
         }
         return move;
     }
