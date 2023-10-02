@@ -29,13 +29,13 @@ Empty space in the board is represented by a number equal to the number of empty
 
 The lines are separated by slashes (`/`). They are written from top to bottom. The pieces in each line are written from left to right.
 
-![Starting PSN representation](doc/startpos.png)
-
 The starting position is represented as: `s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/6/P-S-R-WWS-R-P-/R-P-S-R-P-S- w 0 1`
 
-![PSN representation after a4b5c4](doc/a4b5c4.png)
+![Starting PSN representation](doc/startpos.png)
 
-The above position (after move a4b5c4) is represented as: `s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/3SR2/P-S-R-WW1R-P-/R-P-S-1P-S- b 1 1`
+The below position (after move a4b5c4) is represented as: `s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/3SR2/P-S-R-WW1R-P-/R-P-S-1P-S- b 1 1`
+
+![PSN representation after a4b5c4](doc/a4b5c4.png)
 
 ## Moves
 
