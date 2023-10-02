@@ -7,6 +7,8 @@ An overview can be found here: [GitHub](https://github.com/kz04px/cutegames/blob
 
 The Pijersi Standard Notation (PSN) notation is inspired by the Forsyth–Edwards Notation (FEN) in Chess ([Wikipedia](https://en.wikipedia.org/wiki/Forsyth–Edwards_Notation)).
 
+A Pijersi position is represented by a string in the `[position] [additional info]` format.
+
 ### Pieces
 
 The pieces are represented as such:
@@ -28,6 +30,20 @@ Empty space in the board is represented by a number equal to the number of empty
 ### Lines
 
 The lines are separated by slashes (`/`). They are written from top to bottom. The pieces in each line are written from left to right.
+
+### Additional information
+
+The position word is followed by information about the current player, the half move counter, and the full move counter.
+
+It takes the following form: `[player] [half move] [full move]`.
+
+The player info is either `w` or `b` depending on the player turn. For example, on white to play, the current player is `w`.
+
+The half move counter starts at 0 and is incremented at the end of every move, except if the move contains a capture, in which case the counter is reset to 0.
+
+The full move counter starts at 1 and is incremented at the end of the black turn.
+
+### Examples
 
 The starting position is represented as: `s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/6/P-S-R-WWS-R-P-/R-P-S-R-P-S- w 0 1`
 
@@ -52,11 +68,11 @@ If the starting piece is a single piece, and the action is a simple move or a si
 
 If the starting piece is a single piece and the action is stack-move, then the move is represented by the starting, middle, and ending coordinates.
 
-todo stack
+If the starting piece is a stack, the move is represented by three sets of coordinates. The first coordinates represent the starting position. The second coordinates represent the position where the bottom piece is dropped. The third coordinates represent the position where the top piece is dropped.
 
 In order to check if the move representation matches UGI, a list of all the starting moves can be found here: [Split Perft 1 results](doc/perftsplit_1_startpos.txt).
 
-## Commands
+## Commands [TODO]
 
 An engine that implements UGI has to be able to respond to the following commands.
 
