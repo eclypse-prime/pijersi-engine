@@ -1,7 +1,10 @@
 # Universal Game Interface (UGI)
 
 Natural Selection can use the UGI protocol to communicate and play against other engines. This protocol is designed to be used with any sequential game.
+
 An overview can be found here: [GitHub](https://github.com/kz04px/cutegames/blob/master/ugi.md)
+
+The protocol is based on the UCI protocol for chess.
 
 ## Positions - Pijersi Standard Notation (PSN)
 
