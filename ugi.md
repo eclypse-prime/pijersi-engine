@@ -113,15 +113,23 @@ This command can be sent at any time and must be replied to with `readyok` whene
 
 ### `go`
 
+
+This command orders the engine to search for the best move with the chosen time control.
+
+The options that must be implemented are `depth` and `movetime`. Other options that exist but are not necessary are: `p1time [ms] p2time [ms] p1inc [ms] p2inc [ms]`, `nodes [nodes]`, `infinite`.
+
+The engine indicates the search has finished with `bestmove [move string]`
+
 ```
 >>> go depth 2
+[Search the best move at depth 2]
 <<< info depth 1 seldepth 2 time 0.054 pv a5b5d6
 <<< info depth 2 seldepth 2 time 0.349 pv a5b6d5
 <<< bestmove a5b5d4
 ```
-
 ```
 >>> go movetime 10
+[Search the best move for 10 ms]
 <<< info depth 1 seldepth 1 time 0.046 pv a5b6d7
 <<< info depth 2 seldepth 2 time 2.282 pv a5b6d5
 <<< info depth 3 seldepth 3 time 0.748 pv a2b3c3
