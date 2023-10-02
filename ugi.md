@@ -37,11 +37,9 @@ The position word is followed by information about the current player, the half 
 
 It takes the following form: `[player] [half move] [full move]`.
 
-The player info is either `w` or `b` depending on the player turn. For example, on white to play, the current player is `w`.
-
-The half move counter starts at 0 and is incremented at the end of every move, except if the move contains a capture, in which case the counter is reset to 0.
-
-The full move counter starts at 1 and is incremented at the end of the black turn.
+* The player info is either `w` or `b` depending on the player turn. For example, on white to play, the current player is `w`.
+* The half move counter starts at 0 and is incremented at the end of every move, except if the move contains a capture, in which case the counter is reset to 0.
+* The full move counter starts at 1 and is incremented at the end of the black turn.
 
 ### Examples
 
@@ -74,8 +72,88 @@ In order to check if the move representation matches UGI, a list of all the star
 
 ## Commands [TODO]
 
-An engine that implements UGI has to be able to respond to the following commands.
+An engine that implements UGI has to be able to respond to the following commands at minimum. There are extra commands that are unused for now.
 
-* `ugi`
-* `isready`
-* `go`
+For illustration purposes, requests will be prefixed with `>>>` and answers with `<<<`. **The actual engine should *NOT* use those prefixes**.
+
+### `ugi`
+
+This command is used to tell the engine to switch to UGI mode. This must be sent before any other command and replied to with `ugiok`. The engine will identify itself with the `id` command.
+
+```
+>>> ugi
+<<< id name Natural-Selection
+<<< id author Eclypse-Prime
+<<< ugiok
+```
+
+### `isready`
+
+This command can be sent at any time and must be replied to with `readyok` whenever the engine is ready. `isready` will be sent once after `ugi` before the engine is asked to search/etc. No large amounts of memory or other time expensive operations should be performed before the first isready is received.
+
+```
+>>> isready
+[Perform expensive initializations here]
+<<< readyok
+```
+
+### `uginewgame`
+
+```
+>>> uginewgame
+[Reset the position to startpos]
+```
+
+### `quit`
+
+```
+>>> quit
+[Closes the engine]
+```
+
+### `go`
+
+```
+>>> go depth 2
+<<< info depth 1 seldepth 2 time 0.054 pv a5b5d6
+<<< info depth 2 seldepth 2 time 0.349 pv a5b6d5
+<<< bestmove a5b5d4
+```
+
+```
+>>> go movetime 10
+<<< info depth 1 seldepth 1 time 0.046 pv a5b6d7
+<<< info depth 2 seldepth 2 time 2.282 pv a5b6d5
+<<< info depth 3 seldepth 3 time 0.748 pv a2b3c3
+<<< bestmove a5b5d4
+```
+
+### `position`
+
+```
+>>> position startpos
+```
+```
+>>> position fen [psn]
+```
+```
+>>> position startpos moves [move list]
+```
+```
+>>> position fen [psn] moves [move list]
+```
+
+### `query`
+
+```
+>>> query gameover
+<<< response [true/false]
+```
+```
+>>> query p1turn
+<<< response [true/false]
+```
+```
+>>> query result
+<<< response [p1win/p2win/draw/none]
+```
