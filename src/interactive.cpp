@@ -108,6 +108,26 @@ int main(int argc, char** argv)
                     }
                 }
             }
+            else if (command == "perftsplit")
+            {
+                if (words.size() >= 2)
+                {
+                    string parameter = words[1];
+                    int depth = stoi(parameter);
+                    for (int k = 0; k <= depth; k++)
+                    {
+                        auto start = steady_clock::now();
+                        vector<string> result = Logic::perftSplit(k, board.getState(), board.currentPlayer);
+                        auto end = steady_clock::now();
+                        int duration = duration_cast<microseconds>(end - start).count();
+                        cout << "perft depth " << k << " duration: "<< (float)duration/1000 << "ms" << endl;
+                        for (size_t index = 0; index < result.size(); index++)
+                        {
+                            cout << result[index] << endl;
+                        }
+                    }
+                }
+            }
             else if (command == "m")
             {
                 if (words.size() >= 2)
