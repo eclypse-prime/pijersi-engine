@@ -126,16 +126,16 @@ The engine indicates the search has finished with `bestmove [move string]`
 ```
 >>> go depth 2
 [Search the best move at depth 2]
-<<< info depth 1 seldepth 2 time 0.054 pv a5b5d6
-<<< info depth 2 seldepth 2 time 0.349 pv a5b6d5
+<<< info depth 1 time 0.054 pv a5b5d6
+<<< info depth 2 time 0.349 pv a5b6d5
 <<< bestmove a5b5d4
 ```
 ```
 >>> go movetime 10
 [Search the best move for 10 ms]
-<<< info depth 1 seldepth 1 time 0.046 pv a5b6d7
-<<< info depth 2 seldepth 2 time 2.282 pv a5b6d5
-<<< info depth 3 seldepth 3 time 0.748 pv a2b3c3
+<<< info depth 1 time 0.046 pv a5b6d7
+<<< info depth 2 time 2.282 pv a5b6d5
+<<< info depth 3 time 0.748 pv a2b3c3
 <<< bestmove a5b5d4
 ```
 
