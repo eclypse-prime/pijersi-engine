@@ -56,7 +56,7 @@ namespace PijersiEngine::AlphaBeta
                 for (size_t k = 0; k < nMoves; k++){
                     indices[k] = k;
                 }
-                if (lastScores != nullptr || recursionDepth == 1)
+                if (lastScores != nullptr && recursionDepth > 1)
                 {
                     Utils::doubleSort(lastScores, indices, nMoves);
                 }
