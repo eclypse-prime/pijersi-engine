@@ -11,6 +11,8 @@ using std::chrono::time_point;
 
 namespace PijersiEngine::AlphaBeta
 {
+    extern int64_t predictedScore;
+
     uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime = time_point<steady_clock>::max(), int64_t *lastScores = nullptr);
     int64_t evaluatePiece(uint8_t piece, uint32_t i);
     int64_t evaluatePosition(uint8_t cells[45]);
@@ -22,13 +24,14 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
 
     // NN-powered eval
-    uint32_t ponderAlphaBetaNN(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime = time_point<steady_clock>::max());
-    float evaluateMoveNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
-    float evaluateMoveParallelNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
-    inline float evaluatePositionNN(uint8_t cells[45], uint8_t currentPlayer);
-
-    extern NN::Network network;
-    extern int64_t predictedScore;
+    // namespace EvalNN
+    // {
+    //     uint32_t ponderAlphaBetaNN(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime = time_point<steady_clock>::max());
+    //     float evaluateMoveNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
+    //     float evaluateMoveParallelNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
+    //     inline float evaluatePositionNN(uint8_t cells[45], uint8_t currentPlayer);
+    //     extern NN::Network network;
+    // }
 }
 
 #endif
