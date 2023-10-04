@@ -157,7 +157,7 @@ namespace PijersiEngine::AlphaBeta
 
     // Evaluate piece according to its position, colour and type, uses lookup table for speed
     [[nodiscard]]
-    inline int64_t evaluatePiece(uint8_t piece, uint32_t index)
+    inline int64_t evaluatePiece(uint8_t piece, size_t index)
     {
         return Lookup::pieceScores[Lookup::pieceToIndex[piece] * 45 + index];
     }
@@ -167,7 +167,7 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluatePosition(uint8_t cells[45])
     {
         int64_t score = 0;
-        for (int k = 0; k < 45; k++)
+        for (size_t k = 0; k < 45; k++)
         {
             score += evaluatePiece(cells[k], k);
         }
@@ -178,7 +178,7 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluatePosition(uint8_t cells[45], int64_t pieceScores[45])
     {
         int64_t totalScore = 0;
-        for (int k = 0; k < 45; k++)
+        for (size_t k = 0; k < 45; k++)
         {
             int score = evaluatePiece(cells[k], k);
             pieceScores[k] = score;
@@ -189,7 +189,7 @@ namespace PijersiEngine::AlphaBeta
 
     // Update a piece's score according to its last measured score, returns the difference between its current and last score
     [[nodiscard]]
-    int64_t updatePieceEval(int64_t previousPieceScore, uint8_t piece, int i)
+    int64_t updatePieceEval(int64_t previousPieceScore, uint8_t piece, size_t i)
     {
         if (piece == 0)
         {
@@ -206,9 +206,9 @@ namespace PijersiEngine::AlphaBeta
     [[nodiscard]]
     inline int64_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
-        uint32_t indexStart = move & 0x000000FF;
-        uint32_t indexMid = (move >> 8) & 0x000000FF;
-        uint32_t indexEnd = (move >> 16) & 0x000000FF;
+        size_t indexStart = move & 0x000000FF;
+        size_t indexMid = (move >> 8) & 0x000000FF;
+        size_t indexEnd = (move >> 16) & 0x000000FF;
 
         if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
         {
