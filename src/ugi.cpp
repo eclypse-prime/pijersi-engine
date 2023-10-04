@@ -97,6 +97,10 @@ int main(int argc, char** argv)
                             }
                         }
                     }
+                    else if (mode == "manual")
+                    {
+                        board.playManual(parameter);
+                    }
                 }
             }
             else if (command == "position")
