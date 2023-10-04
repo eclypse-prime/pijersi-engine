@@ -376,7 +376,7 @@ namespace PijersiEngine::AlphaBeta
 
         if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
         {
-            return -2048;
+            return -20480;
         }
 
         if (indexMid > 44)
