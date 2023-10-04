@@ -113,7 +113,7 @@ namespace PijersiEngine
                 if (proposedMove != NULL_MOVE)
                 {
                     move = proposedMove;
-                    cout << "info depth " << depth << " time " << duration << " pv " << moveString << endl;
+                    cout << "info depth " << depth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
                 }
             }
         }
@@ -126,7 +126,7 @@ namespace PijersiEngine
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (move != NULL_MOVE)
             {
-                cout << "info depth " << recursionDepth << " time " << duration << " pv " << moveString << endl;
+                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
             }
         }
         return move;
@@ -171,7 +171,7 @@ namespace PijersiEngine
             if (proposedMove != NULL_MOVE)
             {
                 move = proposedMove;
-                cout << "info depth " << recursionDepth << " seldepth " << recursionDepth << " time " << duration << " pv " << moveString << endl;
+                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
             }
             recursionDepth += 1;
         }
@@ -395,9 +395,9 @@ namespace PijersiEngine
         return Logic::getWinningPlayer(cells);
     }
 
-    int64_t Board::getForecast()
+    int64_t Board::getPredictedScore()
     {
-        return forecast;
+        return AlphaBeta::predictedScore;
     }
 
     // uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)

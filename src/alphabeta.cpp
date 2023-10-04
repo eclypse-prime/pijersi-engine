@@ -26,6 +26,8 @@ namespace PijersiEngine::AlphaBeta
     // The network for NN eval
     NN::Network network;
 
+    int64_t predictedScore = 0;
+
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
@@ -145,6 +147,8 @@ namespace PijersiEngine::AlphaBeta
                         lastScores[k] = scores[k];
                     }
                 }
+
+                predictedScore = scores[index];
 
                 delete scores;
 

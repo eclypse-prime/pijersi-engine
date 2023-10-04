@@ -28,6 +28,7 @@ namespace PijersiEngine::AlphaBeta
     inline float evaluatePositionNN(uint8_t cells[45], uint8_t currentPlayer);
 
     extern NN::Network network;
+    extern int64_t predictedScore;
 }
 
 #endif

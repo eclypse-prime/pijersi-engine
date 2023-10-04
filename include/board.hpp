@@ -61,7 +61,7 @@ namespace PijersiEngine
         // TODO
         bool checkStalemate();
         uint8_t getWinner();
-        int64_t getForecast();
+        int64_t getPredictedScore();
         uint8_t currentPlayer = 0;
 
     private:
@@ -71,7 +71,6 @@ namespace PijersiEngine
         uint32_t lastPieceCount = 0;
 
         uint8_t cells[45];
-        int64_t forecast = 0;
 
         uint32_t halfMoveCounter = 0;
         uint32_t moveCounter = 1;
