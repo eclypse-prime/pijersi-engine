@@ -102,7 +102,7 @@ namespace PijersiEngine
         if (iterative)
         {
             size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
-            int16_t *scores = new int16_t[nMoves];
+            int64_t *scores = new int64_t[nMoves];
             for (int depth = 1; depth <= recursionDepth; depth++)
             {
                 auto start = steady_clock::now();
@@ -159,7 +159,7 @@ namespace PijersiEngine
 
         uint32_t move = NULL_MOVE;
         size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
-        int16_t *scores = new int16_t[nMoves];
+        int64_t *scores = new int64_t[nMoves];
 
         while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
@@ -238,7 +238,7 @@ namespace PijersiEngine
         return cells[Logic::coordsToIndex(i, j)];
     }
 
-    int16_t Board::evaluate()
+    int64_t Board::evaluate()
     {
         return AlphaBeta::evaluatePosition(cells);
     }
@@ -395,7 +395,7 @@ namespace PijersiEngine
         return Logic::getWinningPlayer(cells);
     }
 
-    int16_t Board::getForecast()
+    int64_t Board::getForecast()
     {
         return forecast;
     }

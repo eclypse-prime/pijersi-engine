@@ -29,7 +29,7 @@ namespace PijersiEngine::AlphaBeta
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int16_t* lastScores)
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
     {
 
         // Get a vector of all the available moves for the current player
@@ -64,15 +64,15 @@ namespace PijersiEngine::AlphaBeta
                 size_t index = 0;
 
                 // Initializing scores array
-                int16_t *scores = new int16_t[nMoves];
+                int64_t *scores = new int64_t[nMoves];
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    scores[k] = INT16_MIN;
+                    scores[k] = INT64_MIN;
                 }
 
                 // Cutoffs will happen on winning moves
-                int16_t alpha = -1500;
-                int16_t beta = 1500;
+                int64_t alpha = -15000;
+                int64_t beta = 15000;
 
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
@@ -269,9 +269,9 @@ namespace PijersiEngine::AlphaBeta
 
     // Evaluate piece according to its position, colour and type, unused method
     [[deprecated("slower performance than current implementation")]]
-    inline int16_t evaluatePieceManual(uint8_t piece, uint32_t i)
+    inline int64_t evaluatePieceManual(uint8_t piece, uint32_t i)
     {
-        int16_t score;
+        int64_t score;
 
         // If the piece isn't Wise
         if ((piece & 12) != 12)
@@ -301,16 +301,16 @@ namespace PijersiEngine::AlphaBeta
 
     // Evaluate piece according to its position, colour and type, uses lookup table for speed
     [[nodiscard]]
-    inline int16_t evaluatePiece(uint8_t piece, uint32_t index)
+    inline int64_t evaluatePiece(uint8_t piece, uint32_t index)
     {
         return Lookup::pieceScores[Lookup::pieceToIndex[piece] * 45 + index];
     }
 
     // Evaluates the board
     [[nodiscard]]
-    int16_t evaluatePosition(uint8_t cells[45])
+    int64_t evaluatePosition(uint8_t cells[45])
     {
-        int16_t score = 0;
+        int64_t score = 0;
         for (int k = 0; k < 45; k++)
         {
             score += evaluatePiece(cells[k], k);
@@ -319,9 +319,9 @@ namespace PijersiEngine::AlphaBeta
     }
 
     [[nodiscard]]
-    int16_t evaluatePosition(uint8_t cells[45], int16_t pieceScores[45])
+    int64_t evaluatePosition(uint8_t cells[45], int64_t pieceScores[45])
     {
-        int16_t totalScore = 0;
+        int64_t totalScore = 0;
         for (int k = 0; k < 45; k++)
         {
             int score = evaluatePiece(cells[k], k);
@@ -333,7 +333,7 @@ namespace PijersiEngine::AlphaBeta
 
     // Update a piece's score according to its last measured score, returns the difference between its current and last score
     [[nodiscard]]
-    int16_t updatePieceEval(int16_t previousPieceScore, uint8_t piece, int i)
+    int64_t updatePieceEval(int64_t previousPieceScore, uint8_t piece, int i)
     {
         if (piece == 0)
         {
@@ -349,7 +349,7 @@ namespace PijersiEngine::AlphaBeta
     // This will only evaluate the pieces that have changed.
     [[nodiscard]]
     [[deprecated("slower than current method")]]
-    int16_t updatePositionEval(int16_t previousScore, int16_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
+    int64_t updatePositionEval(int64_t previousScore, int64_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
     {
         for (int k = 0; k < 45; k++)
         {
@@ -364,7 +364,7 @@ namespace PijersiEngine::AlphaBeta
     // Evaluation function for terminal nodes (depth 0)
     // TODO: possible optims
     [[nodiscard]]
-    inline int16_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int16_t previousScore, int16_t previousPieceScores[45])
+    inline int64_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
         uint32_t indexStart = move & 0x000000FF;
         uint32_t indexMid = (move >> 8) & 0x000000FF;
@@ -467,7 +467,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t evaluateMove(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMove(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
@@ -483,7 +483,7 @@ namespace PijersiEngine::AlphaBeta
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size();
 
-        int16_t score = INT16_MIN;
+        int64_t score = INT64_MIN;
 
         // Return a minimal score if time is elapsed
         if (steady_clock::now() > finishTime)
@@ -498,20 +498,20 @@ namespace PijersiEngine::AlphaBeta
             {
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    int16_t eval = INT16_MIN;
+                    int64_t eval = INT64_MIN;
                     if (k==0)
                     {
-                        eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                        eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
                     }
                     else
                     {
                         // Search with a null window
-                        eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                        eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
 
                         // If fail high, do the search with the full window
                         if (alpha < eval && eval < beta)
                         {
-                            eval = (int16_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                            eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
                         }
                     }
                     score = max(score, eval);
@@ -524,11 +524,11 @@ namespace PijersiEngine::AlphaBeta
             }
             else
             {
-                int16_t previousPieceScores[45] = {0};
-                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
+                int64_t previousPieceScores[45] = {0};
+                int64_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
+                    score = max(score, (int64_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -542,7 +542,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int16_t evaluateMoveParallel(uint32_t move, int recursionDepth, int16_t alpha, int16_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
@@ -558,7 +558,7 @@ namespace PijersiEngine::AlphaBeta
         vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves.size();
 
-        int16_t score = INT16_MIN;
+        int64_t score = INT64_MIN;
 
         // Return a minimal score if time is elapsed
         if (steady_clock::now() > finishTime)
@@ -580,7 +580,7 @@ namespace PijersiEngine::AlphaBeta
                     {
                         continue;
                     }
-                    int16_t eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                    int64_t eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
                     #pragma omp atomic compare
                     if (eval > score)
                     {
@@ -599,11 +599,11 @@ namespace PijersiEngine::AlphaBeta
             }
             else
             {
-                int16_t previousPieceScores[45] = {0};
-                int16_t previousScore = evaluatePosition(newCells, previousPieceScores);
+                int64_t previousPieceScores[45] = {0};
+                int64_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int16_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
+                    score = max(score, (int64_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {

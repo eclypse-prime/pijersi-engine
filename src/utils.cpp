@@ -16,10 +16,10 @@ namespace PijersiEngine::Utils
     class sort_indices
     {
     private:
-        int16_t *mparr;
+        int64_t *mparr;
 
     public:
-        sort_indices(int16_t *parr) : mparr(parr) {}
+        sort_indices(int64_t *parr) : mparr(parr) {}
         bool operator()(size_t i, size_t j) const { return mparr[i] > mparr[j]; }
     };
 
@@ -51,7 +51,7 @@ namespace PijersiEngine::Utils
         return str;
     }
 
-    void doubleSort(int16_t* scores, size_t* indices, size_t nMoves)
+    void doubleSort(int64_t* scores, size_t* indices, size_t nMoves)
     {
         for (size_t k = 0; k < nMoves; k++)
         {

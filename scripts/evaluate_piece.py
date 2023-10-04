@@ -101,10 +101,10 @@ for top in ['s', 'p', 'r', 'w']:
 
 pieces += ['s', 'p', 'r', 'w']
 
-print("    int16_t pieceScores[1575] {")
+print("    int64_t pieceScores[1575] {")
 for piece in pieces:
     for i in range(45):
-        score = evaluate_piece(piece, index_to_line[i])
+        score = evaluate_piece(piece, index_to_line[i]) * 10
         print(f"        {score},")
 for i in range(44):
     print("        0,")
