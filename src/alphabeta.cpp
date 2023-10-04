@@ -155,38 +155,6 @@ namespace PijersiEngine::AlphaBeta
         return NULL_MOVE;
     }
 
-    // Evaluate piece according to its position, colour and type, unused method
-    [[deprecated("slower performance than current implementation")]]
-    inline int64_t evaluatePieceManual(uint8_t piece, uint32_t i)
-    {
-        int64_t score;
-
-        // If the piece isn't Wise
-        if ((piece & 12) != 12)
-        {
-            score = 15 - 12 * (piece & 2) - i;
-
-            // If the piece is in a winning position
-            if ((i == 0 && (piece & 2) == 0) || (i == 6 && (piece & 2) == 2))
-            {
-                score *= 256;
-            }
-        }
-        else
-        {
-            score = ((piece & 2) - 1) * -8;
-        }
-
-        // If the piece is a stack
-        if (piece >= 16)
-        {
-            score = score * 2 - 3 * ((piece & 2) - 1);
-        }
-        score *= (piece & 1);
-
-        return score;
-    }
-
     // Evaluate piece according to its position, colour and type, uses lookup table for speed
     [[nodiscard]]
     inline int64_t evaluatePiece(uint8_t piece, uint32_t index)
@@ -231,22 +199,6 @@ namespace PijersiEngine::AlphaBeta
         {
             return evaluatePiece(piece, i) - previousPieceScore;
         }
-    }
-
-    // Update the position's score according to the last measured position and score.
-    // This will only evaluate the pieces that have changed.
-    [[nodiscard]]
-    [[deprecated("slower than current method")]]
-    int64_t updatePositionEval(int64_t previousScore, int64_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
-    {
-        for (int k = 0; k < 45; k++)
-        {
-            if (cells[k] != previousCells[k])
-            {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], k);
-            }
-        }
-        return previousScore;
     }
 
     // Evaluation function for terminal nodes (depth 0)
@@ -504,6 +456,55 @@ namespace PijersiEngine::AlphaBeta
         return score;
     }
 
+    // Update the position's score according to the last measured position and score.
+    // This will only evaluate the pieces that have changed.
+    [[nodiscard]]
+    [[deprecated("slower than current method")]]
+    int64_t updatePositionEval(int64_t previousScore, int64_t previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
+    {
+        for (int k = 0; k < 45; k++)
+        {
+            if (cells[k] != previousCells[k])
+            {
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], k);
+            }
+        }
+        return previousScore;
+    }
+
+    // Evaluate piece according to its position, colour and type, unused method
+    [[deprecated("slower performance than current implementation")]]
+    inline int64_t evaluatePieceManual(uint8_t piece, uint32_t i)
+    {
+        int64_t score;
+
+        // If the piece isn't Wise
+        if ((piece & 12) != 12)
+        {
+            score = 15 - 12 * (piece & 2) - i;
+
+            // If the piece is in a winning position
+            if ((i == 0 && (piece & 2) == 0) || (i == 6 && (piece & 2) == 2))
+            {
+                score *= 256;
+            }
+        }
+        else
+        {
+            score = ((piece & 2) - 1) * -8;
+        }
+
+        // If the piece is a stack
+        if (piece >= 16)
+        {
+            score = score * 2 - 3 * ((piece & 2) - 1);
+        }
+        score *= (piece & 1);
+
+        return score;
+    }
+
+    // Unused NN methods
     /*
     namespace EvalNN
     {
