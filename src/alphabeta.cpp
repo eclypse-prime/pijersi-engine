@@ -86,35 +86,54 @@ namespace PijersiEngine::AlphaBeta
                 {
                     cut = true;
                 }*/
-                // Evaluate possible moves
-                #pragma omp parallel for schedule(dynamic) shared (alpha) if (recursionDepth > 1)
-                for (size_t k = 0; k < nMoves; k++)
+                if (recursionDepth > 1)
                 {
-                    if (cut)
+                    // Evaluate possible moves
+                    #pragma omp parallel for schedule(dynamic) shared (alpha)
+                    for (size_t k = 0; k < nMoves; k++)
                     {
-                        continue;
+                        if (cut)
+                        {
+                            continue;
+                        }
+
+                        // Search with a null window
+                        int64_t eval = -evaluateMove(moves[indices[k]], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
+
+                        // If fail high, do the search with the full window
+                        if (alpha < eval && eval < beta)
+                        {
+                            eval = -evaluateMove(moves[indices[k]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
+                        }
+
+                        // Update alpha
+                        #pragma omp atomic compare
+                        if (eval > alpha)
+                        {
+                            alpha = eval;
+                        }
+
+                        // Cutoff
+                        if (alpha > beta)
+                        {
+                            cut = true;
+                        }
+
+                        scores[indices[k]] = eval;
                     }
-
-                    // Search with a null window
-                    scores[indices[k]] = -evaluateMove(moves[indices[k]], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
-
-                    // If fail high, do the search with the full window
-                    if (alpha < scores[indices[k]] && scores[indices[k]] < beta)
+                }
+                else
+                {
+                    int64_t previousPieceScores[45] = {0};
+                    int64_t previousScore = evaluatePosition(cells, previousPieceScores);
+                    for (size_t k = 0; k < nMoves; k++)
                     {
-                        scores[indices[k]] = -evaluateMove(moves[indices[k]], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
-                    }
-
-                    // Update alpha
-                    #pragma omp atomic compare
-                    if (scores[indices[k]] > alpha)
-                    {
-                        alpha = scores[indices[k]];
-                    }
-
-                    // Cutoff
-                    if (alpha > beta)
-                    {
-                        cut = true;
+                        scores[k] = -evaluateMoveTerminal(moves[k], cells, 1 - currentPlayer, previousScore, previousPieceScores);
+                        alpha = max(alpha, scores[k]);
+                        if (alpha > beta)
+                        {
+                            break;
+                        }
                     }
                 }
 
@@ -341,17 +360,17 @@ namespace PijersiEngine::AlphaBeta
                     int64_t eval = INT64_MIN;
                     if (k==0)
                     {
-                        eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                        eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
                     }
                     else
                     {
                         // Search with a null window
-                        eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                        eval = -evaluateMove(moves[k], recursionDepth - 1, -alpha - 1, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
 
                         // If fail high, do the search with the full window
                         if (alpha < eval && eval < beta)
                         {
-                            eval = (int64_t)-evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
+                            eval = -evaluateMove(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
                         }
                     }
                     score = max(score, eval);
@@ -368,7 +387,7 @@ namespace PijersiEngine::AlphaBeta
                 int64_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int64_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
+                    score = max(score, -evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
@@ -443,7 +462,7 @@ namespace PijersiEngine::AlphaBeta
                 int64_t previousScore = evaluatePosition(newCells, previousPieceScores);
                 for (size_t k = 0; k < nMoves; k++)
                 {
-                    score = max(score, (int64_t)-evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
+                    score = max(score, -evaluateMoveTerminal(moves[k], newCells, 1 - currentPlayer, previousScore, previousPieceScores));
                     alpha = max(alpha, score);
                     if (alpha > beta)
                     {
