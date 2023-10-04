@@ -367,7 +367,7 @@ namespace PijersiEngine::Lookup
     };
 
     // Associates a piece's type index and cell index to its score, index = pieceIndex*45 + cellIndex
-    int64_t pieceScores[1575] {
+    const int64_t pieceScores[1575] {
         76830,
         76830,
         76830,
