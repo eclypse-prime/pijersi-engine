@@ -23,7 +23,7 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove);
 
     // Deprecated
-    int64_t updatePieceEval(int64_t previousPieceScore, uint8_t piece, int i);
+    int64_t updatePieceEval(int64_t previousPieceScore, uint8_t piece, size_t i);
 
     // NN-powered eval
     // namespace EvalNN
