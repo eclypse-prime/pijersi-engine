@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                     int recursionDepth = stoi(parameter);
                     if (recursionDepth >= 1)
                     {
-                        uint32_t move = board.searchDepth(recursionDepth, true);
+                        uint32_t move = board.searchDepth(recursionDepth, false);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);

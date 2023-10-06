@@ -70,11 +70,11 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the engine will not play and the function will return a null move. */
-    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::playDepth(int recursionDepth, bool random, size_t side, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
         // Calculate move
-        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
+        uint32_t move = searchDepth(recursionDepth, random, side, principalVariation, searchTimeMilliseconds, iterative);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -85,7 +85,7 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the function will return a null move. */
-    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::searchDepth(int recursionDepth, bool random, size_t side, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
         // Calculate finish time point
         time_point<steady_clock> finishTime;
@@ -102,31 +102,31 @@ namespace PijersiEngine
         if (iterative)
         {
             size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
-            int64_t *scores = new int64_t[nMoves];
+            float *scores = new float[nMoves];
             for (int depth = 1; depth <= recursionDepth; depth++)
             {
                 auto start = steady_clock::now();
-                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime, scores);
+                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, side, finishTime, scores);
                 auto end = steady_clock::now();
                 string moveString = Logic::moveToString(proposedMove, cells);
                 float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
                 if (proposedMove != NULL_MOVE)
                 {
                     move = proposedMove;
-                    cout << "info depth " << depth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                    // cout << "info depth " << depth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
                 }
             }
         }
         else
         {
             auto start = steady_clock::now();
-            move = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, principalVariation, finishTime);
+            move = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, principalVariation, side, finishTime);
             auto end = steady_clock::now();
             string moveString = Logic::moveToString(move, cells);
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (move != NULL_MOVE)
             {
-                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                // cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
             }
         }
         return move;
@@ -135,10 +135,10 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will not play and the function will return a null move. */
-    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::playTime(bool random, size_t side, uint64_t searchTimeMilliseconds)
     {
         // Calculate move
-        uint32_t move = searchTime(random, searchTimeMilliseconds);
+        uint32_t move = searchTime(random, side, searchTimeMilliseconds);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -149,7 +149,7 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will return a null move. */
-    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::searchTime(bool random, size_t side, uint64_t searchTimeMilliseconds)
     {
         int recursionDepth = 1;
 
@@ -159,19 +159,19 @@ namespace PijersiEngine
 
         uint32_t move = NULL_MOVE;
         size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
-        int64_t *scores = new int64_t[nMoves];
+        float *scores = new float[nMoves];
 
         while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
             auto start = steady_clock::now();
-            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime, scores);
+            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, side, finishTime, scores);
             auto end = steady_clock::now();
             string moveString = Logic::moveToString(proposedMove, cells);
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (proposedMove != NULL_MOVE)
             {
                 move = proposedMove;
-                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                // cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
             }
             recursionDepth += 1;
         }
@@ -238,9 +238,9 @@ namespace PijersiEngine
         return cells[Logic::coordsToIndex(i, j)];
     }
 
-    int64_t Board::evaluate()
+    float Board::evaluate()
     {
-        return AlphaBeta::evaluatePosition(cells);
+        return AlphaBeta::evaluatePosition(cells, 0);
     }
 
     // Adds a piece to the designated coordinates
@@ -395,7 +395,7 @@ namespace PijersiEngine
         return Logic::getWinningPlayer(cells);
     }
 
-    int64_t Board::getPredictedScore()
+    float Board::getPredictedScore()
     {
         return AlphaBeta::predictedScore;
     }
@@ -417,7 +417,7 @@ namespace PijersiEngine
 
     string Board::advice(int recursionDepth, bool random)
     {
-        uint32_t move = searchDepth(recursionDepth, random);
+        uint32_t move = searchDepth(recursionDepth, random, 0);
         string moveString = Logic::moveToString(move, cells);
         return moveString;
     }
