@@ -383,10 +383,9 @@ namespace PijersiEngine
         return halfMoveCounter >= 20;
     }
 
-    // TODO
     bool Board::checkStalemate()
     {
-        return false;
+        return (Logic::availablePlayerMoves(currentPlayer, cells).size() == 0);
     }
 
     uint8_t Board::getWinner()
