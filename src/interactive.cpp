@@ -54,7 +54,7 @@ int main(int argc, char** argv)
                     int recursionDepth = stoi(parameter);
                     if (recursionDepth >= 1)
                     {
-                        uint32_t move = board.searchDepth(recursionDepth, false);
+                        uint32_t move = board.searchDepth(recursionDepth, false, 0);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
                     int durationMilliseconds = stoi(parameter);
                     if (durationMilliseconds >= 0)
                     {
-                        uint32_t move = board.searchTime(true, durationMilliseconds);
+                        uint32_t move = board.searchTime(true, 0, durationMilliseconds);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
