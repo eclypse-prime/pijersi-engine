@@ -57,54 +57,53 @@ src/utils.o: src/utils.cpp $(HEADERS)
 src/interactive.o: src/interactive.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/interactive.cpp -o src/interactive.o
 
-build/interactive.exe: $(OBJ) src/interactive.o
-	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/interactive.o -o build/interactive.exe
+build/interactive: $(OBJ) src/interactive.o
+	@mkdir -p build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/interactive.o -o build/interactive
 
-interactive: build/interactive.exe
+interactive: build/interactive
 
 # Command-line engine
 src/executable.o: src/executable.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/executable.cpp -o src/executable.o
 
-build/executable.exe: $(OBJ) src/executable.o
-	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/executable.o -o build/executable.exe
+build/executable: $(OBJ) src/executable.o
+	@mkdir -p build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/executable.o -o build/executable
 
-executable: build/executable.exe
+executable: build/executable
 
 # Command-line engine
 src/ugi.o: src/ugi.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/ugi.cpp -o src/ugi.o
 
-build/ugi.exe: $(OBJ) src/ugi.o
-	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/ugi.o -o build/ugi.exe
+build/ugi: $(OBJ) src/ugi.o
+	@mkdir -p build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/ugi.o -o build/ugi
 
-ugi: build/ugi.exe
+ugi: build/ugi
 
 # Match between two engines
 src/versus.o: src/versus.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/versus.cpp -o src/versus.o
 
-build/versus.exe: $(OBJ) src/versus.o
-	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/versus.o -o build/versus.exe
+build/versus: $(OBJ) src/versus.o
+	@mkdir -p build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/versus.o -o build/versus
 
-versus : build/versus.exe
+versus : build/versus
 
 # Debug
 src/debug.o: src/debug.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/debug.cpp -o src/debug.o
 
-build/debug.exe: $(OBJ) src/debug.o
-	@if not exist "build" mkdir build
-	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/debug.o -o build/debug.exe
+build/debug: $(OBJ) src/debug.o
+	@mkdir -p build
+	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/debug.o -o build/debug
 
-debug: build/debug.exe
+debug: build/debug
 
 clean:
-	@del /Q /F /S wrap_csharp\*
-	@if exist "src\wrap" rmdir /Q /s "src\wrap"
-	@del /Q /F /S "src\*.o"
-	@if exist "build" rmdir /Q /s "build"
+	@rm -rf src/wrap
+	@rm -f src/*.o
+	@rm -rf build
