@@ -106,7 +106,7 @@ for top in ['s', 'p', 'r', 'w']:
 
 pieces += ['s', 'p', 'r', 'w']
 
-print("    int64_t pieceScores[1575] {")
+print("    const int64_t pieceScores[1575] {")
 for piece in pieces:
     for i in range(45):
         score = evaluate_piece(piece, INDEX_TO_LINE[i])
