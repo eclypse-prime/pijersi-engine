@@ -3,7 +3,7 @@
 %{
     #include <board.hpp>
     #include <piece.hpp>
-    #include <logic.hpp>
+    #include <weight_optim.hpp>
     using namespace PijersiEngine;
 %}
 
@@ -19,4 +19,4 @@ namespace std {
 
 %include <board.hpp>
 %include <piece.hpp>
-%include <logic.hpp>
+%include <weight_optim.hpp>

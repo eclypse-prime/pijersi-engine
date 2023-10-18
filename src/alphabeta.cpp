@@ -483,13 +483,13 @@ namespace PijersiEngine::AlphaBeta
     // This will only evaluate the pieces that have changed.
     [[nodiscard]]
     [[deprecated("slower than current method")]]
-    float updatePositionEval(float previousScore, float previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45])
+    float updatePositionEval(float previousScore, float previousPieceScores[45], uint8_t previousCells[45], uint8_t cells[45], size_t side)
     {
         for (int k = 0; k < 45; k++)
         {
             if (cells[k] != previousCells[k])
             {
-                previousScore += updatePieceEval(previousPieceScores[k], cells[k], k);
+                previousScore += updatePieceEval(previousPieceScores[k], cells[k], k, side);
             }
         }
         return previousScore;

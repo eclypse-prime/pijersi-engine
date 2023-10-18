@@ -17,13 +17,13 @@ namespace PijersiEngine::AlphaBeta
     float evaluatePiece(uint8_t piece, size_t i, size_t side);
     float evaluatePosition(uint8_t cells[45], size_t side);
     float evaluatePosition(uint8_t cells[45], float pieceScores[45], size_t side);
-    float updatePositionEval(float previousScore, uint8_t previousPieceScores, uint8_t previousCells[45], uint8_t cells[45], size_t side);
     inline float evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, float previousScore, float previousPieceScores[45], size_t side);
     float evaluateMove(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove, size_t side);
     float evaluateMoveParallel(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove, size_t side);
+    float updatePieceEval(float previousPieceScore, uint8_t piece, size_t i, size_t size);
 
     // Deprecated
-    float updatePieceEval(float previousPieceScore, uint8_t piece, size_t i, size_t size);
+    float updatePositionEval(float previousScore, uint8_t previousPieceScores, uint8_t previousCells[45], uint8_t cells[45], size_t side);
 
     // NN-powered eval
     // namespace EvalNN
