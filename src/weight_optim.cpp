@@ -172,34 +172,35 @@ void setWeights(float weights[8])
     fillTable();
 }
 
-float playGames(Board &board, int depth, size_t nRepeats, vector<string> openings)
+float playGames(Board &board, int depth, size_t nRepeats)
 {
     size_t side = 0;
     size_t starting_player = 0;
     uint64_t winCount[2] = {0, 0};
 
+    vector<string> openings = readFile("ply1.txt");
     size_t nGames = openings.size() * nRepeats * 2;
 
     for (size_t iter = 0; iter < nGames; iter++)
     {
-        if (iter % (nGames / 20) == 0)
-        {
-            cout << "Starting game " << iter << "/" << nGames << '\r' << flush;
-        }
+        // if (iter % (nGames / 20) == 0)
+        // {
+        //     cout << "Starting game " << iter << "/" << nGames << '\r' << flush;
+        // }
         board.init();
         board.setStringState(openings[(iter/2)%openings.size()]);
         // board.playRandom();
         side = starting_player;
         while (!board.checkWin() && !board.checkDraw() && !board.checkStalemate())
         {
-            board.playDepth(depth, true, side);
+            board.playDepth(depth, false, side);
             if (board.checkWin() || board.checkStalemate())
             {
                 winCount[side] += 1;
-                if (board.checkStalemate())
-                {
-                    cout << "Stalemate" << endl;
-                }
+                // if (board.checkStalemate())
+                // {
+                //     cout << "Stalemate" << endl;
+                // }
             }
             side = 1 - side;
         }
@@ -215,8 +216,8 @@ float playGames(Board &board, int depth, size_t nRepeats, vector<string> opening
 
     float winRateDelta = winRate[1] - winRate[0];
 
-    cout << "Engine 1: " << winRate[0] * 100 << "% (" << winCount[0] << ") | Engine 2: " << winRate[1] * 100 << "% (" << winCount[1] << ")" << endl;
-    cout << "Draws: " << drawRate * 100 << "% (" << nDraws << ")" << endl;
+    // cout << "Engine 1: " << winRate[0] * 100 << "% (" << winCount[0] << ") | Engine 2: " << winRate[1] * 100 << "% (" << winCount[1] << ")" << endl;
+    // cout << "Draws: " << drawRate * 100 << "% (" << nDraws << ")" << endl;
 
     return winRateDelta;
 }

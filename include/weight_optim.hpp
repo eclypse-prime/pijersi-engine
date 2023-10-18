@@ -10,6 +10,6 @@
 
 void setWeights(float weights[8]);
 void fillTable();
-float playGames(PijersiEngine::Board &board, int depth, size_t nRepeats, std::vector<std::string> openings);
+float playGames(PijersiEngine::Board &board, int depth, size_t nRepeats);
 
 #endif
