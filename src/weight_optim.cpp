@@ -172,7 +172,7 @@ void setWeights(float weights[8])
     fillTable();
 }
 
-float playGames(Board board, int depth, size_t nRepeats, vector<string> openings)
+float playGames(Board &board, int depth, size_t nRepeats, vector<string> openings)
 {
     size_t side = 0;
     size_t starting_player = 0;
