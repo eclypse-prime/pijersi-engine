@@ -140,6 +140,8 @@ namespace PijersiEngine::AlphaBeta
                 // Return a null move if time is elapsed
                 if (steady_clock::now() > finishTime)
                 {
+                    delete [] indices;
+                    delete [] scores;
                     return NULL_MOVE;
                 }
 
@@ -166,7 +168,8 @@ namespace PijersiEngine::AlphaBeta
 
                 predictedScore = scores[index];
 
-                delete scores;
+                delete [] indices;
+                delete [] scores;
 
                 return moves[index];
             }
