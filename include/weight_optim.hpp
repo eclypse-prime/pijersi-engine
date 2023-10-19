@@ -9,7 +9,6 @@
 
 
 void setWeights(float weights[8]);
-void fillTable();
 float playGames(PijersiEngine::Board &board, int depth, size_t nRepeats);
 
 #endif

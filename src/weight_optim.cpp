@@ -26,12 +26,7 @@ using std::vector;
 using namespace std::chrono;
 
 // Score line 1 to 7, stack bonus, wise fixed score
-float scoresCurrent[6 + 1 + 1] = {63.6369, 98.5258, 111.57, 112.084, 133.013, 132.617, -10.9016, 68.3554};
-float scoresEval[2][6 + 1 + 1] = {{90, 100, 110, 120, 130, 140, 30, 80}, {63.6369, 98.5258, 111.57, 112.084, 133.013, 132.617, -10.9016, 68.3554}};
-// {71.6253, 92.3781, 99.3675, 117.182, 137.446, 168.55, 150, -14.4487, 80}
-// {94.1396 95.0996 110 124.838 130 140 150 10 75.6163}
-// {63.6804 100 111.324 119.4 130 143.845 150 -16.2713 62.5864} -> 0.2076
-// {63.6804, 100, 111.324, 119.4, 130, 143.845, 150, -16.2713, 57.569} -> 0.2356, 0.1864
+float scoresEval[41] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140, 30, 80};
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -53,121 +48,81 @@ vector<string> readFile(string fileName)
 
 void fillTable()
 {
-    for (size_t side = 0; side < 2; side++)
+    for (size_t piece = 0; piece < 256; piece++)
     {
-        for (size_t piece = 0; piece < 256; piece++)
+        for (size_t index = 0; index < 45; index++)
         {
-            for (size_t index = 0; index < 45; index++)
+            if (Lookup::pieceToIndex[piece] != 34)
             {
-                if (Lookup::pieceToIndex[piece] != 34)
+                float score = 0;
+                if ((piece & 12) != 12)
                 {
-                    float score = 0;
-                    if ((piece & 12) != 12)
+                    if ((piece & 2) == 0 && Logic::indexToLine[index] == 0)
                     {
-                        if ((piece & 2) == 0 && Logic::indexToLine[index] == 0)
-                        {
-                            score = 512*1024;
-                        }
-                        else if ((piece & 2) == 2 && Logic::indexToLine[index] == 6)
-                        {
-                            score = -512*1024;
-                        }
-                        else
-                        {
-                            if ((piece & 2) == 0)
-                            {
-                                score = scoresEval[side][6 - Logic::indexToLine[index]];
-                            }
-                            else
-                            {
-                                score = -scoresEval[side][Logic::indexToLine[index]];
-                            }
-                            if (piece > 16)
-                            {
-                                score *= 2;
-                                if ((piece & 2) == 0)
-                                {
-                                    score += scoresEval[side][6];
-                                }
-                                else
-                                {
-                                    score -= scoresEval[side][6];
-                                }
-                            }
-                        }
+                        score = 512*1024;
+                    }
+                    else if ((piece & 2) == 2 && Logic::indexToLine[index] == 6)
+                    {
+                        score = -512*1024;
                     }
                     else
                     {
                         if ((piece & 2) == 0)
                         {
-                            score = scoresEval[side][7];
+                            score = scoresEval[44 - index];
                         }
                         else
                         {
-                            score = -scoresEval[side][7];
+                            score = -scoresEval[index];
                         }
                         if (piece > 16)
                         {
                             score *= 2;
                             if ((piece & 2) == 0)
                             {
-                                score += scoresEval[side][6];
+                                score += scoresEval[39];
                             }
                             else
                             {
-                                score -= scoresEval[side][6];
+                                score -= scoresEval[39];
                             }
                         }
                     }
-                    Lookup::pieceScores[1575 * side + Lookup::pieceToIndex[piece] * 45 + index] = score;
                 }
+                else
+                {
+                    if ((piece & 2) == 0)
+                    {
+                        score = scoresEval[40];
+                    }
+                    else
+                    {
+                        score = -scoresEval[40];
+                    }
+                    if (piece > 16)
+                    {
+                        score *= 2;
+                        if ((piece & 2) == 0)
+                        {
+                            score += scoresEval[39];
+                        }
+                        else
+                        {
+                            score -= scoresEval[39];
+                        }
+                    }
+                }
+                Lookup::pieceScores[1575 + Lookup::pieceToIndex[piece] * 45 + index] = score;
             }
         }
     }
 }
 
-void mutate(size_t selectedParameter, float delta)
+void setWeights(float weights[41])
 {
-    scoresEval[1][selectedParameter] += delta;
-
-    cout << "Parameter: " << selectedParameter << "   Delta: " << delta << endl;
-    cout << "Original: ";
-    for (size_t k = 0; k < 8; k++)
+    for (size_t k = 0; k < 41; k++)
     {
-        cout << scoresEval[0][k] << " ";
-    }
-    cout << endl;
-    cout << "Current:  ";
-    for (size_t k = 0; k < 8; k++)
-    {
-        cout << scoresCurrent[k] << " ";
-    }
-    cout << endl;
-    cout << "New:      ";
-    for (size_t k = 0; k < 8; k++)
-    {
-        cout << scoresEval[1][k] << " ";
-    }
-    cout << endl;
-}
-
-void update(bool keep, size_t selectedParameter, float delta, float learningRate)
-{
-    if (keep)
-    {
-        scoresCurrent[selectedParameter] += delta * learningRate;
-    }
-    for (size_t k = 0; k < 8; k++)
-    {
-        scoresEval[1][k] = scoresCurrent[k];
-    }
-}
-
-void setWeights(float weights[8])
-{
-    for (size_t k = 0; k < 8; k++)
-    {
-        scoresEval[1][k] = weights[k];
+        scoresEval[k] = weights[k];
     }
     fillTable();
 }
