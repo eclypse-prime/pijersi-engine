@@ -189,10 +189,9 @@ float playGames(Board &board, int depth, size_t nRepeats)
         // }
         board.init();
         board.setStringState(openings[(iter/2)%openings.size()]);
-        // board.playRandom();
         side = starting_player;
         while (!board.checkWin() && !board.checkDraw() && !board.checkStalemate())
-        {
+        { 
             board.playDepth(depth, false, side);
             if (board.checkWin() || board.checkStalemate())
             {
@@ -221,83 +220,3 @@ float playGames(Board &board, int depth, size_t nRepeats)
 
     return winRateDelta;
 }
-
-// int main(int argc, char **argv)
-// {
-//     Board board;
-//     board.init();
-
-//     vector<string> openings = readFile("ply1.txt");
-
-//     size_t nIter = std::stoi(argv[1]);
-//     size_t repeatsPerIter = std::stoi(argv[2]);
-//     int depth = std::stoi(argv[3]);
-//     float temperature = 0.1;
-//     float alpha = 0.90;
-
-//     bool keep = false;
-
-//     fillTable();
-//     cout << "Initial comparison" << endl;
-//     cout << "Original: ";
-//     for (size_t k = 0; k < 8; k++)
-//     {
-//         cout << scoresEval[0][k] << " ";
-//     }
-//     cout << endl;
-//     cout << "Current:  ";
-//     for (size_t k = 0; k < 8; k++)
-//     {
-//         cout << scoresCurrent[k] << " ";
-//     }
-//     cout << endl;
-//     float bestWinRateDelta = playGames(board, depth, repeatsPerIter, openings);
-//     cout << "Initial W/R delta: " << bestWinRateDelta << endl;
-
-
-//     for (size_t iter = 0; iter < nIter; iter++)
-//     {
-//         cout << "Iter " << iter << endl;
-//         size_t selectedParameter = intDistribution(gen);
-
-//         float delta = deltaDistribution(gen);
-
-//         mutate(selectedParameter, delta);
-//         fillTable();
-
-//         float winRateDelta = playGames(board, depth, repeatsPerIter, openings);
-//         cout << "New W/R delta: " << winRateDelta << " | Current W/R Delta: " << bestWinRateDelta << " | Difference: " << winRateDelta - bestWinRateDelta << endl;
-
-//         if (winRateDelta > bestWinRateDelta)
-//         {
-//             cout << "Win rate delta improved, keeping changes" << endl;
-//             keep = true;
-//             bestWinRateDelta = winRateDelta;
-//         }
-//         else
-//         {
-//             float deltaDiff = winRateDelta - bestWinRateDelta;
-//             float threshold = exp(deltaDiff/temperature);
-//             float roll = probabilityDistribution(gen);
-//             cout << "Threshold: " << threshold << " | Roll: " << roll << endl;
-//             if (roll < threshold) {
-//                 cout << "Roll successful, keeping changes" << endl;
-//                 bestWinRateDelta = winRateDelta;
-//                 keep = true;
-//             }
-//             else
-//             {
-//                 cout << "Roll failed, cancelling changes" << endl;
-//                 keep = false;
-//             }
-//         }
-//         update(keep, selectedParameter, delta, 1);
-//         temperature *= alpha;
-//         cout << endl;
-//     }
-//     for (size_t k = 0; k < 8; k++)
-//     {
-//         cout << scoresCurrent[k] << ", ";
-//     }
-//     cout << endl;
-// }
