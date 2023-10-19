@@ -116,6 +116,7 @@ namespace PijersiEngine
                     // cout << "info depth " << depth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
                 }
             }
+            delete [] scores;
         }
         else
         {
@@ -175,6 +176,9 @@ namespace PijersiEngine
             }
             recursionDepth += 1;
         }
+
+        delete [] scores;
+
         return move;
     }
 
