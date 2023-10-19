@@ -34,14 +34,14 @@ python: $(PYTHON_SO)
 $(PYTHON_SRC): pijersi_engine.i $(HEADERS)
 	@mkdir -p wrap_python
 	@mkdir -p src/wrap
-	swig -python -c++ $(INCLUDE) -outdir wrap_python -o $(PYTHON_SRC) pijersi_engine.i
+	@swig -python -c++ $(INCLUDE) -outdir wrap_python -o $(PYTHON_SRC) pijersi_engine.i
 
 $(PYTHON_OBJ): $(PYTHON_SRC) $(HEADERS)
-	g++ $(FLAGS) -c $(INCLUDE) $(PYTHON_INCLUDE) $(PYTHON_LINK) $(PYTHON_SRC) -o $(PYTHON_OBJ)
+	@g++ $(FLAGS) -c $(INCLUDE) $(PYTHON_INCLUDE) $(PYTHON_LINK) $(PYTHON_SRC) -o $(PYTHON_OBJ)
 
 $(PYTHON_SO): $(OBJ) $(PYTHON_OBJ)
 	@mkdir -p wrap_python
-	g++ $(FLAGS) -shared $(INCLUDE) $(PYTHON_INCLUDE) $(PYTHON_LINK) $(OBJ) $(PYTHON_OBJ) -o $(PYTHON_SO)
+	@g++ $(FLAGS) -shared $(INCLUDE) $(PYTHON_INCLUDE) $(PYTHON_LINK) $(OBJ) $(PYTHON_OBJ) -o $(PYTHON_SO)
 
 src/alphabeta.o: src/alphabeta.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/alphabeta.cpp -o src/alphabeta.o
