@@ -8,7 +8,9 @@
 #include <board.hpp>
 
 
-void setWeights(float weights[8]);
+void setWeights(float weights[80]);
+void setWeightsFull(float weights[1575]);
+void checkMismatch();
 float playGames(PijersiEngine::Board &board, int depth, size_t nRepeats);
 
 #endif

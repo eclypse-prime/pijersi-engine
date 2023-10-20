@@ -26,7 +26,10 @@ using std::vector;
 using namespace std::chrono;
 
 // Score line 1 to 7, stack bonus, wise fixed score
-float scoresEval[41] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140, 30, 80};
+float scoresEval[80] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140,
+                        -90, -90, -90, -90, -90, -90, -100, -100, -100, -100, -100, -100, -100, -110, -110, -110, -110, -110, -110, -120, -120, -120, -120, -120, -120, -120, -130, -130, -130, -130, -130, -130, -140, -140, -140, -140, -140, -140, -140,
+                        30,
+                        80};
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -73,18 +76,18 @@ void fillTable()
                         }
                         else
                         {
-                            score = -scoresEval[index];
+                            score = scoresEval[39 + index];
                         }
                         if (piece > 16)
                         {
                             score *= 2;
                             if ((piece & 2) == 0)
                             {
-                                score += scoresEval[39];
+                                score += scoresEval[78];
                             }
                             else
                             {
-                                score -= scoresEval[39];
+                                score -= scoresEval[78];
                             }
                         }
                     }
@@ -93,22 +96,22 @@ void fillTable()
                 {
                     if ((piece & 2) == 0)
                     {
-                        score = scoresEval[40];
+                        score = scoresEval[79];
                     }
                     else
                     {
-                        score = -scoresEval[40];
+                        score = -scoresEval[79];
                     }
                     if (piece > 16)
                     {
                         score *= 2;
                         if ((piece & 2) == 0)
                         {
-                            score += scoresEval[39];
+                            score += scoresEval[78];
                         }
                         else
                         {
-                            score -= scoresEval[39];
+                            score -= scoresEval[78];
                         }
                     }
                 }
@@ -118,13 +121,34 @@ void fillTable()
     }
 }
 
-void setWeights(float weights[41])
+void setWeights(float weights[80])
 {
-    for (size_t k = 0; k < 41; k++)
+    for (size_t k = 0; k < 80; k++)
     {
         scoresEval[k] = weights[k];
     }
     fillTable();
+}
+
+void setWeightsFull(float weights[1575])
+{
+    for (size_t k = 0; k < 1575; k++)
+    {
+        Lookup::pieceScores[1575 + k] = weights[k];
+    }
+}
+
+void checkMismatch()
+{
+    for (size_t k = 0; k < 1575; k++)
+    {
+        float originalWeight = Lookup::pieceScores[k];
+        float newWeight = Lookup::pieceScores[1575 + k];
+        if (newWeight != originalWeight)
+        {
+            cout << "Mismatch: " << newWeight << " " << originalWeight << endl;
+        }
+    }
 }
 
 float playGames(Board &board, int depth, size_t nRepeats)
