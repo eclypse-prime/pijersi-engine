@@ -66,12 +66,12 @@ def evaluate_piece(piece, index):
             if INDEX_TO_LINE[index] == 0:
                 score = 512*1024
             else:
-                score = CELL_TO_SCORE[index]
+                score = CELL_TO_SCORE[44-index]
         else:
             if INDEX_TO_LINE[index] == 6:
                 score = -512*1024
             else:
-                score = CELL_TO_SCORE[index]
+                score = CELL_TO_SCORE[39+index]
     
     elif piece[0] == 'W':
         score = WISE_SCORE
