@@ -26,10 +26,7 @@ using std::vector;
 using namespace std::chrono;
 
 // Score line 1 to 7, stack bonus, wise fixed score
-float scoresEval[80] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140,
-                        -90, -90, -90, -90, -90, -90, -100, -100, -100, -100, -100, -100, -100, -110, -110, -110, -110, -110, -110, -120, -120, -120, -120, -120, -120, -120, -130, -130, -130, -130, -130, -130, -140, -140, -140, -140, -140, -140, -140,
-                        30,
-                        80};
+float scoresEval[80] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140, -90, -90, -90, -90, -90, -90, -100, -100, -100, -100, -100, -100, -100, -110, -110, -110, -110, -110, -110, -120, -120, -120, -120, -120, -120, -120, -130, -130, -130, -130, -130, -130, -140, -140, -140, -140, -140, -140, -140, 30, 80};
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -151,7 +148,7 @@ void checkMismatch()
     }
 }
 
-float playGames(Board &board, int depth, size_t nRepeats)
+float playGames(Board &board, int depth, bool random, size_t nRepeats)
 {
     size_t side = 0;
     size_t starting_player = 0;
@@ -171,7 +168,7 @@ float playGames(Board &board, int depth, size_t nRepeats)
         side = starting_player;
         while (!board.checkWin() && !board.checkDraw() && !board.checkStalemate())
         { 
-            board.playDepth(depth, false, side);
+            board.playDepth(depth, random, side);
             if (board.checkWin() || board.checkStalemate())
             {
                 winCount[side] += 1;
