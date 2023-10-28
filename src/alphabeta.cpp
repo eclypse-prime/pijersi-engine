@@ -70,8 +70,8 @@ namespace PijersiEngine::AlphaBeta
                 }
 
                 // Cutoffs will happen on winning moves
-                int64_t alpha = -15000;
-                int64_t beta = 15000;
+                int64_t alpha = -256*1024;
+                int64_t beta = 256*1024;
 
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
@@ -234,7 +234,7 @@ namespace PijersiEngine::AlphaBeta
 
         if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
         {
-            return -20480;
+            return -512*1024;
         }
 
         if (indexMid > 44)
