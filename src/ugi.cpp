@@ -84,7 +84,7 @@ int main(int argc, char** argv)
                         int durationMilliseconds = stoi(parameter);
                         if (durationMilliseconds >= 0)
                         {
-                            uint32_t move = board.searchTime(true, durationMilliseconds);
+                            uint32_t move = board.searchTime(true, true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.getState());

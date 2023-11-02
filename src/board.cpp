@@ -8,6 +8,7 @@
 #include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
+#include <openings.hpp>
 #include <rng.hpp>
 #include <utils.hpp>
 
@@ -19,6 +20,33 @@ using std::vector;
 
 namespace PijersiEngine
 {
+
+    void printInfo(int recursionDepth, float duration, int predictedScore, string moveString)
+    {
+        cout << "info depth " << recursionDepth << " time " << duration << " score " << predictedScore << " pv " << moveString << endl;
+    }
+
+    uint32_t Board::searchBook()
+    {
+        string currentStringState = getStringState();
+        if (Openings::book.contains(currentStringState))
+        {
+            uint32_t bookMove = Openings::book[currentStringState];
+            string moveString = Logic::moveToString(bookMove, cells);
+            // TODO: use saved depth instead of 6
+            if (verbose)
+            {
+                cout << "info depth 6 time 0 pv " << moveString << endl;
+            }
+            // TODO: save depth into bookMove leftmost bits, if search depth is higher than saved depth, recalculate
+            // TODO: if using iterative deepening, restart from saved depth using it as prinicipal variation
+            return bookMove;
+        }
+        else
+        {
+            return NULL_MOVE;
+        }
+    }
 
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
@@ -70,11 +98,11 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the engine will not play and the function will return a null move. */
-    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::playDepth(int recursionDepth, bool random, bool useOpeningBook, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
         // Calculate move
-        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
+        uint32_t move = searchDepth(recursionDepth, random, useOpeningBook, principalVariation, searchTimeMilliseconds, iterative);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -85,7 +113,7 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the function will return a null move. */
-    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::searchDepth(int recursionDepth, bool random, bool useOpeningBook, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
         // Calculate finish time point
         time_point<steady_clock> finishTime;
@@ -96,6 +124,15 @@ namespace PijersiEngine
         else
         {
             finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
+        }
+
+        if (useOpeningBook)
+        {
+            uint32_t bookMove = searchBook();
+            if (bookMove != NULL_MOVE)
+            {
+                return bookMove;
+            }
         }
 
         uint32_t move = NULL_MOVE;
@@ -113,7 +150,10 @@ namespace PijersiEngine
                 if (proposedMove != NULL_MOVE)
                 {
                     move = proposedMove;
-                    cout << "info depth " << depth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                    if (verbose)
+                    {
+                        printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
+                    }
                 }
             }
             delete [] scores;
@@ -127,7 +167,10 @@ namespace PijersiEngine
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (move != NULL_MOVE)
             {
-                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                if (verbose)
+                {
+                    printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
+                }
             }
         }
         return move;
@@ -136,10 +179,10 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will not play and the function will return a null move. */
-    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::playTime(bool random, bool useOpeningBook, uint64_t searchTimeMilliseconds)
     {
         // Calculate move
-        uint32_t move = searchTime(random, searchTimeMilliseconds);
+        uint32_t move = searchTime(random, useOpeningBook, searchTimeMilliseconds);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -150,9 +193,19 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will return a null move. */
-    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
+    uint32_t Board::searchTime(bool random, bool useOpeningBook, uint64_t searchTimeMilliseconds)
     {
         int recursionDepth = 1;
+
+        if (useOpeningBook)
+        {
+            uint32_t bookMove = searchBook();
+            if (bookMove != NULL_MOVE)
+            {
+                return bookMove;
+            }
+        }
+        // TODO: still search until time is up, but using the saved move as basis
 
         // Calculate finish time point
         time_point<steady_clock> finishTime;
@@ -172,7 +225,10 @@ namespace PijersiEngine
             if (proposedMove != NULL_MOVE)
             {
                 move = proposedMove;
-                cout << "info depth " << recursionDepth << " time " << duration << " score " << AlphaBeta::predictedScore << " pv " << moveString << endl;
+                if (verbose)
+                {
+                    printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
+                }
             }
             recursionDepth += 1;
         }

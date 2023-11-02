@@ -24,13 +24,13 @@ namespace PijersiEngine
 
         // Depth limited search
 
-        uint32_t searchDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
-        uint32_t playDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+        uint32_t searchDepth(int recursionDepth, bool random, bool useOpeningBook = true, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+        uint32_t playDepth(int recursionDepth, bool random = true, bool useOpeningBook = true, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
 
         // Time limited search
         
-        uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
-        uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t searchTime(bool random, bool useOpeningBook = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t playTime(bool random = true, bool useOpeningBook = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
         
         // Random search
 
@@ -64,14 +64,17 @@ namespace PijersiEngine
         int64_t getPredictedScore();
         uint8_t currentPlayer = 0;
 
+        bool verbose = true;
+
     private:
+        uint32_t searchBook();
+
         uint32_t countPieces();
         void endTurn();
 
-        uint32_t lastPieceCount = 0;
-
         uint8_t cells[45];
 
+        uint32_t lastPieceCount = 0;
         uint32_t halfMoveCounter = 0;
         uint32_t moveCounter = 1;
 
