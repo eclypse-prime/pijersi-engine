@@ -70,8 +70,8 @@ namespace PijersiEngine::AlphaBeta
                 }
 
                 // Cutoffs will happen on winning moves
-                int64_t alpha = -256*1024;
-                int64_t beta = 256*1024;
+                int64_t alpha = -BASE_BETA;
+                int64_t beta = BASE_BETA;
 
                 // This will stop iteration if there is a cutoff
                 bool cut = false;
@@ -234,7 +234,7 @@ namespace PijersiEngine::AlphaBeta
 
         if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
         {
-            return -512*1024;
+            return -MAX_SCORE;
         }
 
         if (indexMid > 44)
@@ -340,7 +340,7 @@ namespace PijersiEngine::AlphaBeta
         // Stop the recursion if a winning position is achieved
         if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
         {
-            return -512*1024;
+            return -MAX_SCORE;
         }
 
         if (recursionDepth <= 0)

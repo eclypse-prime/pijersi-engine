@@ -6,6 +6,9 @@
 
 #include <nn.hpp>
 
+#define BASE_BETA 262144
+#define MAX_SCORE 524288
+
 using std::chrono::steady_clock;
 using std::chrono::time_point;
 
