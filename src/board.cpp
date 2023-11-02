@@ -154,6 +154,10 @@ namespace PijersiEngine
                     {
                         printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
                     }
+                    if (AlphaBeta::predictedScore > BASE_BETA)
+                    {
+                        break;
+                    }
                 }
             }
             delete [] scores;
@@ -228,6 +232,10 @@ namespace PijersiEngine
                 if (verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
+                }
+                if (AlphaBeta::predictedScore > BASE_BETA)
+                {
+                    break;
                 }
             }
             recursionDepth += 1;
