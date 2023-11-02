@@ -336,8 +336,14 @@ namespace PijersiEngine::AlphaBeta
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);
 
+        size_t indexEnd = (move >> 16) & 0x000000FF;
         // Stop the recursion if a winning position is achieved
-        if (Logic::isWin(newCells) || recursionDepth <= 0)
+        if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+        {
+            return -512*1024;
+        }
+
+        if (recursionDepth <= 0)
         {
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
