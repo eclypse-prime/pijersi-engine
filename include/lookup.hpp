@@ -9,7 +9,7 @@ using std::vector;
 
 namespace PijersiEngine::Lookup
 {
-    // A vector associating a cell index to the indices of its 1-range neighbours
+    // An array associating a cell index to the indices of its 1-range neighbours
     const vector<uint32_t> neighbours[45] = {
         vector<uint32_t>({1, 6, 7}),
         vector<uint32_t>({0, 2, 7, 8}),
@@ -57,7 +57,7 @@ namespace PijersiEngine::Lookup
         vector<uint32_t>({36, 37, 42, 44}),
         vector<uint32_t>({37, 38, 43})};
 
-    // A vector associating a cell index to the indices of its 2-range neighbours
+    // An array associating a cell index to the indices of its 2-range neighbours
     const vector<uint32_t> neighbours2[45] = {
         vector<uint32_t>({2, 14}),
         vector<uint32_t>({3, 13, 15}),

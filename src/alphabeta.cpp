@@ -527,6 +527,8 @@ namespace PijersiEngine::AlphaBeta
         {
             score = score * 2 - 3 * ((piece & 2) - 1);
         }
+
+        // If there is no piece, score is 0
         score *= (piece & 1);
 
         return score;
