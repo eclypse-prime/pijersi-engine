@@ -9,7 +9,10 @@ using std::vector;
 
 namespace PijersiEngine::Lookup
 {
-    // An array associating a cell index to the indices of its 1-range neighbours
+    /* An array associating a cell index to the indices of its 1-range neighbours
+    The array is composed of 45 segments of length 7.
+    The first element of each segment is the number of neighbours of the corresponding cell.
+    The rest of the elements are the indices of the neighbouring cells. Unused values are set to SIZE_MAX. */
     const size_t neighbours[315] = {
         3, 1, 6, 7, SIZE_MAX, SIZE_MAX, SIZE_MAX,
         4, 0, 2, 7, 8, SIZE_MAX, SIZE_MAX,
@@ -58,7 +61,10 @@ namespace PijersiEngine::Lookup
         3, 37, 38, 43, SIZE_MAX, SIZE_MAX, SIZE_MAX
     };
 
-    // An array associating a cell index to the indices of its 2-range neighbours
+    /* An array associating a cell index to the indices of its 2-range neighbours
+    The array is composed of 45 segments of length 7.
+    The first element of each segment is the number of neighbours of the corresponding cell.
+    The rest of the elements are the indices of the neighbouring cells. Unused values are set to SIZE_MAX. */
     const size_t neighbours2[315] = { 
         2, 2, 14, SIZE_MAX, SIZE_MAX, SIZE_MAX, SIZE_MAX,
         3, 3, 13, 15, SIZE_MAX, SIZE_MAX, SIZE_MAX,

@@ -383,14 +383,16 @@ namespace PijersiEngine::Logic
         if (movingPiece < 16)
         {
             // 1-range first action
-            for (uint32_t indexMid : Lookup::neighbours[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (uint32_t indexEnd : Lookup::neighbours2[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             count++;
@@ -398,8 +400,9 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack, 0/1-range move
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             count++;
@@ -419,13 +422,15 @@ namespace PijersiEngine::Logic
         else
         {
             // 2 range first action
-            for (uint32_t indexMid : Lookup::neighbours2[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours2[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours2[indexMidLoop];
                 if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -444,15 +449,17 @@ namespace PijersiEngine::Logic
                 }
             }
             // 1-range first action
-            for (uint32_t indexMid : Lookup::neighbours[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
                 // 1-range move, [stack or unstack] optional
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
 
                     // 1-range move, stack or unstack
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -475,8 +482,9 @@ namespace PijersiEngine::Logic
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (uint32_t indexEnd : Lookup::neighbours2[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             count++;
@@ -484,8 +492,9 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack, 1-range move
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             count++;
@@ -780,15 +789,17 @@ namespace PijersiEngine::Logic
         if (movingPiece < 16)
         {
             // 1-range first action
-            for (uint32_t indexMid : Lookup::neighbours[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
                 uint32_t halfMove = indexStart | (indexMid << 8);
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (uint32_t indexEnd : Lookup::neighbours2[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
@@ -797,8 +808,9 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack, 0/1-range move
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
@@ -820,14 +832,16 @@ namespace PijersiEngine::Logic
         else
         {
             // 2 range first action
-            for (uint32_t indexMid : Lookup::neighbours2[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours2[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours2[indexMidLoop];
                 uint32_t halfMove = indexStart | (indexMid << 8);
                 if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -848,16 +862,18 @@ namespace PijersiEngine::Logic
                 }
             }
             // 1-range first action
-            for (uint32_t indexMid : Lookup::neighbours[indexStart])
+            for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
+                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
                 uint32_t halfMove = indexStart | (indexMid << 8);
                 // 1-range move, [stack or unstack] optional
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
 
                     // 1-range move, stack or unstack
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -882,8 +898,9 @@ namespace PijersiEngine::Logic
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
-                    for (uint32_t indexEnd : Lookup::neighbours2[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
@@ -892,8 +909,9 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack, 1-range move
-                    for (uint32_t indexEnd : Lookup::neighbours[indexMid])
+                    for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
+                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
