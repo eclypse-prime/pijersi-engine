@@ -42,7 +42,6 @@ namespace PijersiEngine::Logic
     bool isWin(const uint8_t cells[45]);
     uint8_t getWinningPlayer(const uint8_t cells[45]);
     
-    std::vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45]);
     std::vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
     
     bool canTake(uint8_t source, uint8_t target);

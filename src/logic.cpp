@@ -778,12 +778,9 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    vector<uint32_t> availablePieceMoves(uint32_t indexStart, uint8_t cells[45])
+    void availablePieceMoves(uint32_t indexStart, uint8_t cells[45], vector<uint32_t> &moves)
     {
         uint8_t movingPiece = cells[indexStart];
-
-        vector<uint32_t> moves = vector<uint32_t>();
-        moves.reserve(64);
 
         // If the piece is not a stack
         if (movingPiece < 16)
@@ -802,8 +799,7 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
 
@@ -813,8 +809,7 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
 
@@ -824,8 +819,7 @@ namespace PijersiEngine::Logic
                 // 1-range move
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    moves.push_back(concatenatedMove);
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
                 }
             }
         }
@@ -845,8 +839,7 @@ namespace PijersiEngine::Logic
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
 
                         // 2-range move, stack
@@ -857,8 +850,7 @@ namespace PijersiEngine::Logic
                     }
 
                     // 2-range move
-                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    moves.push_back(concatenatedMove);
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
                 }
             }
             // 1-range first action
@@ -877,8 +869,7 @@ namespace PijersiEngine::Logic
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
 
                         // 1-range move, stack
@@ -891,8 +882,7 @@ namespace PijersiEngine::Logic
                     moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
 
                     // 1-range move
-                    uint32_t concatenatedMove = _concatenateMove(indexStart, 0x000000FF, indexMid);
-                    moves.push_back(concatenatedMove);
+                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
                 }
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
@@ -903,8 +893,7 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
 
@@ -914,8 +903,7 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            uint32_t concatenatedMove = _concatenateHalfMove(halfMove, indexEnd);
-                            moves.push_back(concatenatedMove);
+                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
                         }
                     }
 
@@ -927,13 +915,10 @@ namespace PijersiEngine::Logic
                 if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    uint32_t concatenatedMove = _concatenateMove(indexStart, indexStart, indexMid);
-                    moves.push_back(concatenatedMove);
+                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
                 }
             }
         }
-
-        return moves;
     }
 
     // Returns the list of possible moves for a player
@@ -950,8 +935,7 @@ namespace PijersiEngine::Logic
                 // Choose pieces of the current player's colour
                 if ((cells[index] & 2) == (player << 1))
                 {
-                    vector<uint32_t> pieceMoves = availablePieceMoves(index, cells);
-                    moves.insert(moves.end(), pieceMoves.begin(), pieceMoves.end());
+                    availablePieceMoves(index, cells, moves);
                 }
             }
         }

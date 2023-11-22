@@ -262,16 +262,7 @@ namespace PijersiEngine
 
     bool Board::isMoveLegal(uint32_t move)
     {
-        uint32_t indexStart = move & 0x000000FF;
-        if (cells[indexStart] == 0)
-        {
-            return false;
-        }
-        if ((cells[indexStart] & 2) != currentPlayer << 1)
-        {
-            return false;
-        }
-        vector<uint32_t> moves = Logic::availablePieceMoves(indexStart, cells);
+        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         for (size_t k = 0; k < moves.size(); k++)
         {
             if (move == moves[k])
