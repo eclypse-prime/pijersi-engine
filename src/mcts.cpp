@@ -12,6 +12,7 @@
 #include <logic.hpp>
 #include <mcts.hpp>
 
+using std::array;
 using std::cout;
 using std::endl;
 using std::vector;
@@ -23,26 +24,25 @@ namespace PijersiEngine::MCTS
         return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
-    uint32_t ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
     {
         int nThreads = omp_get_max_threads();
-        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
-        int nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         vector<int> visitsPerThreads(nMoves*nThreads);
 
 
         if (nMoves > 0)
         {
-            // #pragma omp parallel for num_threads(nThreads)
-            // for (int k = 0; k < nThreads; k++)
-            for (int k = 0; k < 1; k++)
+            #pragma omp parallel for num_threads(nThreads)
+            for (int k = 0; k < nThreads; k++)
             {
                 Node root(nullptr, NULL_MOVE, currentPlayer);
                 Logic::setState(root.cells, cells);
                 root.expand();
 
-                auto finish = std::chrono::steady_clock::now() + std::chrono::seconds(seconds);
+                auto finish = std::chrono::steady_clock::now() + std::chrono::milliseconds(milliseconds);
 
                 Node *current = &root;
                 do
@@ -85,7 +85,6 @@ namespace PijersiEngine::MCTS
                             else
                             {
                                 float childScore = _UCT(current->children[i]->score, current->children[i]->visits, root.visits);
-                                // cout << childScore << endl;
                                 if (childScore > uctScore)
                                 {
                                     index = i;
@@ -111,11 +110,6 @@ namespace PijersiEngine::MCTS
                 {
                     visitsPerNode[n] += visitsPerThreads[k*nMoves+n];
                 }
-            }
-
-            for (int k = 0; k < nMoves; k++)
-            {
-                cout << Logic::moveToString(moves[k], cells) << ":" << visitsPerNode[k] << endl;
             }
 
             // Get child with max visits from root
@@ -188,11 +182,16 @@ namespace PijersiEngine::MCTS
         {
             Logic::setState(newCells, cells);
             uint8_t currentPlayer = player;
-            while (!Logic::isWin(newCells))
+            while (true)
             {
-                // Logic::playRandom(newCells, currentPlayer);
-                Logic::playManual(AlphaBeta::ponderAlphaBeta(0, true, newCells, currentPlayer), newCells);
+                uint32_t move = Logic::searchRandom(newCells, currentPlayer);
+                size_t indexEnd = (move >> 16) & 0x000000FF;
                 currentPlayer = 1 - currentPlayer;
+                if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+                {
+                    break;
+                }
+                Logic::playManual(move, newCells);
             }
             if (currentPlayer == player)
             {
@@ -205,10 +204,10 @@ namespace PijersiEngine::MCTS
     void Node::expand()
     {
         // Get a vector of all the available moves for the current player
-        vector<uint32_t> moves = Logic::availablePlayerMoves(player, cells);
-        if (moves.size() > 0)
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(player, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
+        if (nMoves > 0)
         {
-            size_t nMoves = moves.size();
             for (size_t k = 0; k < nMoves; k++)
             {
                 children.push_back(new Node(this, moves[k], 1-player));

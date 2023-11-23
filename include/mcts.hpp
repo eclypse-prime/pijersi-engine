@@ -4,7 +4,7 @@
 
 namespace PijersiEngine::MCTS
 {
-    uint32_t ponderMCTS(int seconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
+    uint32_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
 
     struct Node
     {
