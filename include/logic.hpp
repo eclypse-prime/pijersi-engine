@@ -1,5 +1,7 @@
 #ifndef LOGIC_HPP
 #define LOGIC_HPP
+
+#include <array>
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -7,6 +9,7 @@
 #include <utility>
 
 #define NULL_MOVE 0x00FFFFFFU
+#define MAX_PLAYER_MOVES 512
 
 namespace PijersiEngine::Logic
 {
@@ -42,7 +45,7 @@ namespace PijersiEngine::Logic
     bool isWin(const uint8_t cells[45]);
     uint8_t getWinningPlayer(const uint8_t cells[45]);
     
-    std::vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
+    std::array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
     
     bool canTake(uint8_t source, uint8_t target);
     

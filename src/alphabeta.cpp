@@ -14,6 +14,7 @@
 #include <rng.hpp>
 #include <utils.hpp>
 
+using std::array;
 using std::cout;
 using std::endl;
 using std::max;
@@ -32,8 +33,8 @@ namespace PijersiEngine::AlphaBeta
     {
 
         // Get a vector of all the available moves for the current player
-        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         // Return a null move if time is elapsed
         if (steady_clock::now() > finishTime)
@@ -348,8 +349,8 @@ namespace PijersiEngine::AlphaBeta
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
-        size_t nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         int64_t score = INT64_MIN;
 
@@ -360,7 +361,7 @@ namespace PijersiEngine::AlphaBeta
         }
 
         // Evaluate available moves and find the best one
-        if (moves.size() > 0)
+        if (nMoves > 0)
         {
             if (recursionDepth > 1)
             {
@@ -423,8 +424,8 @@ namespace PijersiEngine::AlphaBeta
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
-        size_t nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         int64_t score = INT64_MIN;
 
@@ -435,7 +436,7 @@ namespace PijersiEngine::AlphaBeta
         }
 
         // Evaluate available moves and find the best one
-        if (moves.size() > 0)
+        if (nMoves > 0)
         {
 
             if (recursionDepth > 1)

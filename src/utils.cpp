@@ -64,7 +64,8 @@ namespace PijersiEngine::Utils
     {
         bool sorted = false;
         size_t index = 0;
-        while (!sorted && index < moves.size())
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
+        while (!sorted && index < nMoves)
         {
             if ((moves[index] & NULL_MOVE) == (principalVariation & NULL_MOVE))
             {

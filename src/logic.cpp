@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+using std::array;
 using std::string;
 using std::vector;
 
@@ -548,8 +549,8 @@ namespace PijersiEngine::Logic
             return _countPlayerMoves(currentPlayer, cells);
         }
         // Get a vector of all the available moves for the current player
-        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         uint64_t sum = 0ULL;
 
@@ -581,8 +582,8 @@ namespace PijersiEngine::Logic
         else
         {
             // Get a vector of all the available moves for the current player
-            vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
-            size_t nMoves = moves.size();
+            array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+            size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
             uint64_t sum = 0ULL;
 #pragma omp parallel for schedule(dynamic) reduction(+ \
@@ -609,8 +610,8 @@ namespace PijersiEngine::Logic
         results.reserve(256);
 
         // Get a vector of all the available moves for the current player
-        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
-        size_t nMoves = moves.size();
+        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         // Converts all those moves to string format
         for (size_t k = 0; k < nMoves; k++)
@@ -699,11 +700,12 @@ namespace PijersiEngine::Logic
     uint32_t searchRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
-        vector<uint32_t> moves = availablePlayerMoves(currentPlayer, cells);
+        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
-        if (moves.size() > 0)
+        if (nMoves > 0)
         {
-            std::uniform_int_distribution<int> intDistribution(0, moves.size() - 1);
+            std::uniform_int_distribution<int> intDistribution(0, nMoves - 1);
 
             uint32_t index = intDistribution(RNG::gen);
 
@@ -778,9 +780,10 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    void availablePieceMoves(uint32_t indexStart, uint8_t cells[45], vector<uint32_t> &moves)
+    void availablePieceMoves(uint32_t indexStart, uint8_t cells[45], array<uint32_t, MAX_PLAYER_MOVES> &moves)
     {
         uint8_t movingPiece = cells[indexStart];
+        size_t indexMoves = moves[MAX_PLAYER_MOVES - 1];
 
         // If the piece is not a stack
         if (movingPiece < 16)
@@ -799,7 +802,8 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
 
@@ -809,17 +813,20 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
 
                     // stack only
-                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
+                    indexMoves++;
                 }
                 // 1-range move
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    indexMoves++;
                 }
             }
         }
@@ -839,18 +846,21 @@ namespace PijersiEngine::Logic
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
 
                         // 2-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
 
                     // 2-range move
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    indexMoves++;
                 }
             }
             // 1-range first action
@@ -869,20 +879,24 @@ namespace PijersiEngine::Logic
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
 
                         // 1-range move, stack
                         if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
                     // 1-range move, unstack on starting position
-                    moves.push_back(_concatenateMove(indexStart, indexMid, indexStart));
+                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexStart);
+                    indexMoves++;
 
                     // 1-range move
-                    moves.push_back(_concatenateMove(indexStart, 0x000000FF, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    indexMoves++;
                 }
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
@@ -893,7 +907,8 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
 
@@ -903,30 +918,35 @@ namespace PijersiEngine::Logic
                         uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            moves.push_back(_concatenateHalfMove(halfMove, indexEnd));
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
+                            indexMoves++;
                         }
                     }
 
                     // stack only
-                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
+                    indexMoves++;
                 }
 
                 // unstack
                 if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    moves.push_back(_concatenateMove(indexStart, indexStart, indexMid));
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
+                    indexMoves++;
                 }
             }
         }
+
+        moves[MAX_PLAYER_MOVES - 1] = indexMoves;
     }
 
     // Returns the list of possible moves for a player
-    vector<uint32_t> availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, uint8_t cells[45])
     {
-        vector<uint32_t> moves = vector<uint32_t>();
-        // Reserve space in vector for optimization purposes
-        moves.reserve(512);
+        array<uint32_t, MAX_PLAYER_MOVES> moves;
+        moves[MAX_PLAYER_MOVES - 1] = 0;
+
         // Calculate possible moves
         for (int index = 0; index < 45; index++)
         {
