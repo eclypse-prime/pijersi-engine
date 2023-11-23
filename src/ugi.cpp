@@ -66,7 +66,7 @@ int main(int argc, char** argv)
                         int depth = stoi(parameter);
                         if (depth >= 1)
                         {
-                            uint32_t move = board.searchDepth(depth, true, false);
+                            uint32_t move = board.searchDepth(depth, true);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.getState());
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
                         int durationMilliseconds = stoi(parameter);
                         if (durationMilliseconds >= 0)
                         {
-                            uint32_t move = board.searchTime(true, false, durationMilliseconds);
+                            uint32_t move = board.searchTime(true, true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.getState());
