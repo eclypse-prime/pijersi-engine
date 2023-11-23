@@ -1,4 +1,4 @@
-"""A helper script to generate the switch case in Board::neighbours2(int index)
+"""A helper script to generate the neighbouring cells table Lookup::neighbours2(int index)
 I wanted to hardcode this so I created this script to generate all the cases in C++ code.
 """
 
@@ -38,14 +38,17 @@ def find_neighbours(i: int, j: int) -> List[int]:
 
 def print_case(i: int, j: int):
     index = coords_index(i, j)
-    line = "        vector<uint32_t>({"
+    line = "        "
     neighbours = find_neighbours(i, j)
-    n = len(find_neighbours(i, j))
-    for k in range(n):
-        line += str(neighbours[k])
-        if k < n-1:
+    n = len(neighbours)
+    line += f"{n}, "
+    for k in range(6):
+        if k < n:
+            line += str(neighbours[k])
+        else:
+            line += "SIZE_MAX"
+        if k < 5:
             line += ", "
-    line += "})"
     if (i,j) != (6,5):
         line += (",")
     print(line)

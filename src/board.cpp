@@ -13,6 +13,7 @@
 #include <utils.hpp>
 
 using namespace std::chrono;
+using std::array;
 using std::cout;
 using std::endl;
 using std::string;
@@ -138,7 +139,7 @@ namespace PijersiEngine
         uint32_t move = NULL_MOVE;
         if (iterative)
         {
-            size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
+            size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells)[MAX_PLAYER_MOVES - 1];
             int64_t *scores = new int64_t[nMoves];
             for (int depth = 1; depth <= recursionDepth; depth++)
             {
@@ -216,7 +217,7 @@ namespace PijersiEngine
         finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
 
         uint32_t move = NULL_MOVE;
-        size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells).size();
+        size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells)[MAX_PLAYER_MOVES - 1];
         int64_t *scores = new int64_t[nMoves];
 
         while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
@@ -262,17 +263,9 @@ namespace PijersiEngine
 
     bool Board::isMoveLegal(uint32_t move)
     {
-        uint32_t indexStart = move & 0x000000FF;
-        if (cells[indexStart] == 0)
-        {
-            return false;
-        }
-        if ((cells[indexStart] & 2) != currentPlayer << 1)
-        {
-            return false;
-        }
-        vector<uint32_t> moves = Logic::availablePieceMoves(indexStart, cells);
-        for (size_t k = 0; k < moves.size(); k++)
+        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
+        for (size_t k = 0; k < nMoves; k++)
         {
             if (move == moves[k])
             {
