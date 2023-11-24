@@ -13,7 +13,7 @@ namespace PijersiEngine::Lookup
     The array is composed of 45 segments of length 7.
     The first element of each segment is the number of neighbours of the corresponding cell.
     The rest of the elements are the indices of the neighbouring cells. Unused values are set to SIZE_MAX. */
-    const size_t neighbours[315] = {
+    constexpr size_t neighbours[315] = {
         3, 1, 6, 7, SIZE_MAX, SIZE_MAX, SIZE_MAX,
         4, 0, 2, 7, 8, SIZE_MAX, SIZE_MAX,
         4, 1, 3, 8, 9, SIZE_MAX, SIZE_MAX,
@@ -65,7 +65,7 @@ namespace PijersiEngine::Lookup
     The array is composed of 45 segments of length 7.
     The first element of each segment is the number of neighbours of the corresponding cell.
     The rest of the elements are the indices of the neighbouring cells. Unused values are set to SIZE_MAX. */
-    const size_t neighbours2[315] = { 
+    constexpr size_t neighbours2[315] = { 
         2, 2, 14, SIZE_MAX, SIZE_MAX, SIZE_MAX, SIZE_MAX,
         3, 3, 13, 15, SIZE_MAX, SIZE_MAX, SIZE_MAX,
         4, 0, 4, 14, 16, SIZE_MAX, SIZE_MAX,
@@ -114,7 +114,7 @@ namespace PijersiEngine::Lookup
     };
 
     // Associates a piece's uint8_t representation to an index that can be used in other lookup tables
-    const size_t pieceToIndex[256] {
+    constexpr size_t pieceToIndex[256] {
         34,
         13,
         34,
@@ -374,7 +374,7 @@ namespace PijersiEngine::Lookup
     };
 
     // Associates a piece's type index and cell index to its score, index = pieceIndex*45 + cellIndex
-    const int64_t pieceScores[1575] {
+    constexpr int64_t pieceScores[1575] {
         76790,
         76790,
         76790,

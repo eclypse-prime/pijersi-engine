@@ -17,7 +17,7 @@ namespace PijersiEngine::AlphaBeta
     extern int64_t predictedScore;
 
     uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime = time_point<steady_clock>::max(), int64_t *lastScores = nullptr);
-    int64_t evaluatePiece(uint8_t piece, size_t i);
+    inline int64_t evaluatePiece(uint8_t piece, size_t i);
     int64_t evaluatePosition(uint8_t cells[45]);
     int64_t evaluatePosition(uint8_t cells[45], int64_t pieceScores[45]);
     int64_t updatePositionEval(int64_t previousScore, uint8_t previousPieceScores, uint8_t previousCells[45], uint8_t cells[45]);

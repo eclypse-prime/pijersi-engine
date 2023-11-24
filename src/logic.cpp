@@ -963,7 +963,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a source piece can capture a target piece
-    bool canTake(uint8_t source, uint8_t target)
+    constexpr bool canTake(uint8_t source, uint8_t target)
     {
         uint8_t sourceType = source & 12;
         uint8_t targetType = target & 12;
@@ -1016,7 +1016,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1034,7 +1034,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 2-range move is possible
-    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -1057,7 +1057,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain stack action is possible
-    bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    constexpr bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -1075,7 +1075,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {

@@ -47,16 +47,16 @@ namespace PijersiEngine::Logic
     
     std::array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, uint8_t cells[45]);
     
-    bool canTake(uint8_t source, uint8_t target);
+    constexpr bool canTake(uint8_t source, uint8_t target);
     
     void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     
-    bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
-    bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
-    bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
+    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
+    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
+    constexpr bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45]);
 }
 
 #endif
