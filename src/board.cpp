@@ -462,7 +462,7 @@ namespace PijersiEngine
     // Returns true if the board is in a winning position
     bool Board::checkWin()
     {
-        return Logic::isWin(cells);
+        return Logic::isPositionWin(cells);
     }
 
     bool Board::checkDraw()

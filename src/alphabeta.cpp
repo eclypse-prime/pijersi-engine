@@ -29,7 +29,7 @@ namespace PijersiEngine::AlphaBeta
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
+    uint32_t ponderAlphaBeta(int recursionDepth, bool random, const uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
     {
 
         // Get a vector of all the available moves for the current player
@@ -187,7 +187,7 @@ namespace PijersiEngine::AlphaBeta
 
     // Evaluates the board
     [[nodiscard]]
-    int64_t evaluatePosition(uint8_t cells[45])
+    int64_t evaluatePosition(const uint8_t cells[45])
     {
         int64_t score = 0;
         for (size_t k = 0; k < 45; k++)
@@ -198,7 +198,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     [[nodiscard]]
-    int64_t evaluatePosition(uint8_t cells[45], int64_t pieceScores[45])
+    int64_t evaluatePosition(const uint8_t cells[45], int64_t pieceScores[45])
     {
         int64_t totalScore = 0;
         for (size_t k = 0; k < 45; k++)
@@ -227,15 +227,18 @@ namespace PijersiEngine::AlphaBeta
     // Evaluation function for terminal nodes (depth 0)
     // TODO: possible optims
     [[nodiscard]]
-    inline int64_t evaluateMoveTerminal(uint32_t move, uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
+    inline int64_t evaluateMoveTerminal(uint32_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
         size_t indexStart = move & 0x000000FF;
         size_t indexMid = (move >> 8) & 0x000000FF;
         size_t indexEnd = (move >> 16) & 0x000000FF;
 
-        if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+        if ((cells[indexStart] & 12) != 12)
         {
-            return -MAX_SCORE;
+            if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+            {
+                return -MAX_SCORE;
+            }
         }
 
         if (indexMid > 44)
@@ -330,18 +333,22 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int64_t evaluateMove(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMove(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Create a new board on which the move will be played
         uint8_t newCells[45];
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);
 
+        size_t indexStart = move & 0x000000FF;
         size_t indexEnd = (move >> 16) & 0x000000FF;
         // Stop the recursion if a winning position is achieved
-        if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+        if ((cells[indexStart] & 12) != 12)
         {
-            return -MAX_SCORE;
+            if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+            {
+                return -MAX_SCORE;
+            }
         }
 
         if (recursionDepth <= 0)
@@ -419,7 +426,7 @@ namespace PijersiEngine::AlphaBeta
         Logic::playManual(move, newCells);
 
         // Stop the recursion if a winning position is achieved
-        if (Logic::isWin(newCells) || recursionDepth <= 0)
+        if (Logic::isPositionWin(newCells) || recursionDepth <= 0)
         {
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }

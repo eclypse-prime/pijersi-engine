@@ -212,7 +212,7 @@ namespace PijersiEngine::Logic
     }
 
     // Convert a native triple-index move into the string (a1-b1=c1 style) format.
-    string moveToString(uint32_t move, uint8_t cells[45])
+    string moveToString(uint32_t move, const uint8_t cells[45])
     {
         uint32_t indexStart = move & 0x000000FFU;
         uint32_t indexMid = (move >> 8) & 0x000000FFU;
@@ -254,7 +254,7 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a string (a1-b1=c1 style) move to the native triple-index format
-    uint32_t stringToMove(string moveString, uint8_t cells[45])
+    uint32_t stringToMove(string moveString, const uint8_t cells[45])
     {
         vector<uint32_t> move(3, 0x000000FF);
         if (moveString.size() == 4 || (moveString.size() == 6 && moveString[4] == '-'))
@@ -283,7 +283,7 @@ namespace PijersiEngine::Logic
         return _concatenateMove(move[0], move[1], move[2]);
     }
 
-    string cellsToString(uint8_t cells[45])
+    string cellsToString(const uint8_t cells[45])
     {
         string cellsString = "";
         for (int i = 0; i < 7; i++)
@@ -374,7 +374,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    uint64_t _countPieceMoves(uint32_t indexStart, uint8_t cells[45])
+    uint64_t _countPieceMoves(uint32_t indexStart, const uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -519,7 +519,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the number of possible moves for a player
-    uint64_t _countPlayerMoves(uint8_t player, uint8_t cells[45])
+    uint64_t _countPlayerMoves(uint8_t player, const uint8_t cells[45])
     {
         uint64_t count = 0ULL;
         // Calculate possible moves
@@ -538,12 +538,8 @@ namespace PijersiEngine::Logic
     }
 
     // Subroutine of the perft debug function that is ran by the main perft() function
-    uint64_t _perftIter(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t _perftIter(int recursionDepth, const uint8_t cells[45], uint8_t currentPlayer)
     {
-        if (isWin(cells))
-        {
-            return 0ULL;
-        }
         if (recursionDepth == 1)
         {
             return _countPlayerMoves(currentPlayer, cells);
@@ -557,21 +553,24 @@ namespace PijersiEngine::Logic
         uint8_t newCells[45];
         for (size_t k = 0; k < nMoves; k++)
         {
-            setState(newCells, cells);
-            playManual(moves[k], newCells);
-            sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+            if (!isMoveWin(moves[k], cells))
+            {
+                setState(newCells, cells);
+                playManual(moves[k], newCells);
+                sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+            }
         }
         return sum;
     }
 
     // Perft debug function to measure the number of leaf nodes (possible moves) at a given depth
-    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t perft(int recursionDepth, uint8_t const cells[45], uint8_t currentPlayer)
     {
         if (recursionDepth == 0)
         {
             return 1ULL;
         }
-        else if (isWin(cells))
+        else if (isPositionWin(cells))
         {
             return 0ULL;
         }
@@ -586,23 +585,26 @@ namespace PijersiEngine::Logic
             size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
             uint64_t sum = 0ULL;
-#pragma omp parallel for schedule(dynamic) reduction(+ \
+            #pragma omp parallel for schedule(dynamic) reduction(+ \
                                                      : sum)
             for (size_t k = 0; k < nMoves; k++)
             {
-                uint8_t newCells[45];
-                setState(newCells, cells);
-                playManual(moves[k], newCells);
-                sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+                if (!isMoveWin(moves[k], cells))
+                {
+                    uint8_t newCells[45];
+                    setState(newCells, cells);
+                    playManual(moves[k], newCells);
+                    sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+                }
             }
             return sum;
         }
     }
 
-    vector<string> perftSplit(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    vector<string> perftSplit(int recursionDepth, const uint8_t cells[45], uint8_t currentPlayer)
     {
         vector<string> results;
-        if (recursionDepth == 0 || isWin(cells))
+        if (recursionDepth == 0 || isPositionWin(cells))
         {
             return results;
         }
@@ -697,7 +699,7 @@ namespace PijersiEngine::Logic
     }
 
     // Generates a random move
-    uint32_t searchRandom(uint8_t cells[45], uint8_t currentPlayer)
+    uint32_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
         array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
@@ -725,7 +727,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns true if the board is in a winning position
-    bool isWin(const uint8_t cells[45])
+    bool isPositionWin(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
         {
@@ -750,6 +752,23 @@ namespace PijersiEngine::Logic
             }
         }
         return false;
+    }
+
+    bool isMoveWin(uint32_t move, const uint8_t cells[45])
+    {
+        size_t indexStart = move & 0x000000FF;
+        size_t indexEnd = (move >> 16) & 0x000000FF;
+        uint8_t movingPiece = cells[indexStart];
+        
+        if ((movingPiece & 12) != 12)
+        {
+            if (((movingPiece & 2) == 0 && (indexEnd <= 5)) || ((movingPiece & 2) == 2 && (indexEnd >= 39)))
+            {
+                return true;
+            }
+        }
+        return false;
+
     }
 
     uint8_t getWinningPlayer(const uint8_t cells[45])
@@ -780,7 +799,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    void availablePieceMoves(uint32_t indexStart, uint8_t cells[45], array<uint32_t, MAX_PLAYER_MOVES> &moves)
+    void availablePieceMoves(uint32_t indexStart, const uint8_t cells[45], array<uint32_t, MAX_PLAYER_MOVES> &moves)
     {
         uint8_t movingPiece = cells[indexStart];
         size_t indexMoves = moves[MAX_PLAYER_MOVES - 1];
@@ -942,7 +961,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a player
-    array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, uint8_t cells[45])
+    array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, const uint8_t cells[45])
     {
         array<uint32_t, MAX_PLAYER_MOVES> moves;
         moves[MAX_PLAYER_MOVES - 1] = 0;
@@ -1016,7 +1035,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1034,7 +1053,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 2-range move is possible
-    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -1075,7 +1094,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, uint8_t cells[45])
+    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {

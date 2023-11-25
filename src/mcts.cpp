@@ -161,7 +161,7 @@ namespace PijersiEngine::MCTS
 
     bool Node::isWin()
     {
-        return Logic::isWin(cells);
+        return Logic::isPositionWin(cells);
     }
 
     void Node::update(int winCount, int visitCount)
