@@ -632,10 +632,13 @@ namespace PijersiEngine::Logic
 #pragma omp parallel for schedule(dynamic)
             for (size_t k = 0; k < nMoves; k++)
             {
-                uint8_t newCells[45];
-                setState(newCells, cells);
-                playManual(moves[k], newCells);
-                results[k] += ": " + std::to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
+                if (!isMoveWin(moves[k], cells))
+                {
+                    uint8_t newCells[45];
+                    setState(newCells, cells);
+                    playManual(moves[k], newCells);
+                    results[k] += ": " + std::to_string(_perftIter(recursionDepth - 1, newCells, 1 - currentPlayer));
+                }
             }
         }
         return results;
