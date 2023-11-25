@@ -150,13 +150,26 @@ namespace PijersiEngine
                 float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
                 if (proposedMove != NULL_MOVE)
                 {
-                    move = proposedMove;
                     if (verbose)
                     {
                         printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
                     }
+                    if (AlphaBeta::predictedScore < -BASE_BETA)
+                    {
+                        cout << "info loss in " << depth / 2 << endl;
+                        break;
+                    }
+                    move = proposedMove;
                     if (AlphaBeta::predictedScore > BASE_BETA)
                     {
+                        if (depth > 1)
+                        {
+                            cout << "info mate in " << depth / 2 << endl;
+                        }
+                        else
+                        {
+                            cout << "info mate" << endl;
+                        }
                         break;
                     }
                 }
@@ -229,13 +242,26 @@ namespace PijersiEngine
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (proposedMove != NULL_MOVE)
             {
-                move = proposedMove;
                 if (verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
                 }
+                if (AlphaBeta::predictedScore < -BASE_BETA)
+                {
+                    cout << "info loss in " << recursionDepth / 2 << endl;
+                    break;
+                }
+                move = proposedMove;
                 if (AlphaBeta::predictedScore > BASE_BETA)
                 {
+                    if (recursionDepth > 1)
+                    {
+                        cout << "info mate in " << recursionDepth / 2 << endl;
+                    }
+                    else
+                    {
+                        cout << "info mate" << endl;
+                    }
                     break;
                 }
             }
