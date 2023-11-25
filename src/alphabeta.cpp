@@ -335,14 +335,9 @@ namespace PijersiEngine::AlphaBeta
     // Evaluates a move by calculating the possible subsequent moves recursively
     int64_t evaluateMove(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
-        // Create a new board on which the move will be played
-        uint8_t newCells[45];
-        Logic::setState(newCells, cells);
-        Logic::playManual(move, newCells);
-
+        // Stop the recursion if a winning position is achieved
         size_t indexStart = move & 0x000000FF;
         size_t indexEnd = (move >> 16) & 0x000000FF;
-        // Stop the recursion if a winning position is achieved
         if ((cells[indexStart] & 12) != 12)
         {
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
@@ -350,6 +345,11 @@ namespace PijersiEngine::AlphaBeta
                 return -MAX_SCORE;
             }
         }
+
+        // Create a new board on which the move will be played
+        uint8_t newCells[45];
+        Logic::setState(newCells, cells);
+        Logic::playManual(move, newCells);
 
         if (recursionDepth <= 0)
         {
@@ -418,15 +418,25 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
+        // Stop the recursion if a winning position is achieved
+        size_t indexStart = move & 0x000000FF;
+        size_t indexEnd = (move >> 16) & 0x000000FF;
+        if ((cells[indexStart] & 12) != 12)
+        {
+            if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+            {
+                return -MAX_SCORE;
+            }
+        }
+
         // Create a new board on which the move will be played
         uint8_t newCells[45];
         Logic::setState(newCells, cells);
         Logic::playManual(move, newCells);
 
-        // Stop the recursion if a winning position is achieved
-        if (Logic::isPositionWin(newCells) || recursionDepth <= 0)
+        if (recursionDepth <= 0)
         {
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
