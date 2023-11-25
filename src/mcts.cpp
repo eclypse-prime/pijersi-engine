@@ -95,7 +95,7 @@ namespace PijersiEngine::MCTS
                         current = current->children[index];
                     }
                 } while (std::chrono::steady_clock::now() <= finish);
-                for (int n = 0; n < nMoves; n++)
+                for (size_t n = 0; n < nMoves; n++)
                 {
                     visitsPerThreads[k*nMoves+n] = root.children[n]->visits;
                 }
@@ -106,7 +106,7 @@ namespace PijersiEngine::MCTS
             #pragma omp parallel for
             for (int k = 0; k < nThreads; k++)
             {
-                for (int n = 0; n < nMoves; n++)
+                for (size_t n = 0; n < nMoves; n++)
                 {
                     visitsPerNode[n] += visitsPerThreads[k*nMoves+n];
                 }
@@ -115,7 +115,7 @@ namespace PijersiEngine::MCTS
             // Get child with max visits from root
             int maxVisits = 0;
             size_t index = 0;
-            for (int k = 0; k < nMoves; k++)
+            for (size_t k = 0; k < nMoves; k++)
             {
                 if (visitsPerNode[k] > maxVisits)
                 {

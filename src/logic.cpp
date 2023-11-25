@@ -757,6 +757,7 @@ namespace PijersiEngine::Logic
         return false;
     }
 
+    // Returns true if the move leads to a win
     bool isMoveWin(uint32_t move, const uint8_t cells[45])
     {
         size_t indexStart = move & 0x000000FF;
@@ -771,9 +772,9 @@ namespace PijersiEngine::Logic
             }
         }
         return false;
-
     }
 
+    // Returns 0 if the winning player is white, 1 if black, 0xFF if no winning player
     uint8_t getWinningPlayer(const uint8_t cells[45])
     {
         for (int k = 0; k < 6; k++)
