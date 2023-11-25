@@ -12,13 +12,14 @@ The project contains:
 ## Requirements
 
 * SWIG 4.0.2+
-* MinGW g++ 12+
+* g++ 12+
+* mingw-w64 12+ (cross compiler)
 
-This project has been built on Windows, but could be replicated on Linux by adjusting the build instructions in Makefile.
+This project has been built on Linux, but could be replicated on Windows by adjusting the build instructions in Makefile.
 
 ## Instructions
 
-After installing the requirements, simply run the makefile ```mingw32-make```. This will generate the C++/C# sources, compile them and link them into a DLL library. C# files will also be generated to make the use of the compiled library easier.
+After installing the requirements, simply run the makefile ```make```. This will generate the C++/C# sources, compile them and link them into a DLL library. C# files will also be generated to make the use of the compiled library easier.
 The DLL and the C# files will be found in ```/wrap_csharp```. Simply copy and paste them in the C#/Unity project and they are ready to use.
 
 ## Useful data
