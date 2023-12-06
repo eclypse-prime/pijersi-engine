@@ -54,10 +54,12 @@ namespace PijersiEngine::Logic
     void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     
-    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45]);
-    constexpr bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+    inline bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+    inline bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45]);
+    inline bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+    inline bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+
+    void countMoves(uint8_t currentPlayer, const uint8_t cells[45], size_t countWhite[45], size_t countBlack[45]);
 }
 
 #endif

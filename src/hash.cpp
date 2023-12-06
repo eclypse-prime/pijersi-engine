@@ -18,7 +18,7 @@ namespace PijersiEngine::Hash
         {
             pieceHashKeys[index] = uint64rng(RNG::gen);
         }
-        for (int index = 1530; index < 1545; index++)
+        for (int index = 1530; index < 1575; index++)
         {
             pieceHashKeys[index] = 0;
         }

@@ -1039,7 +1039,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    constexpr bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1057,7 +1057,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 2-range move is possible
-    constexpr bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -1080,7 +1080,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain stack action is possible
-    constexpr bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -1098,7 +1098,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    constexpr bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1113,5 +1113,24 @@ namespace PijersiEngine::Logic
             }
         }
         return true;
+    }
+
+    void countMoves(uint8_t currentPlayer, const uint8_t cells[45], size_t countWhite[45], size_t countBlack[45])
+    {
+        for (size_t index = 0; index < 45; index++)
+        {
+            if (cells[index] != 0)
+            {
+                // Choose pieces of the current player's colour
+                if (currentPlayer == 0 && (cells[index] & 2) == 0)
+                {
+                    countWhite[index] += _countPieceMoves(index, cells);
+                }
+                else if (currentPlayer == 1 && (cells[index] & 2) == 2)
+                {
+                    countBlack[index] += _countPieceMoves(index, cells);
+                }
+            }
+        }
     }
 }
