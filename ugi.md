@@ -139,6 +139,13 @@ The engine indicates the search has finished with `bestmove [move string]`
 <<< bestmove a5b5d4
 ```
 
+The `go manual` command has been implemented for convenience in Natural Selection. It is not standard.
+
+```
+>>> go manual [move]
+[The engine plays the chosen move]
+```
+
 ### `position`
 
 ```
@@ -167,4 +174,15 @@ The engine indicates the search has finished with `bestmove [move string]`
 ```
 >>> query result
 <<< response [p1win/p2win/draw/none]
+```
+
+The following commands have been implemented for convenience in Natural Selection. They are not standard.
+
+```
+>>> query islegal [move]
+<<< response [true/false]
+```
+```
+>>> query fen
+<<< response s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/6/P-S-R-WWS-R-P-/R-P-S-R-P-S- w 0 1
 ```
