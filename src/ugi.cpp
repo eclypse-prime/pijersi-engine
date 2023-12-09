@@ -178,6 +178,26 @@ int main(int argc, char** argv)
                             cout << "response none" << endl;
                         }
                     }
+                    else if (mode == "islegal")
+                    {
+                        if (words.size() >= 3)
+                        {
+                            string moveString = words[2];
+                            uint32_t move = Logic::stringToMove(moveString, board.getState());
+                            if (board.isMoveLegal(move))
+                            {
+                                cout << "response true" << endl;
+                            }
+                            else
+                            {
+                                cout << "response false" << endl;
+                            }
+                        }
+                    }
+                    else if (mode == "fen")
+                    {
+                        cout << "response " << board.getStringState() << endl;
+                    }
                 }
             }
         }

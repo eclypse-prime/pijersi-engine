@@ -473,7 +473,9 @@ namespace PijersiEngine
     // TODO
     bool Board::checkStalemate()
     {
-        return false;
+        array<uint32_t, 512UL> availableMoves = Logic::availablePlayerMoves(currentPlayer, cells);
+        size_t nMoves = availableMoves[MAX_PLAYER_MOVES - 1];
+        return (nMoves == 0);
     }
 
     uint8_t Board::getWinner()
