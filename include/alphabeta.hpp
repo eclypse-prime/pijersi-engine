@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <vector>
 
-#include <nn.hpp>
+// NN disabled for now
+// #include <nn.hpp>
 
 #define BASE_BETA 262144
 #define MAX_SCORE 524288
