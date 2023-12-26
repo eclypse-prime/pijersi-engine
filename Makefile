@@ -15,7 +15,7 @@ PYTHON_SRC=src/wrap/pijersi_engine_python.cpp
 PYTHON_OBJ=src/wrap/pijersi_engine_python.o
 PYTHON_SO=wrap_python/_PijersiCore.so
 
-all: csharp interactive executable ugi versus
+all: csharp python interactive executable ugi versus
 
 # C# wrap build
 
