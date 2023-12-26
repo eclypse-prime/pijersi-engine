@@ -24,13 +24,13 @@ namespace PijersiEngine
 
         // Depth limited search
 
-        uint32_t searchDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
-        uint32_t playDepth(int recursionDepth, bool random = true, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true);
+        uint32_t searchDepth(int recursionDepth, bool random, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true, size_t side = 0);
+        uint32_t playDepth(int recursionDepth, bool random = true, uint32_t prinvipalVariation = NULL_MOVE, uint64_t searchTimeMilliseconds = UINT64_MAX, bool iterative = true, size_t side = 0);
 
         // Time limited search
         
-        uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX);
-        uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX);
+        uint32_t searchTime(bool random, uint64_t searchTimeMilliseconds = UINT64_MAX, size_t side = 0);
+        uint32_t playTime(bool random = true, uint64_t searchTimeMilliseconds = UINT64_MAX, size_t side = 0);
         
         // Random search
 
@@ -42,7 +42,7 @@ namespace PijersiEngine
         
         std::string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
-        int64_t evaluate();
+        float evaluate();
 
         void setState(uint8_t newState[45]);
         uint8_t *getState();
@@ -61,7 +61,7 @@ namespace PijersiEngine
         // TODO
         bool checkStalemate();
         uint8_t getWinner();
-        int64_t getPredictedScore();
+        float getPredictedScore();
         uint8_t currentPlayer = 0;
 
     private:
