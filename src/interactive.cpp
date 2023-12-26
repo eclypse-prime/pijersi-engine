@@ -8,6 +8,7 @@
 #include <alphabeta.hpp>
 #include <board.hpp>
 #include <logic.hpp>
+#include <options.hpp>
 #include <utils.hpp>
 
 using namespace std::chrono;
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
                     int durationMilliseconds = stoi(parameter);
                     if (durationMilliseconds >= 0)
                     {
-                        uint32_t move = board.searchTime(true, true, durationMilliseconds);
+                        uint32_t move = board.searchTime(true, durationMilliseconds);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
@@ -135,6 +136,28 @@ int main(int argc, char** argv)
                     string parameter = words[1];
                     uint32_t move = Logic::stringToMove(parameter, board.getState());
                     board.playManual(move);
+                }
+            }
+            else if (command == "o")
+            {
+                if (words.size() >= 3)
+                {
+                    string parameter = words[1];
+                    if (parameter == "threads")
+                    {
+                        string value = words[2];
+                        Options::threads = stoi(value);
+                    }
+                    if (parameter == "verbose")
+                    {
+                        string value = words[2];
+                        Options::verbose = (value == "true");
+                    }
+                    if (parameter == "openingBook")
+                    {
+                        string value = words[2];
+                        Options::openingBook = (value == "true");
+                    }
                 }
             }
             else if (command == "r")

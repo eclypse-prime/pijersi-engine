@@ -1,9 +1,9 @@
 INCLUDE=-Iinclude
 # Dependencies to nn.hpp, nn.cpp removed
-HEADERS=include/alphabeta.hpp include/board.hpp include/hash.hpp include/logic.hpp include/lookup.hpp include/mcts.hpp include/openings.hpp include/piece.hpp include/rng.hpp include/utils.hpp include/weights.hpp include/npy.hpp
+HEADERS=include/alphabeta.hpp include/board.hpp include/hash.hpp include/logic.hpp include/lookup.hpp include/mcts.hpp include/openings.hpp include/options.hpp include/piece.hpp include/rng.hpp include/utils.hpp include/weights.hpp include/npy.hpp
 FLAGS=-Wall -flto=1 -O3 -fopenmp -std=c++20
-SRC=src/alphabeta.cpp src/board.cpp src/hash.cpp src/logic.cpp src/mcts.cpp src/rng.cpp src/utils.cpp
-OBJ=src/alphabeta.o src/board.o src/hash.o src/logic.o src/mcts.o src/rng.o src/utils.o
+SRC=src/alphabeta.cpp src/board.cpp src/hash.cpp src/logic.cpp src/mcts.cpp src/options.cpp src/rng.cpp src/utils.cpp
+OBJ=src/alphabeta.o src/board.o src/hash.o src/logic.o src/mcts.o src/options.o src/rng.o src/utils.o
 CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
 CSHARP_OBJ=src/wrap/pijersi_engine_csharp.o
 CSHARP_DLL=wrap_csharp/PijersiCore.dll
@@ -41,6 +41,9 @@ src/mcts.o: src/mcts.cpp $(HEADERS)
 
 src/nn.o: src/nn.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/nn.cpp -o src/nn.o
+
+src/options.o: src/options.cpp $(HEADERS)
+	@g++ $(FLAGS) -c $(INCLUDE) src/options.cpp -o src/options.o
 
 src/rng.o: src/rng.cpp $(HEADERS)
 	@g++ $(FLAGS) -c $(INCLUDE) src/rng.cpp -o src/rng.o

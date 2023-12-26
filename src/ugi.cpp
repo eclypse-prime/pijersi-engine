@@ -8,6 +8,7 @@
 #include <board.hpp>
 #include <alphabeta.hpp>
 #include <logic.hpp>
+#include <options.hpp>
 #include <utils.hpp>
 
 using namespace std::chrono;
@@ -48,7 +49,32 @@ int main(int argc, char** argv)
             {
                 cout << "id name Natural-Selection" << endl;
                 cout << "id author Eclypse-Prime" << endl;
+                cout << "option name threads type spin default 8" << endl;
+                cout << "option name verbose type check default true" << endl;
+                cout << "option name openingBook type check default true" << endl;
                 cout << "ugiok" << endl;
+            }
+            else if (command == "setoption")
+            {
+                if (words.size() >= 5)
+                {
+                    string parameter = words[2];
+                    if (parameter == "threads")
+                    {
+                        string value = words[4];
+                        Options::threads = stoi(value);
+                    }
+                    if (parameter == "verbose")
+                    {
+                        string value = words[4];
+                        Options::verbose = (value == "true");
+                    }
+                    if (parameter == "openingBook")
+                    {
+                        string value = words[4];
+                        Options::openingBook = (value == "true");
+                    }
+                }
             }
             else if (command == "isready")
             {
@@ -84,7 +110,7 @@ int main(int argc, char** argv)
                         int durationMilliseconds = stoi(parameter);
                         if (durationMilliseconds >= 0)
                         {
-                            uint32_t move = board.searchTime(true, true, durationMilliseconds);
+                            uint32_t move = board.searchTime(true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.getState());

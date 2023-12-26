@@ -9,6 +9,7 @@
 #include <board.hpp>
 #include <logic.hpp>
 #include <openings.hpp>
+#include <options.hpp>
 #include <rng.hpp>
 #include <utils.hpp>
 
@@ -35,7 +36,7 @@ namespace PijersiEngine
             uint32_t bookMove = Openings::book[currentStringState];
             string moveString = Logic::moveToString(bookMove, cells);
             // TODO: use saved depth instead of 6
-            if (verbose)
+            if (Options::verbose)
             {
                 cout << "info depth 6 time 0 pv " << moveString << endl;
             }
@@ -99,11 +100,11 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the engine will not play and the function will return a null move. */
-    uint32_t Board::playDepth(int recursionDepth, bool random, bool useOpeningBook, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
         // Calculate move
-        uint32_t move = searchDepth(recursionDepth, random, useOpeningBook, principalVariation, searchTimeMilliseconds, iterative);
+        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -114,7 +115,7 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the function will return a null move. */
-    uint32_t Board::searchDepth(int recursionDepth, bool random, bool useOpeningBook, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
         // Calculate finish time point
         time_point<steady_clock> finishTime;
@@ -127,7 +128,7 @@ namespace PijersiEngine
             finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
         }
 
-        if (useOpeningBook)
+        if (Options::openingBook)
         {
             uint32_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
@@ -150,7 +151,7 @@ namespace PijersiEngine
                 float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
                 if (proposedMove != NULL_MOVE)
                 {
-                    if (verbose)
+                    if (Options::verbose)
                     {
                         printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
                     }
@@ -185,7 +186,7 @@ namespace PijersiEngine
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (move != NULL_MOVE)
             {
-                if (verbose)
+                if (Options::verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
                 }
@@ -197,10 +198,10 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will not play and the function will return a null move. */
-    uint32_t Board::playTime(bool random, bool useOpeningBook, uint64_t searchTimeMilliseconds)
+    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
     {
         // Calculate move
-        uint32_t move = searchTime(random, useOpeningBook, searchTimeMilliseconds);
+        uint32_t move = searchTime(random, searchTimeMilliseconds);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -211,11 +212,11 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will return a null move. */
-    uint32_t Board::searchTime(bool random, bool useOpeningBook, uint64_t searchTimeMilliseconds)
+    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
     {
         int recursionDepth = 1;
 
-        if (useOpeningBook)
+        if (Options::openingBook)
         {
             uint32_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
@@ -242,7 +243,7 @@ namespace PijersiEngine
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
             if (proposedMove != NULL_MOVE)
             {
-                if (verbose)
+                if (Options::verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
                 }

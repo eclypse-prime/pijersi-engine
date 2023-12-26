@@ -11,6 +11,7 @@
 #include <alphabeta.hpp>
 #include <logic.hpp>
 #include <lookup.hpp>
+#include <options.hpp>
 #include <rng.hpp>
 #include <utils.hpp>
 
@@ -90,7 +91,7 @@ namespace PijersiEngine::AlphaBeta
                 if (recursionDepth > 1)
                 {
                     // Evaluate possible moves
-                    #pragma omp parallel for schedule(dynamic) shared (alpha)
+                    #pragma omp parallel for schedule(dynamic) shared (alpha) num_threads(Options::threads)
                     for (size_t k = 0; k < nMoves; k++)
                     {
                         if (cut)
