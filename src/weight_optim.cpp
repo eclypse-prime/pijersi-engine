@@ -166,7 +166,7 @@ float playGames(Board &board, int depth, bool random, size_t nRepeats)
         //     cout << "Starting game " << iter << "/" << nGames << '\r' << flush;
         // }
         board.init();
-        // board.playRandom();
+        board.playRandom();
         // board.playRandom();
         // board.setStringState(openings[(iter/2)%openings.size()]);
         side = starting_player;
