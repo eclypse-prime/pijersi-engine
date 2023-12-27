@@ -27,7 +27,7 @@ using namespace std::chrono;
 
 // 63, 100, 110, 115, 130, 135, -10, 70
 // Score line 1 to 7, stack bonus, wise fixed score
-float scoresEval[80] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140, -90, -90, -90, -90, -90, -90, -100, -100, -100, -100, -100, -100, -100, -110, -110, -110, -110, -110, -110, -120, -120, -120, -120, -120, -120, -120, -130, -130, -130, -130, -130, -130, -140, -140, -140, -140, -140, -140, -140, 30, 80};
+float scoresEval[41] = {90, 90, 90, 90, 90, 90, 100, 100, 100, 100, 100, 100, 100, 110, 110, 110, 110, 110, 110, 120, 120, 120, 120, 120, 120, 120, 130, 130, 130, 130, 130, 130, 140, 140, 140, 140, 140, 140, 140, 30, 80};
 
 std::random_device rd;
 std::mt19937 gen(rd());
@@ -74,18 +74,18 @@ void fillTable()
                         }
                         else
                         {
-                            score = scoresEval[39 + index];
+                            score = -scoresEval[index];
                         }
                         if (piece > 16)
                         {
                             score *= 2;
                             if ((piece & 2) == 0)
                             {
-                                score += scoresEval[78];
+                                score += scoresEval[39];
                             }
                             else
                             {
-                                score -= scoresEval[78];
+                                score -= scoresEval[39];
                             }
                         }
                     }
@@ -94,22 +94,22 @@ void fillTable()
                 {
                     if ((piece & 2) == 0)
                     {
-                        score = scoresEval[79];
+                        score = scoresEval[40];
                     }
                     else
                     {
-                        score = -scoresEval[79];
+                        score = -scoresEval[40];
                     }
                     if (piece > 16)
                     {
                         score *= 2;
                         if ((piece & 2) == 0)
                         {
-                            score += scoresEval[78];
+                            score += scoresEval[39];
                         }
                         else
                         {
-                            score -= scoresEval[78];
+                            score -= scoresEval[39];
                         }
                     }
                 }
@@ -119,9 +119,9 @@ void fillTable()
     }
 }
 
-void setWeights(float weights[80])
+void setWeights(float weights[41])
 {
-    for (size_t k = 0; k < 80; k++)
+    for (size_t k = 0; k < 41; k++)
     {
         scoresEval[k] = weights[k];
     }
@@ -155,8 +155,9 @@ float playGames(Board &board, int depth, bool random, size_t nRepeats)
     size_t starting_player = 0;
     uint64_t winCount[2] = {0, 0};
 
-    vector<string> openings = readFile("ply1.txt");
-    size_t nGames = openings.size() * nRepeats * 2;
+    // vector<string> openings = readFile("ply1.txt");
+    // size_t nGames = openings.size() * nRepeats * 2;
+    size_t nGames = nRepeats;
 
     for (size_t iter = 0; iter < nGames; iter++)
     {
@@ -165,11 +166,13 @@ float playGames(Board &board, int depth, bool random, size_t nRepeats)
         //     cout << "Starting game " << iter << "/" << nGames << '\r' << flush;
         // }
         board.init();
-        board.setStringState(openings[(iter/2)%openings.size()]);
+        // board.playRandom();
+        // board.playRandom();
+        // board.setStringState(openings[(iter/2)%openings.size()]);
         side = starting_player;
         while (!board.checkWin() && !board.checkDraw() && !board.checkStalemate())
         { 
-            board.playDepth(depth, random, side);
+            board.playDepth(depth, random, NULL_MOVE, UINT64_MAX, true, side);
             if (board.checkWin() || board.checkStalemate())
             {
                 winCount[side] += 1;
