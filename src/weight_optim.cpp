@@ -155,9 +155,8 @@ float playGames(Board &board, int depth, bool random, size_t nRepeats)
     size_t starting_player = 0;
     uint64_t winCount[2] = {0, 0};
 
-    // vector<string> openings = readFile("ply1.txt");
-    // size_t nGames = openings.size() * nRepeats * 2;
-    size_t nGames = nRepeats;
+    vector<string> openings = readFile("ply1.txt");
+    size_t nGames = openings.size() * nRepeats * 2;
 
     for (size_t iter = 0; iter < nGames; iter++)
     {
@@ -166,9 +165,9 @@ float playGames(Board &board, int depth, bool random, size_t nRepeats)
         //     cout << "Starting game " << iter << "/" << nGames << '\r' << flush;
         // }
         board.init();
-        board.playRandom();
         // board.playRandom();
-        // board.setStringState(openings[(iter/2)%openings.size()]);
+        // board.playRandom();
+        board.setStringState(openings[(iter/2)%openings.size()]);
         side = starting_player;
         while (!board.checkWin() && !board.checkDraw() && !board.checkStalemate())
         { 
