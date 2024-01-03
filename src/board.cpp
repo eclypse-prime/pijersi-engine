@@ -154,11 +154,14 @@ namespace PijersiEngine
                     if (Options::verbose)
                     {
                         printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
-                        if (AlphaBeta::predictedScore < -BASE_BETA)
+                    }
+                    if (AlphaBeta::predictedScore < -BASE_BETA)
+                    {
+                        if (Options::verbose)
                         {
                             cout << "info loss in " << depth / 2 << endl;
-                            break;
                         }
+                        break;
                     }
                     move = proposedMove;
                     if (AlphaBeta::predictedScore > BASE_BETA)
@@ -249,11 +252,14 @@ namespace PijersiEngine
                 if (Options::verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
-                    if (AlphaBeta::predictedScore < -BASE_BETA)
+                }
+                if (AlphaBeta::predictedScore < -BASE_BETA)
+                {
+                    if (Options::verbose)
                     {
                         cout << "info loss in " << recursionDepth / 2 << endl;
-                        break;
                     }
+                    break;
                 }
                 move = proposedMove;
                 if (AlphaBeta::predictedScore > BASE_BETA)
