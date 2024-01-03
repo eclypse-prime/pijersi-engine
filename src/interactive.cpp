@@ -102,7 +102,7 @@ int main(int argc, char** argv)
                     for (int k = 0; k <= depth; k++)
                     {
                         auto start = steady_clock::now();
-                        uint64_t result = Logic::perft(k, board.getState(), board.currentPlayer);
+                        uint64_t result = Logic::perft(k, board.cells, board.currentPlayer);
                         auto end = steady_clock::now();
                         int duration = duration_cast<microseconds>(end - start).count();
                         cout << "perft depth " << k << " result: " << result << " duration: "<< (float)duration/1000 << "ms" << endl;
@@ -118,7 +118,7 @@ int main(int argc, char** argv)
                     for (int k = 0; k <= depth; k++)
                     {
                         auto start = steady_clock::now();
-                        vector<string> result = Logic::perftSplit(k, board.getState(), board.currentPlayer);
+                        vector<string> result = Logic::perftSplit(k, board.cells, board.currentPlayer);
                         auto end = steady_clock::now();
                         int duration = duration_cast<microseconds>(end - start).count();
                         cout << "perft depth " << k << " duration: "<< (float)duration/1000 << "ms" << endl;
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
                 if (words.size() >= 2)
                 {
                     string parameter = words[1];
-                    uint32_t move = Logic::stringToMove(parameter, board.getState());
+                    uint32_t move = Logic::stringToMove(parameter, board.cells);
                     board.playManual(move);
                 }
             }
@@ -174,9 +174,9 @@ int main(int argc, char** argv)
             }
         }
     }
-    // board.playManual(Logic::stringToMove("f5=d4-c4", board.getState()));
+    // board.playManual(Logic::stringToMove("f5=d4-c4", board.cells));
     // uint32_t move = board.playAlphaBeta(5);
 
-    // cout << Logic::moveToString(move, board.getState()) << endl;
+    // cout << Logic::moveToString(move, board.cells) << endl;
     return 0;
 }

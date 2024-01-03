@@ -54,7 +54,7 @@ int main(int argc, char** argv)
             move = board.searchDepth(recursionDepth, true);
             if (move != NULL_MOVE)
             {
-                string moveString = Logic::moveToString(move, board.getState());
+                string moveString = Logic::moveToString(move, board.cells);
                 cout << moveString << endl;
             }
         }
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
             move = board.searchTime(true, durationMilliseconds);
             if (move != NULL_MOVE)
             {
-                string moveString = Logic::moveToString(move, board.getState());
+                string moveString = Logic::moveToString(move, board.cells);
                 cout << moveString << endl;
             }
         }

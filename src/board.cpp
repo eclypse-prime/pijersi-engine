@@ -93,7 +93,7 @@ namespace PijersiEngine
     // Board copy constructor
     Board::Board(Board &board)
     {
-        setState(board.cells);
+        Logic::setState(cells, board.cells);
         currentPlayer = board.currentPlayer;
     }
 
@@ -154,22 +154,25 @@ namespace PijersiEngine
                     if (Options::verbose)
                     {
                         printInfo(depth, duration, AlphaBeta::predictedScore, moveString);
-                    }
-                    if (AlphaBeta::predictedScore < -BASE_BETA)
-                    {
-                        cout << "info loss in " << depth / 2 << endl;
-                        break;
+                        if (AlphaBeta::predictedScore < -BASE_BETA)
+                        {
+                            cout << "info loss in " << depth / 2 << endl;
+                            break;
+                        }
                     }
                     move = proposedMove;
                     if (AlphaBeta::predictedScore > BASE_BETA)
                     {
-                        if (depth > 1)
+                        if (Options::verbose)
                         {
-                            cout << "info mate in " << depth / 2 << endl;
-                        }
-                        else
-                        {
-                            cout << "info mate" << endl;
+                            if (depth > 1)
+                            {
+                                cout << "info mate in " << depth / 2 << endl;
+                            }
+                            else
+                            {
+                                cout << "info mate" << endl;
+                            }
                         }
                         break;
                     }
@@ -246,22 +249,25 @@ namespace PijersiEngine
                 if (Options::verbose)
                 {
                     printInfo(recursionDepth, duration, AlphaBeta::predictedScore, moveString);
-                }
-                if (AlphaBeta::predictedScore < -BASE_BETA)
-                {
-                    cout << "info loss in " << recursionDepth / 2 << endl;
-                    break;
+                    if (AlphaBeta::predictedScore < -BASE_BETA)
+                    {
+                        cout << "info loss in " << recursionDepth / 2 << endl;
+                        break;
+                    }
                 }
                 move = proposedMove;
                 if (AlphaBeta::predictedScore > BASE_BETA)
                 {
-                    if (recursionDepth > 1)
+                    if (Options::verbose)
                     {
-                        cout << "info mate in " << recursionDepth / 2 << endl;
-                    }
-                    else
-                    {
-                        cout << "info mate" << endl;
+                        if (recursionDepth > 1)
+                        {
+                            cout << "info mate in " << recursionDepth / 2 << endl;
+                        }
+                        else
+                        {
+                            cout << "info mate" << endl;
+                        }
                     }
                     break;
                 }
@@ -335,17 +341,6 @@ namespace PijersiEngine
     void Board::addPiece(uint8_t piece, int i, int j)
     {
         cells[Logic::coordsToIndex(i, j)] = piece;
-    }
-
-    // Sets the board to a chosen state
-    void Board::setState(uint8_t newState[45])
-    {
-        Logic::setState(cells, newState);
-    }
-
-    uint8_t *Board::getState()
-    {
-        return cells;
     }
 
     void Board::setStringState(string stateString)

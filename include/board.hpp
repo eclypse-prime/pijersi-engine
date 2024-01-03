@@ -43,9 +43,6 @@ namespace PijersiEngine
         std::string advice(int recursionDepth, bool random);
         bool isMoveLegal(uint32_t move);
         int64_t evaluate();
-
-        void setState(uint8_t newState[45]);
-        uint8_t *getState();
         
         void setStringState(std::string stateString);
         std::string getStringState();
@@ -63,14 +60,14 @@ namespace PijersiEngine
         uint8_t getWinner();
         int64_t getPredictedScore();
         uint8_t currentPlayer = 0;
+        
+        uint8_t cells[45];
 
     private:
         uint32_t searchBook();
 
         uint32_t countPieces();
         void endTurn();
-
-        uint8_t cells[45];
 
         uint32_t lastPieceCount = 0;
         uint32_t halfMoveCounter = 0;

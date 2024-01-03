@@ -95,8 +95,8 @@ int main(int argc, char** argv)
                             uint32_t move = board.searchDepth(depth, true);
                             if (move != NULL_MOVE)
                             {
-                                string moveString = Logic::moveToString(move, board.getState());
-                                cout << "bestmove " << Logic::moveToString(move, board.getState()) << endl;
+                                string moveString = Logic::moveToString(move, board.cells);
+                                cout << "bestmove " << Logic::moveToString(move, board.cells) << endl;
                                 board.playManual(move);
                             }
                             else
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
                             uint32_t move = board.searchTime(true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
-                                string moveString = Logic::moveToString(move, board.getState());
+                                string moveString = Logic::moveToString(move, board.cells);
                                 cout << "bestmove " << moveString << endl;
                                 board.playManual(move);
                             }
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
                         if (words.size() >= 3)
                         {
                             string moveString = words[2];
-                            uint32_t move = Logic::stringToMove(moveString, board.getState());
+                            uint32_t move = Logic::stringToMove(moveString, board.cells);
                             if (board.isMoveLegal(move))
                             {
                                 cout << "response true" << endl;
