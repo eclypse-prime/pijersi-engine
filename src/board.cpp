@@ -133,6 +133,7 @@ namespace PijersiEngine
             uint32_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
             {
+                AlphaBeta::predictedScore = 0;
                 return bookMove;
             }
         }
@@ -227,6 +228,7 @@ namespace PijersiEngine
             uint32_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
             {
+                AlphaBeta::predictedScore = 0;
                 return bookMove;
             }
         }
