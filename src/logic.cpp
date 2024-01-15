@@ -348,6 +348,7 @@ namespace PijersiEngine::Logic
             size_t j = 0;
             while (j < (cellLines[i].size()))
             {
+                // If cellsLines[i][j] exists in charToPiece
                 if (Logic::charToPiece.find(cellLines[i][j]) != Logic::charToPiece.end())
                 {
                     if (cellLines[i][j+1] != '-')
