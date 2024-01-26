@@ -33,7 +33,7 @@ namespace PijersiEngine::AlphaBeta
     uint32_t ponderAlphaBeta(int recursionDepth, bool random, const uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
     {
 
-        // Get a vector of all the available moves for the current player
+        // Get an array of all the available moves for the current player, the last element of the array is the number of available moves
         array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
@@ -48,11 +48,7 @@ namespace PijersiEngine::AlphaBeta
             if (recursionDepth > 0)
             {
 
-                // // The Principal Variation is the first move to be searched
-                // if (principalVariation != NULL_MOVE)
-                // {
-                //     Utils::sortPrincipalVariation(moves, principalVariation);
-                // }
+                // Sort the order of moves to evaluate according to the last search at depth - 1
                 size_t *indices = new size_t[nMoves];
                 for (size_t k = 0; k < nMoves; k++){
                     indices[k] = k;
@@ -62,6 +58,7 @@ namespace PijersiEngine::AlphaBeta
                     Utils::doubleSort(lastScores, indices, nMoves);
                 }
 
+                // Index of the best move
                 size_t index = 0;
 
                 // Initializing scores array
@@ -88,6 +85,7 @@ namespace PijersiEngine::AlphaBeta
                 {
                     cut = true;
                 }*/
+                // On depth > 1, run the classic recursive search, with the lowest depth being parallelized
                 if (recursionDepth > 1)
                 {
                     // Evaluate possible moves
@@ -124,6 +122,7 @@ namespace PijersiEngine::AlphaBeta
                         scores[indices[k]] = eval;
                     }
                 }
+                // On depth 0, run the lightweight eval, only calculating score differences on cells that changed (incremental eval)
                 else
                 {
                     int64_t previousPieceScores[45] = {0};
@@ -151,6 +150,7 @@ namespace PijersiEngine::AlphaBeta
                 float maximum = -FLT_MAX;
                 for (size_t k = 0; k < nMoves; k++)
                 {
+                    // TODO: change this to get the first best score (since it is already sorted)
                     // Add randomness to separate equal moves if parameter active
                     float salt = random ? RNG::distribution(RNG::gen) : 0.f;
                     float saltedScore = salt + (float)scores[k];
@@ -198,6 +198,7 @@ namespace PijersiEngine::AlphaBeta
         return score;
     }
 
+    // Evaluates the board, saves the individual cell scores
     [[nodiscard]]
     int64_t evaluatePosition(const uint8_t cells[45], int64_t pieceScores[45])
     {
@@ -225,7 +226,7 @@ namespace PijersiEngine::AlphaBeta
         }
     }
 
-    // Evaluation function for terminal nodes (depth 0)
+    // Evaluation function for terminal nodes (depth 0), only calculates cells that changed (incremental eval)
     // TODO: possible optims
     [[nodiscard]]
     inline int64_t evaluateMoveTerminal(uint32_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
@@ -520,7 +521,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluate piece according to its position, colour and type, unused method
-    [[deprecated("slower performance than current implementation")]]
+    [[deprecated("slower performance and lower engine strength than current implementation")]]
     inline int64_t evaluatePieceManual(uint8_t piece, uint32_t i)
     {
         int64_t score;
@@ -552,238 +553,5 @@ namespace PijersiEngine::AlphaBeta
 
         return score;
     }
-
-    // Unused NN methods
-    /*
-    namespace EvalNN
-    {
-        // The network for NN eval
-        NN::Network network;
-
-        // Calculates a move using alphabeta minimax algorithm of chosen depth.
-        // If a finish time is provided, it will search until that time point is reached.
-        // In that case, the function will return a null move.
-        uint32_t ponderAlphaBetaNN(int recursionDepth, bool random, uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime)
-        {
-
-            // Get a vector of all the available moves for the current player
-            vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, cells);
-            size_t nMoves = moves.size();
-
-            // Return a null move if time is elapsed
-            if (steady_clock::now() > finishTime)
-            {
-                return NULL_MOVE;
-            }
-
-            if (nMoves > 0)
-            {
-                if (recursionDepth > 0)
-                {
-
-                    // The Principal Variation is the first move to be searched
-                    if (principalVariation != NULL_MOVE)
-                    {
-                        Utils::sortPrincipalVariation(moves, principalVariation);
-                    }
-
-                    size_t index = 0;
-
-                    // Initializing scores array
-                    float *scores = new float[nMoves];
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        scores[k] = -FLT_MAX;
-                    }
-
-                    // Cutoffs will happen on winning moves
-                    float alpha = -0.9;
-                    float beta = 0.9;
-
-                    // This will stop iteration if there is a cutoff
-                    bool cut = false;
-
-                    // Search the first move first (Principal Variation)
-                    scores[0] = -evaluateMoveParallelNN(moves[0], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, false);
-                    if (scores[0] > alpha)
-                    {
-                        alpha = scores[0];
-                    }
-                    if (alpha > beta)
-                    {
-                        cut = true;
-                    }
-                    // Evaluate possible moves
-                    #pragma omp parallel for schedule(dynamic) shared (alpha)
-                    for (size_t k = 1; k < nMoves; k++)
-                    {
-                        if (cut)
-                        {
-                            continue;
-                        }
-
-                        // Search with a null window
-                        scores[k] = -evaluateMoveNN(moves[k], recursionDepth - 1, -alpha - 1, -alpha, cells, 1 - currentPlayer, finishTime, true);
-
-                        // If fail high, do the search with the full window
-                        if (alpha < scores[k] && scores[k] < beta)
-                        {
-                            scores[k] = -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, cells, 1 - currentPlayer, finishTime, true);
-                        }
-
-                        // Update alpha
-                        #pragma omp atomic compare
-                        if (scores[k] > alpha)
-                        {
-                            alpha = scores[k];
-                        }
-
-                        // Cutoff
-                        if (alpha > beta)
-                        {
-                            cut = true;
-                        }
-                    }
-
-                    // Return a null move if time is elapsed
-                    if (steady_clock::now() > finishTime)
-                    {
-                        return NULL_MOVE;
-                    }
-
-                    // Find best move
-                    float maximum = -FLT_MAX;
-                    for (size_t k = 0; k < nMoves; k++)
-                    {
-                        // Add randomness to separate equal moves if parameter active
-                        float salt = random ? RNG::distribution(RNG::gen) : 0.f;
-                        float saltedScore = salt + scores[k];
-                        if (saltedScore > maximum)
-                        {
-                            maximum = saltedScore;
-                            index = k;
-                        }
-                    }
-
-                    delete scores;
-
-                    return moves[index];
-                }
-            }
-            return NULL_MOVE;
-        }
-
-        // Evaluates a move by calculating the possible subsequent moves recursively
-        float evaluateMoveNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
-        {
-            // Create a new board on which the move will be played
-            uint8_t newCells[45];
-            Logic::setState(newCells, cells);
-            Logic::playManual(move, newCells);
-
-            // Stop the recursion if a winning position is achieved
-            if (Logic::isWin(newCells))
-            {
-                return -2;
-            }
-            if (recursionDepth <= 0)
-            {
-                return evaluatePositionNN(newCells, currentPlayer);
-            }
-
-            vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
-            size_t nMoves = moves.size();
-
-            float score = -FLT_MAX;
-
-            // Return a minimal score if time is elapsed
-            if (steady_clock::now() > finishTime)
-            {
-                return score;
-            }
-
-            // Evaluate available moves and find the best one
-            if (moves.size() > 0)
-            {
-                for (size_t k = 0; k < nMoves; k++)
-                {
-                    score = max(score, -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove));
-                    alpha = max(alpha, score);
-                    if (alpha > beta)
-                    {
-                        break;
-                    }
-                }
-            }
-
-            return score;
-        }
-
-        // Evaluates a move by calculating the possible subsequent moves recursively
-        float evaluateMoveParallelNN(uint32_t move, int recursionDepth, float alpha, float beta, uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
-        {
-            // Create a new board on which the move will be played
-            uint8_t newCells[45];
-            Logic::setState(newCells, cells);
-            Logic::playManual(move, newCells);
-
-            // Stop the recursion if a winning position is achieved
-            if (Logic::isWin(newCells))
-            {
-                return -2;
-            }
-            if (recursionDepth <= 0)
-            {
-                return evaluatePositionNN(newCells, currentPlayer);
-            }
-
-            vector<uint32_t> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
-            size_t nMoves = moves.size();
-
-            float score = -FLT_MAX;
-
-            // Return a minimal score if time is elapsed
-            if (steady_clock::now() > finishTime)
-            {
-                return score;
-            }
-
-            // Evaluate available moves and find the best one
-            if (moves.size() > 0)
-            {
-                bool cut = false;
-                #pragma omp parallel for schedule(dynamic) shared(alpha)
-                for (size_t k = 0; k < nMoves; k++)
-                {
-                    if (cut)
-                    {
-                        continue;
-                    }
-                    float eval = -evaluateMoveNN(moves[k], recursionDepth - 1, -beta, -alpha, newCells, 1 - currentPlayer, finishTime, allowNullMove);
-                    #pragma omp atomic compare
-                    if (eval > score)
-                    {
-                        score = eval;
-                    }
-                    #pragma omp atomic compare
-                    if (score > alpha)
-                    {
-                        alpha = score;
-                    }
-                    if (alpha > beta)
-                    {
-                        cut = true;
-                    }
-                }
-            }
-
-            return score;
-        }
-
-        inline float evaluatePositionNN(uint8_t cells[45], uint8_t currentPlayer)
-        {
-            return network.forward(cells, currentPlayer);
-        }
-    }*/
 
 }

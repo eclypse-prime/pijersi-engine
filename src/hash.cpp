@@ -33,7 +33,7 @@ namespace PijersiEngine::Hash
         return pieceHashKeys[Lookup::pieceToIndex[piece] * 45 + index];
     }
 
-    // Implement incremental hashing
+    // TODO: Implement incremental hashing
     uint64_t hash(uint8_t cells[45], int recursionDepth)
     {
         uint64_t result = 0;

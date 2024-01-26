@@ -23,11 +23,13 @@ using std::vector;
 namespace PijersiEngine
 {
 
+    // Prints the move info in UGI format
     void printInfo(int recursionDepth, float duration, int predictedScore, string moveString)
     {
         cout << "info depth " << recursionDepth << " time " << duration << " score " << predictedScore << " pv " << moveString << endl;
     }
 
+    // Search the move book. If the position is in the book, return the best move. Otherwise return the null move.
     uint32_t Board::searchBook()
     {
         string currentStringState = getStringState();
@@ -50,12 +52,14 @@ namespace PijersiEngine
         }
     }
 
+    // TODO: maybe move this to Logic
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
     {
         return piece + (newBottom << 4);
     }
 
+    // TODO: maybe move this to Logic
     // Creates a piece of chosen colour and type
     uint8_t createPiece(PieceColour colour, PieceType type)
     {
@@ -103,7 +107,6 @@ namespace PijersiEngine
     uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
-        // Calculate move
         uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
         if (move != NULL_MOVE)
         {
@@ -492,21 +495,6 @@ namespace PijersiEngine
     {
         return AlphaBeta::predictedScore;
     }
-
-    // uint32_t Board::ponderMCTS(int seconds, int simulationsPerRollout)
-    // {
-    //     return MCTS::ponderMCTS(seconds, simulationsPerRollout, cells, currentPlayer);
-    // }
-
-    // // Plays a move and returns it
-    // uint32_t Board::playMCTS(int seconds, int simulationsPerRollout)
-    // {
-    //     // Calculate move
-    //     uint32_t move = ponderMCTS(seconds, simulationsPerRollout);
-    //     // Apply move
-    //     playManual(move);
-    //     return move;
-    // }
 
     string Board::advice(int recursionDepth, bool random)
     {
