@@ -127,12 +127,12 @@ namespace PijersiEngine::Logic
 
     inline uint32_t _concatenateMove(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd)
     {
-        return (indexStart) | (indexMid << 8) | (indexEnd << 16);
+        return (indexStart) | (indexMid << INDEX_WIDTH) | (indexEnd << (2*INDEX_WIDTH));
     }
 
     inline uint32_t _concatenateHalfMove(uint32_t halfMove, uint32_t indexEnd)
     {
-        return halfMove | (indexEnd << 16);
+        return halfMove | (indexEnd << (2*INDEX_WIDTH));
     }
 
     inline uint32_t _concatenateVictory(uint32_t move)
@@ -215,8 +215,8 @@ namespace PijersiEngine::Logic
     string moveToString(uint32_t move, const uint8_t cells[45])
     {
         uint32_t indexStart = move & 0x000000FFU;
-        uint32_t indexMid = (move >> 8) & 0x000000FFU;
-        uint32_t indexEnd = (move >> 16) & 0x000000FFU;
+        uint32_t indexMid = (move >> INDEX_WIDTH) & 0x000000FFU;
+        uint32_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FFU;
 
         if (indexStart > 44)
         {
@@ -304,7 +304,7 @@ namespace PijersiEngine::Logic
                         cellsString += std::to_string(counter);
                         counter = 0;
                     }
-                    if (piece > 16)
+                    if (piece >= 16)
                     {
                         cellsString += Logic::pieceToChar[piece >> 4];
                         cellsString += Logic::pieceToChar[piece & 0x0FU];
@@ -529,7 +529,7 @@ namespace PijersiEngine::Logic
             if (cells[index] != 0)
             {
                 // Choose pieces of the current player's colour
-                if ((cells[index] & 2) == (player << 1))
+                if ((cells[index] & COLOUR_MASK) == (player << 1))
                 {
                     count += _countPieceMoves(index, cells);
                 }
@@ -989,14 +989,10 @@ namespace PijersiEngine::Logic
     // Returns whether a source piece can capture a target piece
     constexpr bool canTake(uint8_t source, uint8_t target)
     {
-        uint8_t sourceType = source & 12;
-        uint8_t targetType = target & 12;
+        uint8_t sourceType = source & TYPE_MASK;
+        uint8_t targetType = target & TYPE_MASK;
         // Scissors > Paper, Paper > Rock, Rock > Scissors
-        if ((sourceType == 0 && targetType == 4) || (sourceType == 4 && targetType == 8) || (sourceType == 8 && targetType == 0))
-        {
-            return true;
-        }
-        return false;
+        return ((sourceType == TYPE_SCISSORS && targetType == TYPE_PAPER) || (sourceType == TYPE_PAPER && targetType == TYPE_ROCK) || (sourceType == TYPE_ROCK && targetType == TYPE_SCISSORS));
     }
 
     // Applies a move between chosen coordinates
@@ -1020,10 +1016,10 @@ namespace PijersiEngine::Logic
         uint8_t endPiece = cells[indexEnd];
 
         // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
-        cells[indexStart] = (movingPiece >> 4);
+        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
 
         // Move the top piece to the target cell and set its new bottom piece
-        cells[indexEnd] = (movingPiece & 15) + (endPiece << 4);
+        cells[indexEnd] = (movingPiece & TOP_MASK) + (endPiece << HALF_PIECE_WIDTH);
     }
 
     // Applies an unstack between chosen coordinates
@@ -1032,11 +1028,11 @@ namespace PijersiEngine::Logic
         uint8_t movingPiece = cells[indexStart];
 
         // Leave the bottom piece in the starting cell
-        cells[indexStart] = (movingPiece >> 4);
+        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
         // Remove the bottom piece from the moving piece
         // Move the top piece to the target cell
         // Will overwrite the eaten piece if there is one
-        cells[indexEnd] = (movingPiece & 15);
+        cells[indexEnd] = (movingPiece & TOP_MASK);
     }
 
     // Returns whether a certain 1-range move is possible
@@ -1045,7 +1041,7 @@ namespace PijersiEngine::Logic
         if (cells[indexEnd] != 0)
         {
             // If the end piece and the moving piece are the same colour
-            if ((cells[indexEnd] & 2) == (movingPiece & 2))
+            if ((cells[indexEnd] & COLOUR_MASK) == (movingPiece & COLOUR_MASK))
             {
                 return false;
             }
@@ -1068,7 +1064,7 @@ namespace PijersiEngine::Logic
         if (cells[indexEnd] != 0)
         {
             // If the end piece and the moving piece are the same colour
-            if ((cells[indexEnd] & 2) == (movingPiece & 2))
+            if ((cells[indexEnd] & COLOUR_MASK) == (movingPiece & COLOUR_MASK))
             {
                 return false;
             }
@@ -1086,10 +1082,10 @@ namespace PijersiEngine::Logic
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
         // If the end piece is not a stack
-        if ((cells[indexEnd] != 0) && ((cells[indexEnd] & 2) == (movingPiece & 2)) && (cells[indexEnd] < 16))
+        if ((cells[indexEnd] != 0) && ((cells[indexEnd] & COLOUR_MASK) == (movingPiece & COLOUR_MASK)) && (cells[indexEnd] < 16))
         {
             // If the upper piece is Wise and the target piece is not Wise
-            if ((movingPiece & 12) == 12 && (cells[indexEnd] & 12) != 12)
+            if ((movingPiece & TYPE_MASK) == TYPE_WISE && (cells[indexEnd] & TYPE_MASK) != TYPE_WISE)
             {
                 return false;
             }
@@ -1104,7 +1100,7 @@ namespace PijersiEngine::Logic
         if (cells[indexEnd] != 0)
         {
             // If the cells are the same colour
-            if ((cells[indexEnd] & 2) == (movingPiece & 2))
+            if ((cells[indexEnd] & COLOUR_MASK) == (movingPiece & COLOUR_MASK))
             {
                 return false;
             }
@@ -1123,11 +1119,11 @@ namespace PijersiEngine::Logic
             if (cells[index] != 0)
             {
                 // Choose pieces of the current player's colour
-                if (currentPlayer == 0 && (cells[index] & 2) == 0)
+                if (currentPlayer == 0 && (cells[index] & COLOUR_MASK) == COLOUR_WHITE)
                 {
                     countWhite[index] += _countPieceMoves(index, cells);
                 }
-                else if (currentPlayer == 1 && (cells[index] & 2) == 2)
+                else if (currentPlayer == 1 && (cells[index] & COLOUR_MASK) == COLOUR_BLACK)
                 {
                     countBlack[index] += _countPieceMoves(index, cells);
                 }

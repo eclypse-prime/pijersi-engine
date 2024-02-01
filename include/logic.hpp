@@ -8,6 +8,22 @@
 #include <unordered_map>
 #include <utility>
 
+#define HALF_PIECE_WIDTH 4
+#define INDEX_WIDTH 8
+
+#define COLOUR_MASK 0b0010u
+#define TYPE_MASK 0b1100u
+#define TOP_MASK 0b1111u
+
+#define COLOUR_WHITE 0b0000u
+#define COLOUR_BLACK 0b0010u
+
+#define TYPE_SCISSORS 0b0000u
+#define TYPE_PAPER 0b0100u
+#define TYPE_ROCK 0b1000u
+#define TYPE_WISE 0b1100u
+
+
 #define NULL_MOVE 0x00FFFFFFU
 #define MAX_PLAYER_MOVES 512
 
