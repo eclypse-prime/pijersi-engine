@@ -40,6 +40,7 @@
 # SWIG generated files and build files
 src/wrap/
 wrap_csharp/
+wrap_python/
 build/
 
 # Debug sources
