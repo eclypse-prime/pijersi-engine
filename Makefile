@@ -8,6 +8,8 @@ CSHARP_SRC=src/wrap/pijersi_engine_csharp.cpp
 CSHARP_OBJ=src/wrap/pijersi_engine_csharp.o
 CSHARP_DLL=wrap_csharp/PijersiCore.dll
 
+.phony: all csharp interactive executable ugi versus debug run_debug
+
 all: csharp interactive executable ugi versus
 
 csharp: $(CSHARP_DLL)
@@ -103,6 +105,9 @@ build/debug: $(OBJ) src/debug.o
 	@g++ $(FLAGS) $(INCLUDE) $(OBJ) src/debug.o -o build/debug
 
 debug: build/debug
+
+run_debug:
+	@build/debug
 
 clean:
 	@rm -rf src/wrap
