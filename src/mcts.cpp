@@ -24,10 +24,10 @@ namespace PijersiEngine::MCTS
         return nodeWins/nodeSimulations + 1.414f * sqrtf(logf(totalSimulations) / nodeSimulations);
     }
 
-    uint32_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer)
     {
         int nThreads = omp_get_max_threads();
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         vector<int> visitsPerThreads(nMoves*nThreads);
@@ -130,7 +130,7 @@ namespace PijersiEngine::MCTS
         return NULL_MOVE;
     }
 
-    Node::Node(Node *newParent, const uint32_t &newMove, uint8_t newPlayer) : move(newMove)
+    Node::Node(Node *newParent, const uint64_t &newMove, uint8_t newPlayer) : move(newMove)
     {
         parent = newParent;
         player = newPlayer;
@@ -184,7 +184,7 @@ namespace PijersiEngine::MCTS
             uint8_t currentPlayer = player;
             while (true)
             {
-                uint32_t move = Logic::searchRandom(newCells, currentPlayer);
+                uint64_t move = Logic::searchRandom(newCells, currentPlayer);
                 size_t indexEnd = (move >> 16) & 0x000000FF;
                 currentPlayer = 1 - currentPlayer;
                 if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
@@ -204,7 +204,7 @@ namespace PijersiEngine::MCTS
     void Node::expand()
     {
         // Get a vector of all the available moves for the current player
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(player, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(player, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
         if (nMoves > 0)
         {

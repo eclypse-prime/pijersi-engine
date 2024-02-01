@@ -30,11 +30,11 @@ namespace PijersiEngine::AlphaBeta
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a finish time is provided, it will search until that time point is reached.
     In that case, the function will return a null move. */
-    uint32_t ponderAlphaBeta(int recursionDepth, bool random, const uint8_t cells[45], uint8_t currentPlayer, uint32_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
+    uint64_t ponderAlphaBeta(int recursionDepth, bool random, const uint8_t cells[45], uint8_t currentPlayer, uint64_t principalVariation, time_point<steady_clock> finishTime, int64_t* lastScores)
     {
 
         // Get an array of all the available moves for the current player, the last element of the array is the number of available moves
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         // Return a null move if time is elapsed
@@ -229,7 +229,7 @@ namespace PijersiEngine::AlphaBeta
     // Evaluation function for terminal nodes (depth 0), only calculates cells that changed (incremental eval)
     // TODO: possible optims
     [[nodiscard]]
-    inline int64_t evaluateMoveTerminal(uint32_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
+    inline int64_t evaluateMoveTerminal(uint64_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
         size_t indexStart = move & 0x000000FF;
         size_t indexMid = (move >> 8) & 0x000000FF;
@@ -335,7 +335,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int64_t evaluateMove(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMove(uint64_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Stop the recursion if a winning position is achieved
         size_t indexStart = move & 0x000000FF;
@@ -358,7 +358,7 @@ namespace PijersiEngine::AlphaBeta
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         int64_t score = INT64_MIN;
@@ -420,7 +420,7 @@ namespace PijersiEngine::AlphaBeta
     }
 
     // Evaluates a move by calculating the possible subsequent moves recursively
-    int64_t evaluateMoveParallel(uint32_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
+    int64_t evaluateMoveParallel(uint64_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Stop the recursion if a winning position is achieved
         size_t indexStart = move & 0x000000FF;
@@ -443,7 +443,7 @@ namespace PijersiEngine::AlphaBeta
             return (currentPlayer == 0) ? evaluatePosition(newCells) : -evaluatePosition(newCells);
         }
 
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, newCells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         int64_t score = INT64_MIN;
@@ -522,7 +522,7 @@ namespace PijersiEngine::AlphaBeta
 
     // Evaluate piece according to its position, colour and type, unused method
     [[deprecated("slower performance and lower engine strength than current implementation")]]
-    inline int64_t evaluatePieceManual(uint8_t piece, uint32_t i)
+    inline int64_t evaluatePieceManual(uint8_t piece, uint64_t i)
     {
         int64_t score;
 
