@@ -508,7 +508,7 @@ namespace PijersiEngine::Logic
                 }
 
                 // unstack
-                else if (isUnstackValid(movingPiece, indexMid, cells))
+                if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
                     count++;
@@ -953,7 +953,7 @@ namespace PijersiEngine::Logic
                 }
 
                 // unstack
-                else if (isUnstackValid(movingPiece, indexMid, cells))
+                if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
                     moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
@@ -977,7 +977,7 @@ namespace PijersiEngine::Logic
             if (cells[index] != 0)
             {
                 // Choose pieces of the current player's colour
-                if ((cells[index] & 2) == (player << 1))
+                if ((cells[index] & COLOUR_MASK) == (player << 1))
                 {
                     availablePieceMoves(index, cells, moves);
                 }
