@@ -106,7 +106,7 @@ build/debug: $(OBJ) src/debug.o
 
 debug: build/debug
 
-run_debug:
+run_debug: debug
 	@build/debug
 
 clean:
