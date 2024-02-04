@@ -11,17 +11,17 @@
 #define HALF_PIECE_WIDTH 4
 #define INDEX_WIDTH 8
 
-#define COLOUR_MASK 0b0010u
-#define TYPE_MASK 0b1100u
-#define TOP_MASK 0b1111u
+#define COLOUR_MASK 0b0010U
+#define TYPE_MASK 0b1100U
+#define TOP_MASK 0b1111U
 
-#define COLOUR_WHITE 0b0000u
-#define COLOUR_BLACK 0b0010u
+#define COLOUR_WHITE 0b0000U
+#define COLOUR_BLACK 0b0010U
 
-#define TYPE_SCISSORS 0b0000u
-#define TYPE_PAPER 0b0100u
-#define TYPE_ROCK 0b1000u
-#define TYPE_WISE 0b1100u
+#define TYPE_SCISSORS 0b0000U
+#define TYPE_PAPER 0b0100U
+#define TYPE_ROCK 0b1000U
+#define TYPE_WISE 0b1100U
 
 
 #define NULL_MOVE 0x00FFFFFFU
@@ -65,10 +65,6 @@ namespace PijersiEngine::Logic
     std::array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(const uint8_t player, const uint8_t cells[45]);
     
     constexpr bool canTake(uint8_t source, uint8_t target);
-    
-    void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
-    void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
-    void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45]);
     
     inline bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
     inline bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45]);

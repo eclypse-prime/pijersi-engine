@@ -651,6 +651,57 @@ namespace PijersiEngine::Logic
         std::copy(origin, origin + 45, target);
     }
 
+    // Drops a piece on top of an existing piece
+    inline void drop(uint8_t piece, uint32_t target, uint8_t cells[45])
+    {
+        // This is refactorizable if captures are stored.
+        if ((cells[target] & COLOUR_MASK) != (piece & COLOUR_MASK))
+        {
+            cells[target] = 0U;
+        }
+        cells[target] = (cells[target] << HALF_PIECE_WIDTH) | piece;
+    }
+
+    // Applies a move between chosen coordinates
+    inline void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    {
+        // Do nothing if start and end coordinate are identical
+        if (indexStart != indexEnd)
+        {
+            // Move the piece to the target cell
+            cells[indexEnd] = cells[indexStart];
+
+            // Set the starting cell as empty
+            cells[indexStart] = 0;
+        }
+    }
+
+    // Applies a stack between chosen coordinates
+    inline void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    {
+        uint8_t movingPiece = cells[indexStart];
+        uint8_t endPiece = cells[indexEnd];
+
+        // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
+        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
+
+        // Move the top piece to the target cell and set its new bottom piece
+        cells[indexEnd] = (movingPiece & TOP_MASK) + (endPiece << HALF_PIECE_WIDTH);
+    }
+
+    // Applies an unstack between chosen coordinates
+    inline void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    {
+        uint8_t movingPiece = cells[indexStart];
+
+        // Leave the bottom piece in the starting cell
+        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
+        // Remove the bottom piece from the moving piece
+        // Move the top piece to the target cell
+        // Will overwrite the eaten piece if there is one
+        cells[indexEnd] = (movingPiece & TOP_MASK);
+    }
+
     // Plays the selected move
     void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45])
     {
@@ -661,34 +712,30 @@ namespace PijersiEngine::Logic
         uint8_t movingPiece = cells[indexStart];
         if (movingPiece != 0)
         {
-            // If there is no intermediate move
-            if (indexMid > 44)
+            // If there is no third coordinate
+            if (indexEnd > 44)
             {
-                // Simple move
-                move(indexStart, indexEnd, cells);
+                // Simple move or stack
+                cells[indexStart] = 0;
+                drop(movingPiece, indexMid, cells);
             }
-            // There is an intermediate move
             else
             {
-                uint8_t midPiece = cells[indexMid];
-                uint8_t endPiece = cells[indexEnd];
-                // The piece at the mid coordinates is an ally : stack and move
-                if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (indexMid != indexStart))
+                uint8_t middlePiece = cells[indexMid];
+                // If the starting piece is a single piece, stack-move
+                if (movingPiece < 16)
                 {
-                    stack(indexStart, indexMid, cells);
-                    move(indexMid, indexEnd, cells);
+                    cells[indexStart] = 0;
+                    cells[indexMid] = 0;
+                    cells[indexEnd] = movingPiece | (middlePiece << HALF_PIECE_WIDTH);
                 }
-                // The piece at the end coordinates is an ally : move and stack
-                else if (endPiece != 0 && (endPiece & 2) == (movingPiece & 2))
-                {
-                    move(indexStart, indexMid, cells);
-                    stack(indexMid, indexEnd, cells);
-                }
-                // The end coordinates contain an enemy or no piece : move and unstack
                 else
                 {
-                    move(indexStart, indexMid, cells);
-                    unstack(indexMid, indexEnd, cells);
+                    cells[indexStart] = 0;
+                    uint8_t bottom = movingPiece >> HALF_PIECE_WIDTH;
+                    uint8_t top = movingPiece & TOP_MASK;
+                    drop(bottom, indexMid, cells);
+                    drop(top, indexEnd, cells);
                 }
             }
         }
@@ -993,46 +1040,6 @@ namespace PijersiEngine::Logic
         uint8_t targetType = target & TYPE_MASK;
         // Scissors > Paper, Paper > Rock, Rock > Scissors
         return ((sourceType == TYPE_SCISSORS && targetType == TYPE_PAPER) || (sourceType == TYPE_PAPER && targetType == TYPE_ROCK) || (sourceType == TYPE_ROCK && targetType == TYPE_SCISSORS));
-    }
-
-    // Applies a move between chosen coordinates
-    void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
-    {
-        // Do nothing if start and end coordinate are identical
-        if (indexStart != indexEnd)
-        {
-            // Move the piece to the target cell
-            cells[indexEnd] = cells[indexStart];
-
-            // Set the starting cell as empty
-            cells[indexStart] = 0;
-        }
-    }
-
-    // Applies a stack between chosen coordinates
-    void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
-    {
-        uint8_t movingPiece = cells[indexStart];
-        uint8_t endPiece = cells[indexEnd];
-
-        // If the moving piece is already on top of a stack, leave the bottom piece in the starting cell
-        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
-
-        // Move the top piece to the target cell and set its new bottom piece
-        cells[indexEnd] = (movingPiece & TOP_MASK) + (endPiece << HALF_PIECE_WIDTH);
-    }
-
-    // Applies an unstack between chosen coordinates
-    void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
-    {
-        uint8_t movingPiece = cells[indexStart];
-
-        // Leave the bottom piece in the starting cell
-        cells[indexStart] = (movingPiece >> HALF_PIECE_WIDTH);
-        // Remove the bottom piece from the moving piece
-        // Move the top piece to the target cell
-        // Will overwrite the eaten piece if there is one
-        cells[indexEnd] = (movingPiece & TOP_MASK);
     }
 
     // Returns whether a certain 1-range move is possible
