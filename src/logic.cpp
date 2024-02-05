@@ -731,11 +731,38 @@ namespace PijersiEngine::Logic
                 }
                 else
                 {
-                    cells[indexStart] = 0;
-                    uint8_t bottom = movingPiece >> HALF_PIECE_WIDTH;
-                    uint8_t top = movingPiece & TOP_MASK;
-                    drop(bottom, indexMid, cells);
-                    drop(top, indexEnd, cells);
+                    // Unstack or move
+                    if (indexStart == indexMid || indexMid == indexEnd)
+                    {
+                        cells[indexStart] = 0;
+                        uint8_t bottom = movingPiece >> HALF_PIECE_WIDTH;
+                        uint8_t top = movingPiece & TOP_MASK;
+                        drop(bottom, indexMid, cells);
+                        drop(top, indexEnd, cells);
+                    }
+                    else
+                    {
+                        uint8_t midPiece = cells[indexMid];
+                        uint8_t endPiece = cells[indexEnd];
+                        // The piece at the mid coordinates is an ally : stack and move
+                        if ((midPiece & 3) == (movingPiece & 3))
+                        {
+                            stack(indexStart, indexMid, cells);
+                            move(indexMid, indexEnd, cells);
+                        }
+                        // The piece at the end coordinates is an ally : move and stack
+                        else if ((endPiece & 3) == (movingPiece & 3))
+                        {
+                            move(indexStart, indexMid, cells);
+                            stack(indexMid, indexEnd, cells);
+                        }
+                        // The end coordinates contain an enemy or no piece : move and unstack
+                        else
+                        {
+                            move(indexStart, indexMid, cells);
+                            unstack(indexMid, indexEnd, cells);
+                        }
+                    }
                 }
             }
         }
@@ -890,13 +917,13 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack only
-                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
+                    moves[indexMoves] = _concatenateHalfMove(halfMove, 0xFFU);
                     indexMoves++;
                 }
                 // 1-range move
                 else if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] = _concatenateHalfMove(halfMove, 0xFFU);
                     indexMoves++;
                 }
             }
@@ -930,7 +957,7 @@ namespace PijersiEngine::Logic
                     }
 
                     // 2-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexMid);
                     indexMoves++;
                 }
             }
@@ -966,7 +993,7 @@ namespace PijersiEngine::Logic
                     indexMoves++;
 
                     // 1-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexMid);
                     indexMoves++;
                 }
                 // stack, [1/2-range move] optional
