@@ -225,31 +225,12 @@ namespace PijersiEngine::Logic
 
         string moveString = indexToString(indexStart);
 
-        if (indexMid < 45)
-        {
-            if (indexStart == indexMid) {
-                if (cells[indexStart] < 16)
-                {
-                    moveString += indexToString(indexEnd);
-                }
-                else
-                {
-                    moveString += indexToString(indexStart) + indexToString(indexEnd);
-                }
-            }
-            else
-            {
-                moveString += indexToString(indexMid) + indexToString(indexEnd);
-            }
-        }
-        else
+        moveString += indexToString(indexMid);
+        if (indexEnd < 45)
         {
             moveString += indexToString(indexEnd);
-            if (cells[indexStart] >= 16)
-            {
-                moveString += indexToString(indexEnd);
-            }
         }
+
         return moveString;
     }
 
