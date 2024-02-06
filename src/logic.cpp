@@ -241,21 +241,13 @@ namespace PijersiEngine::Logic
         if (moveString.size() == 4 || (moveString.size() == 6 && moveString[4] == '-'))
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[2] = stringToIndex(moveString.substr(2, 2));
-            if (cells[move[2]] != 0 && ((cells[move[0]] & 2) == (cells[move[2]] & 2)))
-            {
-                move[1] = move[0];
-            }
+            move[1] = stringToIndex(moveString.substr(2, 2));
         }
         else if (moveString.size() == 6)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
             move[1] = stringToIndex(moveString.substr(2, 2));
             move[2] = stringToIndex(moveString.substr(4, 2));
-            if (move[1] == move[2])
-            {
-                move[1] = 0x000000FF;
-            }
         }
         else
         {
