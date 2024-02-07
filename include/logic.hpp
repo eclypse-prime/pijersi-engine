@@ -11,6 +11,7 @@
 #define HALF_PIECE_WIDTH 4
 #define INDEX_WIDTH 8
 
+#define BASE_MASK 0b0001U
 #define COLOUR_MASK 0b0010U
 #define TYPE_MASK 0b1100U
 #define TOP_MASK 0b1111U

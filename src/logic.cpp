@@ -683,58 +683,68 @@ namespace PijersiEngine::Logic
             return;
         }
         uint8_t movingPiece = cells[indexStart];
-        if (movingPiece != 0)
+        // If there is no third coordinate
+        if (indexEnd > 44)
         {
-            // If there is no third coordinate
-            if (indexEnd > 44)
+            if ((cells[indexMid] & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
             {
-                // Simple move or stack
-                cells[indexStart] = 0;
-                drop(movingPiece, indexMid, cells);
+                stack(indexStart, indexMid, cells);
             }
             else
             {
-                uint8_t middlePiece = cells[indexMid];
-                // If the starting piece is a single piece, stack-move
-                if (movingPiece < 16)
+                move(indexStart, indexMid, cells);
+            }
+        }
+        else
+        {
+            // If the starting piece is a single piece, stack-move
+            if (movingPiece < 16)
+            {
+                uint8_t midPiece = cells[indexMid];
+                cells[indexStart] = 0;
+                cells[indexMid] = 0;
+                cells[indexEnd] = movingPiece | (midPiece << HALF_PIECE_WIDTH);
+            }
+            else
+            {
+                // Unstack
+                if (indexStart == indexMid)
                 {
-                    cells[indexStart] = 0;
-                    cells[indexMid] = 0;
-                    cells[indexEnd] = movingPiece | (middlePiece << HALF_PIECE_WIDTH);
-                }
-                else
-                {
-                    // Unstack or move
-                    if (indexStart == indexMid || indexMid == indexEnd)
+                    if ((cells[indexEnd] & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
                     {
-                        cells[indexStart] = 0;
-                        uint8_t bottom = movingPiece >> HALF_PIECE_WIDTH;
-                        uint8_t top = movingPiece & TOP_MASK;
-                        drop(bottom, indexMid, cells);
-                        drop(top, indexEnd, cells);
+                        stack(indexStart, indexEnd, cells);
                     }
                     else
                     {
-                        uint8_t midPiece = cells[indexMid];
-                        uint8_t endPiece = cells[indexEnd];
-                        // The piece at the mid coordinates is an ally : stack and move
-                        if ((midPiece & 3) == (movingPiece & 3))
-                        {
-                            stack(indexStart, indexMid, cells);
-                            move(indexMid, indexEnd, cells);
-                        }
-                        // The piece at the end coordinates is an ally : move and stack
-                        else if ((endPiece & 3) == (movingPiece & 3))
-                        {
-                            move(indexStart, indexMid, cells);
-                            stack(indexMid, indexEnd, cells);
-                        }
-                        // The end coordinates contain an enemy or no piece : move and unstack
-                        else
-                        {
-                            move(indexStart, indexMid, cells);
-                            unstack(indexMid, indexEnd, cells);
-                        }
+                        unstack(indexStart, indexEnd, cells);
+                    }
+                }
+                // Move
+                else if (indexMid == indexEnd)
+                {
+                    move(indexStart, indexEnd, cells);
+                }
+                else
+                {
+                    uint8_t midPiece = cells[indexMid];
+                    uint8_t endPiece = cells[indexEnd];
+                    // The piece at the mid coordinates is an ally : stack and move
+                    if ((midPiece & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
+                    {
+                        stack(indexStart, indexMid, cells);
+                        move(indexMid, indexEnd, cells);
+                    }
+                    // The piece at the end coordinates is an ally : move and stack
+                    else if ((endPiece & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
+                    {
+                        move(indexStart, indexMid, cells);
+                        stack(indexMid, indexEnd, cells);
+                    }
+                    // The end coordinates contain an enemy or no piece : move and unstack
+                    else
+                    {
+                        move(indexStart, indexMid, cells);
+                        unstack(indexMid, indexEnd, cells);
                     }
                 }
             }
@@ -810,6 +820,10 @@ namespace PijersiEngine::Logic
     {
         size_t indexStart = move & 0x000000FF;
         size_t indexEnd = (move >> 16) & 0x000000FF;
+        if (indexEnd > 44)
+        {
+            indexEnd = (move >> 8) & 0x000000FF;
+        }
         uint8_t movingPiece = cells[indexStart];
         
         if ((movingPiece & 12) != 12)
