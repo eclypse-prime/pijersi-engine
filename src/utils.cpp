@@ -60,7 +60,7 @@ namespace PijersiEngine::Utils
         std::sort(indices, indices + nMoves, sort_indices(scores));
     }
 
-    void sortPrincipalVariation(vector<uint32_t> &moves, uint32_t principalVariation)
+    void sortPrincipalVariation(vector<uint64_t> &moves, uint64_t principalVariation)
     {
         bool sorted = false;
         size_t index = 0;
@@ -69,7 +69,7 @@ namespace PijersiEngine::Utils
         {
             if ((moves[index] & NULL_MOVE) == (principalVariation & NULL_MOVE))
             {
-                uint32_t temp = moves[0];
+                uint64_t temp = moves[0];
                 moves[0] = moves[index];
                 moves[index] = temp;
                 sorted = true;

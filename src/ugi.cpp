@@ -92,7 +92,7 @@ int main(int argc, char** argv)
                         int depth = stoi(parameter);
                         if (depth >= 1)
                         {
-                            uint32_t move = board.searchDepth(depth, true);
+                            uint64_t move = board.searchDepth(depth, true);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.cells);
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
                         int durationMilliseconds = stoi(parameter);
                         if (durationMilliseconds >= 0)
                         {
-                            uint32_t move = board.searchTime(true, durationMilliseconds);
+                            uint64_t move = board.searchTime(true, durationMilliseconds);
                             if (move != NULL_MOVE)
                             {
                                 string moveString = Logic::moveToString(move, board.cells);
@@ -209,7 +209,7 @@ int main(int argc, char** argv)
                         if (words.size() >= 3)
                         {
                             string moveString = words[2];
-                            uint32_t move = Logic::stringToMove(moveString, board.cells);
+                            uint64_t move = Logic::stringToMove(moveString, board.cells);
                             if (board.isMoveLegal(move))
                             {
                                 cout << "response true" << endl;

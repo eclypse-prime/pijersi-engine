@@ -30,12 +30,12 @@ namespace PijersiEngine
     }
 
     // Search the move book. If the position is in the book, return the best move. Otherwise return the null move.
-    uint32_t Board::searchBook()
+    uint64_t Board::searchBook()
     {
         string currentStringState = getStringState();
         if (Openings::book.contains(currentStringState))
         {
-            uint32_t bookMove = Openings::book[currentStringState];
+            uint64_t bookMove = Openings::book[currentStringState];
             string moveString = Logic::moveToString(bookMove, cells);
             // TODO: use saved depth instead of 6
             if (Options::verbose)
@@ -104,10 +104,10 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the engine will not play and the function will return a null move. */
-    uint32_t Board::playDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint64_t Board::playDepth(int recursionDepth, bool random, uint64_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
 
-        uint32_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
+        uint64_t move = searchDepth(recursionDepth, random, principalVariation, searchTimeMilliseconds, iterative);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -118,7 +118,7 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm of chosen depth.
     If a duration is provided, it will search until that time is over.
     In that case, the function will return a null move. */
-    uint32_t Board::searchDepth(int recursionDepth, bool random, uint32_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
+    uint64_t Board::searchDepth(int recursionDepth, bool random, uint64_t principalVariation, uint64_t searchTimeMilliseconds, bool iterative)
     {
         // Calculate finish time point
         time_point<steady_clock> finishTime;
@@ -133,7 +133,7 @@ namespace PijersiEngine
 
         if (Options::openingBook)
         {
-            uint32_t bookMove = searchBook();
+            uint64_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
             {
                 AlphaBeta::predictedScore = 0;
@@ -141,7 +141,7 @@ namespace PijersiEngine
             }
         }
 
-        uint32_t move = NULL_MOVE;
+        uint64_t move = NULL_MOVE;
         if (iterative)
         {
             size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells)[MAX_PLAYER_MOVES - 1];
@@ -149,7 +149,7 @@ namespace PijersiEngine
             for (int depth = 1; depth <= recursionDepth; depth++)
             {
                 auto start = steady_clock::now();
-                uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime, scores);
+                uint64_t proposedMove = AlphaBeta::ponderAlphaBeta(depth, random, cells, currentPlayer, move, finishTime, scores);
                 auto end = steady_clock::now();
                 string moveString = Logic::moveToString(proposedMove, cells);
                 float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
@@ -208,10 +208,10 @@ namespace PijersiEngine
     /* Plays a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will not play and the function will return a null move. */
-    uint32_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
+    uint64_t Board::playTime(bool random, uint64_t searchTimeMilliseconds)
     {
         // Calculate move
-        uint32_t move = searchTime(random, searchTimeMilliseconds);
+        uint64_t move = searchTime(random, searchTimeMilliseconds);
         if (move != NULL_MOVE)
         {
             playManual(move);
@@ -222,13 +222,13 @@ namespace PijersiEngine
     /* Calculates a move using alphabeta minimax algorithm. The engine will search for the provided duration in milliseconds.
     The engine will then return the best move found during that timeframe.
     If no move is found, the engine will return a null move. */
-    uint32_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
+    uint64_t Board::searchTime(bool random, uint64_t searchTimeMilliseconds)
     {
         int recursionDepth = 1;
 
         if (Options::openingBook)
         {
-            uint32_t bookMove = searchBook();
+            uint64_t bookMove = searchBook();
             if (bookMove != NULL_MOVE)
             {
                 AlphaBeta::predictedScore = 0;
@@ -241,14 +241,14 @@ namespace PijersiEngine
         time_point<steady_clock> finishTime;
         finishTime = steady_clock::now() + std::chrono::milliseconds(searchTimeMilliseconds);
 
-        uint32_t move = NULL_MOVE;
+        uint64_t move = NULL_MOVE;
         size_t nMoves = Logic::availablePlayerMoves(currentPlayer, cells)[MAX_PLAYER_MOVES - 1];
         int64_t *scores = new int64_t[nMoves];
 
         while (steady_clock::now() < finishTime && recursionDepth < MAX_DEPTH)
         {
             auto start = steady_clock::now();
-            uint32_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime, scores);
+            uint64_t proposedMove = AlphaBeta::ponderAlphaBeta(recursionDepth, random, cells, currentPlayer, move, finishTime, scores);
             auto end = steady_clock::now();
             string moveString = Logic::moveToString(proposedMove, cells);
             float duration = (float)duration_cast<microseconds>(end - start).count()/1000;
@@ -292,22 +292,22 @@ namespace PijersiEngine
     }
 
     // Chooses a random move
-    uint32_t Board::searchRandom()
+    uint64_t Board::searchRandom()
     {
         return Logic::searchRandom(cells, currentPlayer);
     }
 
     // Plays a random move and returns it
-    uint32_t Board::playRandom()
+    uint64_t Board::playRandom()
     {
-        uint32_t move = Logic::playRandom(cells, currentPlayer);
+        uint64_t move = Logic::playRandom(cells, currentPlayer);
         endTurn();
         return move;
     }
 
-    bool Board::isMoveLegal(uint32_t move)
+    bool Board::isMoveLegal(uint64_t move)
     {
-        array<uint32_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
         for (size_t k = 0; k < nMoves; k++)
         {
@@ -319,13 +319,13 @@ namespace PijersiEngine
         return false;
     }
 
-    void Board::playManual(vector<uint32_t> move)
+    void Board::playManual(vector<uint64_t> move)
     {
         Logic::play(move[0], move[1], move[2], cells);
         endTurn();
     }
 
-    void Board::playManual(uint32_t move)
+    void Board::playManual(uint64_t move)
     {
         Logic::playManual(move, cells);
         endTurn();
@@ -333,7 +333,7 @@ namespace PijersiEngine
 
     void Board::playManual(string moveString)
     {
-        uint32_t move = Logic::stringToMove(moveString, cells);
+        uint64_t move = Logic::stringToMove(moveString, cells);
         Logic::playManual(move, cells);
         endTurn();
     }
@@ -480,7 +480,7 @@ namespace PijersiEngine
     // TODO
     bool Board::checkStalemate()
     {
-        array<uint32_t, 512UL> availableMoves = Logic::availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, 512UL> availableMoves = Logic::availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = availableMoves[MAX_PLAYER_MOVES - 1];
         return (nMoves == 0);
     }
@@ -498,14 +498,14 @@ namespace PijersiEngine
 
     string Board::advice(int recursionDepth, bool random)
     {
-        uint32_t move = searchDepth(recursionDepth, random);
+        uint64_t move = searchDepth(recursionDepth, random);
         string moveString = Logic::moveToString(move, cells);
         return moveString;
     }
 
-    uint32_t Board::countPieces()
+    uint64_t Board::countPieces()
     {
-        uint32_t count = 0U;
+        uint64_t count = 0U;
         for (size_t index = 0; index < 45; index++)
         {
             if (cells[index] >= 16)
@@ -527,7 +527,7 @@ namespace PijersiEngine
             moveCounter += 1;
         }
         currentPlayer = 1U - currentPlayer;
-        uint32_t pieceCount = countPieces();
+        uint64_t pieceCount = countPieces();
         if (lastPieceCount != pieceCount)
         {
             lastPieceCount = pieceCount;

@@ -55,7 +55,7 @@ int main(int argc, char** argv)
                     int recursionDepth = stoi(parameter);
                     if (recursionDepth >= 1)
                     {
-                        uint32_t move = board.searchDepth(recursionDepth, true);
+                        uint64_t move = board.searchDepth(recursionDepth, true);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
                     int durationMilliseconds = stoi(parameter);
                     if (durationMilliseconds >= 0)
                     {
-                        uint32_t move = board.searchTime(true, durationMilliseconds);
+                        uint64_t move = board.searchTime(true, durationMilliseconds);
                         if (move != NULL_MOVE)
                         {
                             board.playManual(move);
@@ -134,7 +134,7 @@ int main(int argc, char** argv)
                 if (words.size() >= 2)
                 {
                     string parameter = words[1];
-                    uint32_t move = Logic::stringToMove(parameter, board.cells);
+                    uint64_t move = Logic::stringToMove(parameter, board.cells);
                     board.playManual(move);
                 }
             }
@@ -175,7 +175,7 @@ int main(int argc, char** argv)
         }
     }
     // board.playManual(Logic::stringToMove("f5=d4-c4", board.cells));
-    // uint32_t move = board.playAlphaBeta(5);
+    // uint64_t move = board.playAlphaBeta(5);
 
     // cout << Logic::moveToString(move, board.cells) << endl;
     return 0;

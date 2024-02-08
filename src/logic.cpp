@@ -49,9 +49,9 @@ namespace PijersiEngine::Logic
     string invalidStateStringException = "Invalid state string.";
 
     // Converts a (i, j) coordinate set to an index
-    uint32_t coordsToIndex(uint32_t i, uint32_t j)
+    uint64_t coordsToIndex(uint64_t i, uint64_t j)
     {
-        uint32_t index;
+        uint64_t index;
         if (i % 2 == 0)
         {
             index = 13 * i / 2 + j;
@@ -64,10 +64,10 @@ namespace PijersiEngine::Logic
     }
 
     // Converts an index to a (i, j) coordinate set
-    Coords indexToCoords(uint32_t index)
+    Coords indexToCoords(uint64_t index)
     {
-        uint32_t i = 2 * (index / 13);
-        uint32_t j = index % 13;
+        uint64_t i = 2 * (index / 13);
+        uint64_t j = index % 13;
         if (j > 5)
         {
             j -= 6;
@@ -77,7 +77,7 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a cell index to its associated row index
-    uint32_t indexToLine[] = {
+    uint64_t indexToLine[] = {
         0,
         0,
         0,
@@ -125,23 +125,23 @@ namespace PijersiEngine::Logic
         6,
     };
 
-    inline uint32_t _concatenateMove(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd)
+    inline uint64_t _concatenateMove(uint64_t indexStart, uint64_t indexMid, uint64_t indexEnd)
     {
         return (indexStart) | (indexMid << INDEX_WIDTH) | (indexEnd << (2*INDEX_WIDTH));
     }
 
-    inline uint32_t _concatenateHalfMove(uint32_t halfMove, uint32_t indexEnd)
+    inline uint64_t _concatenateHalfMove(uint64_t halfMove, uint64_t indexEnd)
     {
         return halfMove | (indexEnd << (2*INDEX_WIDTH));
     }
 
-    inline uint32_t _concatenateVictory(uint32_t move)
+    inline uint64_t _concatenateVictory(uint64_t move)
     {
         return 0x80000000U | move;
     }
 
     // Converts a native index into a "a1" style string
-    string indexToString(uint32_t index)
+    string indexToString(uint64_t index)
     {
         Coords coords = indexToCoords(index);
         string cellString = rowLetters[coords.first] + std::to_string(coords.second + 1);
@@ -149,10 +149,10 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a "a1" style string coordinate into an index
-    uint32_t stringToIndex(string cellString)
+    uint64_t stringToIndex(string cellString)
     {
-        uint32_t i = 0xFFFFFFFFU;
-        uint32_t j = 0xFFFFFFFFU;
+        uint64_t i = 0xFFFFFFFFU;
+        uint64_t j = 0xFFFFFFFFU;
         if (cellString.size() == 2)
         {
             switch (cellString[0])
@@ -212,11 +212,11 @@ namespace PijersiEngine::Logic
     }
 
     // Convert a native triple-index move into the string (a1-b1=c1 style) format.
-    string moveToString(uint32_t move, const uint8_t cells[45])
+    string moveToString(uint64_t move, const uint8_t cells[45])
     {
-        uint32_t indexStart = move & 0x000000FFU;
-        uint32_t indexMid = (move >> INDEX_WIDTH) & 0x000000FFU;
-        uint32_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FFU;
+        uint64_t indexStart = move & 0x000000FFU;
+        uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FFU;
+        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FFU;
 
         if (indexStart > 44)
         {
@@ -235,9 +235,9 @@ namespace PijersiEngine::Logic
     }
 
     // Converts a string (a1-b1=c1 style) move to the native triple-index format
-    uint32_t stringToMove(string moveString, const uint8_t cells[45])
+    uint64_t stringToMove(string moveString, const uint8_t cells[45])
     {
-        vector<uint32_t> move(3, 0x000000FF);
+        vector<uint64_t> move(3, 0x000000FF);
         if (moveString.size() == 4 || (moveString.size() == 6 && moveString[4] == '-'))
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
@@ -348,7 +348,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    uint64_t _countPieceMoves(uint32_t indexStart, const uint8_t cells[45])
+    uint64_t _countPieceMoves(uint64_t indexStart, const uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -360,14 +360,14 @@ namespace PijersiEngine::Logic
             // 1-range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
+                uint64_t indexMid = Lookup::neighbours[indexMidLoop];
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             count++;
@@ -377,7 +377,7 @@ namespace PijersiEngine::Logic
                     // stack, 0/1-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             count++;
@@ -399,13 +399,13 @@ namespace PijersiEngine::Logic
             // 2 range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours2[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours2[indexMidLoop];
+                uint64_t indexMid = Lookup::neighbours2[indexMidLoop];
                 if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -426,7 +426,7 @@ namespace PijersiEngine::Logic
             // 1-range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
+                uint64_t indexMid = Lookup::neighbours[indexMidLoop];
                 // 1-range move, [stack or unstack] optional
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
@@ -434,7 +434,7 @@ namespace PijersiEngine::Logic
                     // 1-range move, stack or unstack
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -459,7 +459,7 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             count++;
@@ -469,7 +469,7 @@ namespace PijersiEngine::Logic
                     // stack, 1-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             count++;
@@ -519,7 +519,7 @@ namespace PijersiEngine::Logic
             return _countPlayerMoves(currentPlayer, cells);
         }
         // Get a vector of all the available moves for the current player
-        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         uint64_t sum = 0ULL;
@@ -555,7 +555,7 @@ namespace PijersiEngine::Logic
         else
         {
             // Get a vector of all the available moves for the current player
-            array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+            array<uint64_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
             size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
             uint64_t sum = 0ULL;
@@ -586,7 +586,7 @@ namespace PijersiEngine::Logic
         results.reserve(256);
 
         // Get a vector of all the available moves for the current player
-        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         // Converts all those moves to string format
@@ -625,7 +625,7 @@ namespace PijersiEngine::Logic
     }
 
     // Drops a piece on top of an existing piece
-    inline void drop(uint8_t piece, uint32_t target, uint8_t cells[45])
+    inline void drop(uint8_t piece, uint64_t target, uint8_t cells[45])
     {
         // This is refactorizable if captures are stored.
         if ((cells[target] & COLOUR_MASK) != (piece & COLOUR_MASK))
@@ -636,7 +636,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies a move between chosen coordinates
-    inline void move(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    inline void move(uint64_t indexStart, uint64_t indexEnd, uint8_t cells[45])
     {
         // Do nothing if start and end coordinate are identical
         if (indexStart != indexEnd)
@@ -650,7 +650,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies a stack between chosen coordinates
-    inline void stack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    inline void stack(uint64_t indexStart, uint64_t indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
         uint8_t endPiece = cells[indexEnd];
@@ -663,7 +663,7 @@ namespace PijersiEngine::Logic
     }
 
     // Applies an unstack between chosen coordinates
-    inline void unstack(uint32_t indexStart, uint32_t indexEnd, uint8_t cells[45])
+    inline void unstack(uint64_t indexStart, uint64_t indexEnd, uint8_t cells[45])
     {
         uint8_t movingPiece = cells[indexStart];
 
@@ -676,7 +676,7 @@ namespace PijersiEngine::Logic
     }
 
     // Plays the selected move
-    void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45])
+    void play(uint64_t indexStart, uint64_t indexMid, uint64_t indexEnd, uint8_t cells[45])
     {
         if (indexStart > 44)
         {
@@ -751,26 +751,26 @@ namespace PijersiEngine::Logic
         }
     }
 
-    void playManual(uint32_t move, uint8_t cells[45])
+    void playManual(uint64_t move, uint8_t cells[45])
     {
-        uint32_t indexStart = move & 0x000000FF;
-        uint32_t indexMid = (move >> 8) & 0x000000FF;
-        uint32_t indexEnd = (move >> 16) & 0x000000FF;
+        uint64_t indexStart = move & 0x000000FF;
+        uint64_t indexMid = (move >> 8) & 0x000000FF;
+        uint64_t indexEnd = (move >> 16) & 0x000000FF;
         play(indexStart, indexMid, indexEnd, cells);
     }
 
     // Generates a random move
-    uint32_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer)
     {
         // Get a vector of all the available moves for the current player
-        array<uint32_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
+        array<uint64_t, MAX_PLAYER_MOVES> moves = availablePlayerMoves(currentPlayer, cells);
         size_t nMoves = moves[MAX_PLAYER_MOVES - 1];
 
         if (nMoves > 0)
         {
             std::uniform_int_distribution<int> intDistribution(0, nMoves - 1);
 
-            uint32_t index = intDistribution(RNG::gen);
+            uint64_t index = intDistribution(RNG::gen);
 
             return moves[index];
         }
@@ -778,9 +778,9 @@ namespace PijersiEngine::Logic
     }
 
     // Plays a random move
-    uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t playRandom(uint8_t cells[45], uint8_t currentPlayer)
     {
-        uint32_t move = searchRandom(cells, currentPlayer);
+        uint64_t move = searchRandom(cells, currentPlayer);
         // Apply move
         playManual(move, cells);
 
@@ -816,7 +816,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns true if the move leads to a win
-    bool isMoveWin(uint32_t move, const uint8_t cells[45])
+    bool isMoveWin(uint64_t move, const uint8_t cells[45])
     {
         size_t indexStart = move & 0x000000FF;
         size_t indexEnd = (move >> 16) & 0x000000FF;
@@ -865,7 +865,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a specific piece
-    void availablePieceMoves(uint32_t indexStart, const uint8_t cells[45], array<uint32_t, MAX_PLAYER_MOVES> &moves)
+    void availablePieceMoves(uint64_t indexStart, const uint8_t cells[45], array<uint64_t, MAX_PLAYER_MOVES> &moves)
     {
         uint8_t movingPiece = cells[indexStart];
         size_t indexMoves = moves[MAX_PLAYER_MOVES - 1];
@@ -876,15 +876,15 @@ namespace PijersiEngine::Logic
             // 1-range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
-                uint32_t halfMove = indexStart | (indexMid << 8);
+                uint64_t indexMid = Lookup::neighbours[indexMidLoop];
+                uint64_t halfMove = indexStart | (indexMid << 8);
                 // stack, [1/2-range move] optional
                 if (isStackValid(movingPiece, indexMid, cells))
                 {
                     // stack, 2-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
                             moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
@@ -895,7 +895,7 @@ namespace PijersiEngine::Logic
                     // stack, 0/1-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
                             moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
@@ -920,14 +920,14 @@ namespace PijersiEngine::Logic
             // 2 range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours2[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours2[indexMidLoop];
-                uint32_t halfMove = indexStart | (indexMid << 8);
+                uint64_t indexMid = Lookup::neighbours2[indexMidLoop];
+                uint64_t halfMove = indexStart | (indexMid << 8);
                 if (isMove2Valid(movingPiece, indexStart, indexMid, cells))
                 {
                     // 2-range move, stack or unstack
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -951,8 +951,8 @@ namespace PijersiEngine::Logic
             // 1-range first action
             for (size_t indexMidLoop = 7 * indexStart + 1; indexMidLoop < 7 * indexStart + Lookup::neighbours[7 * indexStart] + 1; indexMidLoop++)
             {
-                uint32_t indexMid = Lookup::neighbours[indexMidLoop];
-                uint32_t halfMove = indexStart | (indexMid << 8);
+                uint64_t indexMid = Lookup::neighbours[indexMidLoop];
+                uint64_t halfMove = indexStart | (indexMid << 8);
                 // 1-range move, [stack or unstack] optional
                 if (isMoveValid(movingPiece, indexMid, cells))
                 {
@@ -960,7 +960,7 @@ namespace PijersiEngine::Logic
                     // 1-range move, stack or unstack
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
@@ -989,7 +989,7 @@ namespace PijersiEngine::Logic
                     // stack, 2-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours2[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours2[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
                             moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
@@ -1000,7 +1000,7 @@ namespace PijersiEngine::Logic
                     // stack, 1-range move
                     for (size_t indexEndLoop = 7 * indexMid + 1; indexEndLoop < 7 * indexMid + Lookup::neighbours[7 * indexMid] + 1; indexEndLoop++)
                     {
-                        uint32_t indexEnd = Lookup::neighbours[indexEndLoop];
+                        uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
                             moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
@@ -1027,9 +1027,9 @@ namespace PijersiEngine::Logic
     }
 
     // Returns the list of possible moves for a player
-    array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, const uint8_t cells[45])
+    array<uint64_t, MAX_PLAYER_MOVES> availablePlayerMoves(uint8_t player, const uint8_t cells[45])
     {
-        array<uint32_t, MAX_PLAYER_MOVES> moves;
+        array<uint64_t, MAX_PLAYER_MOVES> moves;
         moves[MAX_PLAYER_MOVES - 1] = 0;
 
         // Calculate possible moves
@@ -1057,7 +1057,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 1-range move is possible
-    inline bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isMoveValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {
@@ -1075,7 +1075,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain 2-range move is possible
-    inline bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isMove2Valid(uint8_t movingPiece, uint64_t indexStart, uint64_t indexEnd, const uint8_t cells[45])
     {
         // If there is a piece blocking the move (cell between the start and end positions)
         if (cells[(indexEnd + indexStart) / 2] != 0)
@@ -1098,7 +1098,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain stack action is possible
-    inline bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isStackValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45])
     {
         // If the end cell is not empty
         // If the target piece and the moving piece are the same colour
@@ -1116,7 +1116,7 @@ namespace PijersiEngine::Logic
     }
 
     // Returns whether a certain unstack action is possible
-    inline bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45])
+    inline bool isUnstackValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45])
     {
         if (cells[indexEnd] != 0)
         {

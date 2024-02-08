@@ -12,7 +12,7 @@ using std::string;
 
 namespace PijersiEngine::Openings
 {
-    unordered_map<string, uint32_t> book = {
+    unordered_map<string, uint64_t> book = {
         {"s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/6/P-S-R-WWS-R-P-/R-P-S-R-P-S- w 0 1", 1054499},
         {"s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/7/P-5/1S-R-WWS-R-P-/R-P-S-R-P-S- b 1 1", 1312256},
         {"s-p-r-s-p-r-/p-r-s-wwr-s-p-/6/SP6/6/2R-WWS-R-P-/R-P-S-R-P-S- b 1 1", 1246976},

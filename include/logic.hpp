@@ -30,21 +30,21 @@
 
 namespace PijersiEngine::Logic
 {
-    using Coords = std::pair<uint32_t,uint32_t>;
+    using Coords = std::pair<uint64_t,uint64_t>;
 
     // TODO: convert and move to lookup
-    uint32_t coordsToIndex(uint32_t i, uint32_t j);
-    Coords indexToCoords(uint32_t index);
-    extern uint32_t indexToLine[45];
+    uint64_t coordsToIndex(uint64_t i, uint64_t j);
+    Coords indexToCoords(uint64_t index);
+    extern uint64_t indexToLine[45];
 
     extern std::unordered_map<uint8_t, char> pieceToChar;
     extern std::unordered_map<char, uint8_t> charToPiece;
 
-    std::string indexToString(uint32_t index);
-    uint32_t stringToIndex(std::string cellString);
+    std::string indexToString(uint64_t index);
+    uint64_t stringToIndex(std::string cellString);
     
-    std::string moveToString(uint32_t move, const uint8_t cells[45]);
-    uint32_t stringToMove(std::string moveString, const uint8_t cells[45]);
+    std::string moveToString(uint64_t move, const uint8_t cells[45]);
+    uint64_t stringToMove(std::string moveString, const uint8_t cells[45]);
     
     std::string cellsToString(const uint8_t cells[45]);
     void stringToCells(std::string cellsString, uint8_t targetCells[45]);
@@ -54,23 +54,23 @@ namespace PijersiEngine::Logic
     
     void setState(uint8_t target[45], const uint8_t origin[45]);
     
-    void play(uint32_t indexStart, uint32_t indexMid, uint32_t indexEnd, uint8_t cells[45]);
-    void playManual(uint32_t move, uint8_t *cells);
-    uint32_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer);
-    uint32_t playRandom(uint8_t cells[45], uint8_t currentPlayer);
+    void play(uint64_t indexStart, uint64_t indexMid, uint64_t indexEnd, uint8_t cells[45]);
+    void playManual(uint64_t move, uint8_t *cells);
+    uint64_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer);
+    uint64_t playRandom(uint8_t cells[45], uint8_t currentPlayer);
     
     bool isPositionWin(const uint8_t cells[45]);
-    bool isMoveWin(uint32_t move, const uint8_t cells[45]);
+    bool isMoveWin(uint64_t move, const uint8_t cells[45]);
     uint8_t getWinningPlayer(const uint8_t cells[45]);
     
-    std::array<uint32_t, MAX_PLAYER_MOVES> availablePlayerMoves(const uint8_t player, const uint8_t cells[45]);
+    std::array<uint64_t, MAX_PLAYER_MOVES> availablePlayerMoves(const uint8_t player, const uint8_t cells[45]);
     
     constexpr bool canTake(uint8_t source, uint8_t target);
     
-    inline bool isMoveValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    inline bool isMove2Valid(uint8_t movingPiece, uint32_t indexStart, uint32_t indexEnd, const uint8_t cells[45]);
-    inline bool isStackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
-    inline bool isUnstackValid(uint8_t movingPiece, uint32_t indexEnd, const uint8_t cells[45]);
+    inline bool isMoveValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45]);
+    inline bool isMove2Valid(uint8_t movingPiece, uint64_t indexStart, uint64_t indexEnd, const uint8_t cells[45]);
+    inline bool isStackValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45]);
+    inline bool isUnstackValid(uint8_t movingPiece, uint64_t indexEnd, const uint8_t cells[45]);
 
     void countMoves(uint8_t currentPlayer, const uint8_t cells[45], size_t countWhite[45], size_t countBlack[45]);
 }

@@ -4,7 +4,7 @@
 
 namespace PijersiEngine::MCTS
 {
-    uint32_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
+    uint64_t ponderMCTS(int milliseconds, int simulationsPerRollout, uint8_t cells[45], uint8_t currentPlayer);
 
     struct Node
     {
@@ -12,12 +12,12 @@ namespace PijersiEngine::MCTS
         uint8_t player;
         Node *parent;
         std::vector<Node*> children;
-        uint32_t move;
+        uint64_t move;
 
         int visits = 0;
         int score = 0;
 
-        Node(Node *newParent, const uint32_t &newMove, uint8_t newPlayer);
+        Node(Node *newParent, const uint64_t &newMove, uint8_t newPlayer);
         ~Node();
 
         void expand();

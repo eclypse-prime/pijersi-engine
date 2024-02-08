@@ -11,7 +11,7 @@ namespace PijersiEngine::Utils
     std::string strip(std::string str);
 
     void doubleSort(int64_t* scores, size_t* indices, size_t nMoves);
-    void sortPrincipalVariation(std::vector<uint32_t>& moves, uint32_t principalVariation);
+    void sortPrincipalVariation(std::vector<uint64_t>& moves, uint64_t principalVariation);
 }
 
 #endif
