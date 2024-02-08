@@ -52,7 +52,7 @@ namespace PijersiEngine
         }
     }
 
-    // TODO: maybe move this to Logic
+    // TODO: maybe move this to Logic, there is possible duplicate code
     // Adds a bottom piece to the selected piece
     uint8_t addBottom(uint8_t piece, uint8_t newBottom)
     {
