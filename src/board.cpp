@@ -305,6 +305,7 @@ namespace PijersiEngine
         return move;
     }
 
+    // TODO: this will fail
     bool Board::isMoveLegal(uint64_t move)
     {
         array<uint64_t, MAX_PLAYER_MOVES> moves = Logic::availablePlayerMoves(currentPlayer, cells);
@@ -317,12 +318,6 @@ namespace PijersiEngine
             }
         }
         return false;
-    }
-
-    void Board::playManual(vector<uint64_t> move)
-    {
-        Logic::play(move[0], move[1], move[2], cells);
-        endTurn();
     }
 
     void Board::playManual(uint64_t move)

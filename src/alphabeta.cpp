@@ -232,25 +232,27 @@ namespace PijersiEngine::AlphaBeta
     inline int64_t evaluateMoveTerminal(uint64_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
         size_t indexStart = move & 0x000000FF;
-        size_t indexMid = (move >> 8) & 0x000000FF;
-        size_t indexEnd = (move >> 16) & 0x000000FF;
+        size_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
+        size_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
 
         if ((cells[indexStart] & 12) != 12)
         {
-            if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
+            size_t indexLast = (indexEnd > 44) ? indexMid : indexEnd;
+            if ((currentPlayer == 1 && (indexLast <= 5)) || (currentPlayer == 0 && (indexLast >= 39)))
             {
+                cout << Logic::moveToString(move, cells) << " " << (int)currentPlayer << " " << indexLast << endl;
                 return -MAX_SCORE;
             }
         }
 
-        if (indexMid > 44)
+        if (indexEnd > 44)
         {
             // Starting cell
             previousScore -= previousPieceScores[indexStart];
 
             // Ending cell
-            previousScore -= previousPieceScores[indexEnd];
-            previousScore += evaluatePiece(cells[indexStart], indexEnd);
+            previousScore -= previousPieceScores[indexMid];
+            previousScore += evaluatePiece(cells[indexStart], indexMid);
         }
         else
         {
@@ -342,6 +344,10 @@ namespace PijersiEngine::AlphaBeta
         size_t indexEnd = (move >> 16) & 0x000000FF;
         if ((cells[indexStart] & 12) != 12)
         {
+            if (indexEnd > 44)
+            {
+                indexEnd = (move >> 8) & 0x000000FF;
+            }
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
                 return -MAX_SCORE;

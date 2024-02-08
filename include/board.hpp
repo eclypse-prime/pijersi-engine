@@ -18,7 +18,6 @@ namespace PijersiEngine
         Board(Board &board);
         // ~Board();
 
-        void playManual(std::vector<uint64_t> move);
         void playManual(uint64_t move);
         void playManual(std::string move);
 

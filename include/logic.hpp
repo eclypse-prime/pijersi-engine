@@ -49,12 +49,13 @@ namespace PijersiEngine::Logic
     std::string cellsToString(const uint8_t cells[45]);
     void stringToCells(std::string cellsString, uint8_t targetCells[45]);
     
-    uint64_t perft(int recursionDepth, const uint8_t cells[45], uint8_t currentPlayer);
+    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer);
     std::vector<std::string> perftSplit(int recursionDepth, const uint8_t cells[45], uint8_t currentPlayer);
     
     void setState(uint8_t target[45], const uint8_t origin[45]);
     
-    void play(uint64_t indexStart, uint64_t indexMid, uint64_t indexEnd, uint8_t cells[45]);
+    void play(uint64_t move, uint8_t cells[45]);
+    void unplay(uint64_t move, uint8_t cells[45]);
     void playManual(uint64_t move, uint8_t *cells);
     uint64_t searchRandom(const uint8_t cells[45], uint8_t currentPlayer);
     uint64_t playRandom(uint8_t cells[45], uint8_t currentPlayer);
