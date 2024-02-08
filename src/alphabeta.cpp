@@ -237,22 +237,20 @@ namespace PijersiEngine::AlphaBeta
 
         if ((cells[indexStart] & 12) != 12)
         {
-            size_t indexLast = (indexEnd > 44) ? indexMid : indexEnd;
-            if ((currentPlayer == 1 && (indexLast <= 5)) || (currentPlayer == 0 && (indexLast >= 39)))
+            if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
-                cout << Logic::moveToString(move, cells) << " " << (int)currentPlayer << " " << indexLast << endl;
                 return -MAX_SCORE;
             }
         }
 
-        if (indexEnd > 44)
+        if (indexMid > 44)
         {
             // Starting cell
             previousScore -= previousPieceScores[indexStart];
 
             // Ending cell
-            previousScore -= previousPieceScores[indexMid];
-            previousScore += evaluatePiece(cells[indexStart], indexMid);
+            previousScore -= previousPieceScores[indexEnd];
+            previousScore += evaluatePiece(cells[indexStart], indexEnd);
         }
         else
         {
@@ -344,10 +342,6 @@ namespace PijersiEngine::AlphaBeta
         size_t indexEnd = (move >> 16) & 0x000000FF;
         if ((cells[indexStart] & 12) != 12)
         {
-            if (indexEnd > 44)
-            {
-                indexEnd = (move >> 8) & 0x000000FF;
-            }
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
                 return -MAX_SCORE;

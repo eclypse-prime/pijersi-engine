@@ -2,7 +2,7 @@
 
 namespace PijersiEngine::Options
 {
-    size_t threads = 1;
+    size_t threads = 8;
     bool verbose = true;
     bool openingBook = false;
 }

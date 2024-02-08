@@ -219,9 +219,9 @@ namespace PijersiEngine::Logic
     // Convert a native triple-index move into the string (a1-b1=c1 style) format.
     string moveToString(uint64_t move, const uint8_t cells[45])
     {
-        uint64_t indexStart = move & 0x000000FFU;
-        uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FFU;
-        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FFU;
+        uint32_t indexStart = move & 0x000000FFU;
+        uint32_t indexMid = (move >> INDEX_WIDTH) & 0x000000FFU;
+        uint32_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FFU;
 
         if (indexStart > 44)
         {
@@ -230,29 +230,56 @@ namespace PijersiEngine::Logic
 
         string moveString = indexToString(indexStart);
 
-        moveString += indexToString(indexMid);
-        if (indexEnd < 45)
+        if (indexMid < 45)
+        {
+            if (indexStart == indexMid) {
+                if (cells[indexStart] < 16)
+                {
+                    moveString += indexToString(indexEnd);
+                }
+                else
+                {
+                    moveString += indexToString(indexStart) + indexToString(indexEnd);
+                }
+            }
+            else
+            {
+                moveString += indexToString(indexMid) + indexToString(indexEnd);
+            }
+        }
+        else
         {
             moveString += indexToString(indexEnd);
+            if (cells[indexStart] >= 16)
+            {
+                moveString += indexToString(indexEnd);
+            }
         }
-
         return moveString;
     }
 
     // Converts a string (a1-b1=c1 style) move to the native triple-index format
     uint64_t stringToMove(string moveString, const uint8_t cells[45])
     {
-        vector<uint64_t> move(3, 0x000000FF);
+        vector<uint32_t> move(3, 0x000000FF);
         if (moveString.size() == 4 || (moveString.size() == 6 && moveString[4] == '-'))
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
-            move[1] = stringToIndex(moveString.substr(2, 2));
+            move[2] = stringToIndex(moveString.substr(2, 2));
+            if (cells[move[2]] != 0 && ((cells[move[0]] & 2) == (cells[move[2]] & 2)))
+            {
+                move[1] = move[0];
+            }
         }
         else if (moveString.size() == 6)
         {
             move[0] = stringToIndex(moveString.substr(0, 2));
             move[1] = stringToIndex(moveString.substr(2, 2));
             move[2] = stringToIndex(moveString.substr(4, 2));
+            if (move[1] == move[2])
+            {
+                move[1] = 0x000000FF;
+            }
         }
         else
         {
@@ -260,7 +287,6 @@ namespace PijersiEngine::Logic
         }
         return _concatenateMove(move[0], move[1], move[2]);
     }
-
     string cellsToString(const uint8_t cells[45])
     {
         string cellsString = "";
@@ -535,6 +561,7 @@ namespace PijersiEngine::Logic
             if (!isMoveWin(moves[k], cells))
             {
                 // setState(newCells, cells);
+                // playManual(moves[k], newCells);
                 playManual(moves[k], cells);
                 sum += _perftIter(recursionDepth - 1, cells, 1 - currentPlayer);
                 unplay(moves[k], cells);
@@ -544,7 +571,7 @@ namespace PijersiEngine::Logic
     }
 
     // Perft debug function to measure the number of leaf nodes (possible moves) at a given depth
-    uint64_t perft(int recursionDepth, uint8_t cells[45], uint8_t currentPlayer)
+    uint64_t perft(int recursionDepth, const uint8_t cells[45], uint8_t currentPlayer)
     {
         if (recursionDepth == 0)
         {
@@ -556,7 +583,9 @@ namespace PijersiEngine::Logic
         }
         else if (recursionDepth == 1)
         {
-            return _perftIter(1, cells, currentPlayer);
+            uint8_t newCells[45];
+            setState(newCells, cells);
+            return _perftIter(1, newCells, currentPlayer);
         }
         else
         {
@@ -687,75 +716,42 @@ namespace PijersiEngine::Logic
         uint64_t indexStart = move & 0x000000FF;
         uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
         uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
-
+        
         if (indexStart > 44)
         {
             return;
         }
         uint8_t movingPiece = cells[indexStart];
-        // If there is no third coordinate
-        if (indexEnd > 44)
+        if (movingPiece != 0)
         {
-            if ((cells[indexMid] & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
+            // If there is no intermediate move
+            if (indexMid > 44)
             {
-                _stack(indexStart, indexMid, cells);
+                // Simple move
+                _move(indexStart, indexEnd, cells);
             }
+            // There is an intermediate move
             else
             {
-                _move(indexStart, indexMid, cells);
-            }
-        }
-        else
-        {
-            // If the starting piece is a single piece, stack-move
-            if (movingPiece < 16)
-            {
-                uint8_t pieceMid = cells[indexMid];
-                cells[indexStart] = 0;
-                cells[indexMid] = 0;
-                cells[indexEnd] = movingPiece | (pieceMid << HALF_PIECE_WIDTH);
-            }
-            else
-            {
-                // Unstack
-                if (indexStart == indexMid)
+                uint8_t midPiece = cells[indexMid];
+                uint8_t endPiece = cells[indexEnd];
+                // The piece at the mid coordinates is an ally : stack and move
+                if (midPiece != 0 && (midPiece & 2) == (movingPiece & 2) && (indexMid != indexStart))
                 {
-                    if ((cells[indexEnd] & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
-                    {
-                        _stack(indexStart, indexEnd, cells);
-                    }
-                    else
-                    {
-                        _unstack(indexStart, indexEnd, cells);
-                    }
+                    _stack(indexStart, indexMid, cells);
+                    _move(indexMid, indexEnd, cells);
                 }
-                // Move
-                else if (indexMid == indexEnd)
+                // The piece at the end coordinates is an ally : move and stack
+                else if (endPiece != 0 && (endPiece & 2) == (movingPiece & 2))
                 {
-                    _move(indexStart, indexEnd, cells);
+                    _move(indexStart, indexMid, cells);
+                    _stack(indexMid, indexEnd, cells);
                 }
+                // The end coordinates contain an enemy or no piece : move and unstack
                 else
                 {
-                    uint8_t pieceMid = cells[indexMid];
-                    uint8_t pieceEnd = cells[indexEnd];
-                    // The piece at the mid coordinates is an ally : stack and move
-                    if ((pieceMid & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
-                    {
-                        _stack(indexStart, indexMid, cells);
-                        _move(indexMid, indexEnd, cells);
-                    }
-                    // The piece at the end coordinates is an ally : move and stack
-                    else if ((pieceEnd & (COLOUR_MASK | BASE_MASK)) == (movingPiece & (COLOUR_MASK | BASE_MASK)))
-                    {
-                        _move(indexStart, indexMid, cells);
-                        _stack(indexMid, indexEnd, cells);
-                    }
-                    // The end coordinates contain an enemy or no piece : move and unstack
-                    else
-                    {
-                        _move(indexStart, indexMid, cells);
-                        _unstack(indexMid, indexEnd, cells);
-                    }
+                    _move(indexStart, indexMid, cells);
+                    _unstack(indexMid, indexEnd, cells);
                 }
             }
         }
@@ -766,11 +762,14 @@ namespace PijersiEngine::Logic
         uint64_t indexStart = move & 0x000000FF;
         uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
         uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
-        uint64_t pieceStart = (move >> (3*INDEX_WIDTH)) & 0x000000FF;
-        uint64_t pieceMid = (move >> (4*INDEX_WIDTH)) & 0x000000FF;
-        uint64_t pieceEnd = (move >> (5*INDEX_WIDTH)) & 0x000000FF;
+        uint8_t pieceStart = (move >> (3*INDEX_WIDTH)) & 0x000000FF;
+        uint8_t pieceMid = (move >> (4*INDEX_WIDTH)) & 0x000000FF;
+        uint8_t pieceEnd = (move >> (5*INDEX_WIDTH)) & 0x000000FF;
         cells[indexStart] = pieceStart;
-        cells[indexMid] = pieceMid;
+        if (indexMid <= 44)
+        {
+            cells[indexMid] = pieceMid;
+        }
         cells[indexEnd] = pieceEnd;
     }
 
@@ -844,10 +843,6 @@ namespace PijersiEngine::Logic
         
         if ((movingPiece & 12) != 12)
         {
-            if (indexEnd > 44)
-            {
-                indexEnd = (move >> 8) & 0x000000FF;
-            }
             if (((movingPiece & 2) == 0 && (indexEnd <= 5)) || ((movingPiece & 2) == 2 && (indexEnd >= 39)))
             {
                 return true;
@@ -924,13 +919,13 @@ namespace PijersiEngine::Logic
                     }
 
                     // stack only
-                    moves[indexMoves] = _concatenateHalfMove(halfMove, 0xFFU) | _concatenatePieces(cells[indexStart], cells[indexMid], 0ULL);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid) | _concatenatePieces(cells[indexStart], cells[indexStart], cells[indexMid]);
                     indexMoves++;
                 }
                 // 1-range move
                 else if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves[indexMoves] = _concatenateHalfMove(halfMove, 0xFFU) | _concatenatePieces(cells[indexStart], cells[indexMid], 0ULL);
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
                     indexMoves++;
                 }
             }
@@ -964,7 +959,7 @@ namespace PijersiEngine::Logic
                     }
 
                     // 2-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexMid) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexMid]);
+                    moves[indexMoves] =_concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
                     indexMoves++;
                 }
             }
@@ -1000,7 +995,7 @@ namespace PijersiEngine::Logic
                     indexMoves++;
 
                     // 1-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexMid) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
                     indexMoves++;
                 }
                 // stack, [1/2-range move] optional
