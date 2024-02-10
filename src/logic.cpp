@@ -7,7 +7,6 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 using std::array;
@@ -563,10 +562,7 @@ namespace PijersiEngine::Logic
             {
                 setState(newCells, cells);
                 playManual(moves[k], newCells);
-                // playManual(moves[k], cells);
                 sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
-                // sum += _perftIter(recursionDepth - 1, cells, 1 - currentPlayer);
-                // unplay(moves[k], cells);
             }
         }
         return sum;
@@ -658,9 +654,7 @@ namespace PijersiEngine::Logic
     // Copy the data from origin to target
     void setState(uint8_t target[45], const uint8_t origin[45])
     {
-        // TODO: See if memcpy is faster, as there is no aliasing here
         std::memcpy(target, origin, 45);
-        // std::copy(origin, origin+45, target);
     }
 
     // Drops a piece on top of an existing piece
