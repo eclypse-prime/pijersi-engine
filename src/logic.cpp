@@ -3,6 +3,7 @@
 #include <rng.hpp>
 #include <utils.hpp>
 
+#include <cstring>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -555,16 +556,17 @@ namespace PijersiEngine::Logic
 
         uint64_t sum = 0ULL;
 
-        // uint8_t newCells[45];
+        uint8_t newCells[45];
         for (size_t k = 0; k < nMoves; k++)
         {
             if (!isMoveWin(moves[k], cells))
             {
-                // setState(newCells, cells);
-                // playManual(moves[k], newCells);
-                playManual(moves[k], cells);
-                sum += _perftIter(recursionDepth - 1, cells, 1 - currentPlayer);
-                unplay(moves[k], cells);
+                setState(newCells, cells);
+                playManual(moves[k], newCells);
+                // playManual(moves[k], cells);
+                sum += _perftIter(recursionDepth - 1, newCells, 1 - currentPlayer);
+                // sum += _perftIter(recursionDepth - 1, cells, 1 - currentPlayer);
+                // unplay(moves[k], cells);
             }
         }
         return sum;
@@ -656,7 +658,9 @@ namespace PijersiEngine::Logic
     // Copy the data from origin to target
     void setState(uint8_t target[45], const uint8_t origin[45])
     {
-        std::copy(origin, origin + 45, target);
+        // TODO: See if memcpy is faster, as there is no aliasing here
+        std::memcpy(target, origin, 45);
+        // std::copy(origin, origin+45, target);
     }
 
     // Drops a piece on top of an existing piece
@@ -902,7 +906,7 @@ namespace PijersiEngine::Logic
                         uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells) || ((indexStart == (indexMid + indexEnd) / 2) && isMoveValid(movingPiece, indexEnd, cells)))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
@@ -913,19 +917,19 @@ namespace PijersiEngine::Logic
                         uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells) || (indexStart == indexEnd))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
 
                     // stack only
-                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid) | _concatenatePieces(cells[indexStart], cells[indexStart], cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
                     indexMoves++;
                 }
                 // 1-range move
                 else if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
                     indexMoves++;
                 }
             }
@@ -946,20 +950,20 @@ namespace PijersiEngine::Logic
                         // 2-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
 
                         // 2-range move, stack
                         else if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
 
                     // 2-range move
-                    moves[indexMoves] =_concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
+                    moves[indexMoves] =_concatenateMove(indexStart, 0x000000FF, indexMid);
                     indexMoves++;
                 }
             }
@@ -979,23 +983,23 @@ namespace PijersiEngine::Logic
                         // 1-range move, unstack
                         if (isUnstackValid(movingPiece, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
 
                         // 1-range move, stack
                         else if (isStackValid(movingPiece, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
                     // 1-range move, unstack on starting position
-                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexStart) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexStart]);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexMid, indexStart);
                     indexMoves++;
 
                     // 1-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid) | _concatenatePieces(cells[indexStart], 0ULL, cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
                     indexMoves++;
                 }
                 // stack, [1/2-range move] optional
@@ -1007,7 +1011,7 @@ namespace PijersiEngine::Logic
                         uint64_t indexEnd = Lookup::neighbours2[indexEndLoop];
                         if (isMove2Valid(movingPiece, indexMid, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
@@ -1018,13 +1022,13 @@ namespace PijersiEngine::Logic
                         uint64_t indexEnd = Lookup::neighbours[indexEndLoop];
                         if (isMoveValid(movingPiece, indexEnd, cells))
                         {
-                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd) | _concatenatePieces(cells[indexStart], cells[indexMid], cells[indexEnd]);
+                            moves[indexMoves] = _concatenateHalfMove(halfMove, indexEnd);
                             indexMoves++;
                         }
                     }
 
                     // stack only
-                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid) | _concatenatePieces(cells[indexStart], cells[indexStart], cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
                     indexMoves++;
                 }
 
@@ -1032,7 +1036,7 @@ namespace PijersiEngine::Logic
                 if (isUnstackValid(movingPiece, indexMid, cells))
                 {
                     // unstack only
-                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid) | _concatenatePieces(cells[indexStart], cells[indexStart], cells[indexMid]);
+                    moves[indexMoves] = _concatenateMove(indexStart, indexStart, indexMid);
                     indexMoves++;
                 }
             }
