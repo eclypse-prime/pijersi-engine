@@ -711,9 +711,9 @@ namespace PijersiEngine::Logic
     // Plays the selected move
     void play(uint64_t move, uint8_t cells[45])
     {
-        uint64_t indexStart = move & 0x000000FF;
-        uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
-        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
+        uint64_t indexStart = move & INDEX_MASK;
+        uint64_t indexMid = (move >> INDEX_WIDTH) & INDEX_MASK;
+        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & INDEX_MASK;
         
         if (indexStart > 44)
         {
@@ -757,12 +757,12 @@ namespace PijersiEngine::Logic
 
     void unplay(uint64_t move, uint8_t cells[45])
     {
-        uint64_t indexStart = move & 0x000000FF;
-        uint64_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
-        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
-        uint8_t pieceStart = (move >> (3*INDEX_WIDTH)) & 0x000000FF;
-        uint8_t pieceMid = (move >> (4*INDEX_WIDTH)) & 0x000000FF;
-        uint8_t pieceEnd = (move >> (5*INDEX_WIDTH)) & 0x000000FF;
+        uint64_t indexStart = move & INDEX_MASK;
+        uint64_t indexMid = (move >> INDEX_WIDTH) & INDEX_MASK;
+        uint64_t indexEnd = (move >> (2*INDEX_WIDTH)) & INDEX_MASK;
+        uint8_t pieceStart = (move >> (3*INDEX_WIDTH)) & INDEX_MASK;
+        uint8_t pieceMid = (move >> (4*INDEX_WIDTH)) & INDEX_MASK;
+        uint8_t pieceEnd = (move >> (5*INDEX_WIDTH)) & INDEX_MASK;
         cells[indexStart] = pieceStart;
         if (indexMid <= 44)
         {
@@ -835,8 +835,8 @@ namespace PijersiEngine::Logic
     // Returns true if the move leads to a win
     bool isMoveWin(uint64_t move, const uint8_t cells[45])
     {
-        size_t indexStart = move & 0x000000FF;
-        size_t indexEnd = (move >> (2 * INDEX_WIDTH)) & 0x000000FF;
+        size_t indexStart = move & INDEX_MASK;
+        size_t indexEnd = (move >> (2 * INDEX_WIDTH)) & INDEX_MASK;
         uint8_t movingPiece = cells[indexStart];
         
         if ((movingPiece & TYPE_MASK) != TYPE_WISE)
@@ -923,7 +923,7 @@ namespace PijersiEngine::Logic
                 // 1-range move
                 else if (isMoveValid(movingPiece, indexMid, cells))
                 {
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] = _concatenateMove(indexStart, NULL_ACTION, indexMid);
                     indexMoves++;
                 }
             }
@@ -957,7 +957,7 @@ namespace PijersiEngine::Logic
                     }
 
                     // 2-range move
-                    moves[indexMoves] =_concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] =_concatenateMove(indexStart, NULL_ACTION, indexMid);
                     indexMoves++;
                 }
             }
@@ -993,7 +993,7 @@ namespace PijersiEngine::Logic
                     indexMoves++;
 
                     // 1-range move
-                    moves[indexMoves] = _concatenateMove(indexStart, 0x000000FF, indexMid);
+                    moves[indexMoves] = _concatenateMove(indexStart, NULL_ACTION, indexMid);
                     indexMoves++;
                 }
                 // stack, [1/2-range move] optional
