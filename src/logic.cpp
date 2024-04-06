@@ -232,15 +232,9 @@ namespace PijersiEngine::Logic
 
         if (indexMid < 45)
         {
-            if (indexStart == indexMid) {
-                if (cells[indexStart] < 16)
-                {
-                    moveString += indexToString(indexEnd);
-                }
-                else
-                {
-                    moveString += indexToString(indexStart) + indexToString(indexEnd);
-                }
+            if (indexStart == indexMid && cells[indexStart] < 16)
+            {
+                moveString += indexToString(indexEnd);
             }
             else
             {
