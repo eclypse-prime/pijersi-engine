@@ -10,6 +10,7 @@
 
 #define HALF_PIECE_WIDTH 4
 #define INDEX_WIDTH 8
+#define INDEX_MASK 0xFFU
 
 #define BASE_MASK 0b0001U
 #define COLOUR_MASK 0b0010U
@@ -26,6 +27,7 @@
 
 
 #define NULL_MOVE 0x00FFFFFFU
+#define NULL_ACTION 0xFFU
 #define MAX_PLAYER_MOVES 512
 
 namespace PijersiEngine::Logic

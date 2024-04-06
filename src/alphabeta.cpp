@@ -231,11 +231,11 @@ namespace PijersiEngine::AlphaBeta
     [[nodiscard]]
     inline int64_t evaluateMoveTerminal(uint64_t move, const uint8_t cells[45], uint8_t currentPlayer, int64_t previousScore, int64_t previousPieceScores[45])
     {
-        size_t indexStart = move & 0x000000FF;
-        size_t indexMid = (move >> INDEX_WIDTH) & 0x000000FF;
-        size_t indexEnd = (move >> (2*INDEX_WIDTH)) & 0x000000FF;
+        size_t indexStart = move & INDEX_MASK;
+        size_t indexMid = (move >> INDEX_WIDTH) & INDEX_MASK;
+        size_t indexEnd = (move >> (2*INDEX_WIDTH)) & INDEX_MASK;
 
-        if ((cells[indexStart] & 12) != 12)
+        if ((cells[indexStart] & TYPE_MASK) != TYPE_WISE)
         {
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
@@ -258,10 +258,10 @@ namespace PijersiEngine::AlphaBeta
             uint8_t midPiece = cells[indexMid];
             uint8_t endPiece = cells[indexEnd];
             // The piece at the mid coordinates is an ally : stack and move
-            if (midPiece != 0 && (midPiece & 2) == (startPiece & 2) && (indexMid != indexStart))
+            if (midPiece != 0 && (midPiece & COLOUR_MASK) == (startPiece & COLOUR_MASK) && (indexMid != indexStart))
             {
-                endPiece = (startPiece & 15) + (midPiece << 4);
-                startPiece = (startPiece >> 4);
+                endPiece = (startPiece & TOP_MASK) + (midPiece << HALF_PIECE_WIDTH);
+                startPiece = (startPiece >> HALF_PIECE_WIDTH);
                 midPiece = 0;
 
                 // Starting cell
@@ -280,16 +280,16 @@ namespace PijersiEngine::AlphaBeta
                 previousScore += evaluatePiece(endPiece, indexEnd);
             }
             // The piece at the end coordinates is an ally : move and stack
-            else if (endPiece != 0 && (endPiece & 2) == (startPiece & 2))
+            else if (endPiece != 0 && (endPiece & COLOUR_MASK) == (startPiece & COLOUR_MASK))
             {
                 midPiece = startPiece;
                 startPiece = 0;
-                endPiece = (midPiece & 15) + (endPiece << 4);
+                endPiece = (midPiece & TOP_MASK) + (endPiece << HALF_PIECE_WIDTH);
                 if (indexStart == indexEnd)
                 {
                     endPiece = (midPiece & 15);
                 }
-                midPiece = (midPiece >> 4);
+                midPiece = (midPiece >> HALF_PIECE_WIDTH);
 
                 // Starting cell
                 if (indexStart != indexMid)
@@ -313,8 +313,8 @@ namespace PijersiEngine::AlphaBeta
             {
                 midPiece = startPiece;
                 startPiece = 0;
-                endPiece = (midPiece & 15);
-                midPiece = (midPiece >> 4);
+                endPiece = (midPiece & TOP_MASK);
+                midPiece = (midPiece >> HALF_PIECE_WIDTH);
                 // Starting cell
                 if (indexStart != indexMid)
                 {
@@ -338,9 +338,9 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluateMove(uint64_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Stop the recursion if a winning position is achieved
-        size_t indexStart = move & 0x000000FF;
-        size_t indexEnd = (move >> 16) & 0x000000FF;
-        if ((cells[indexStart] & 12) != 12)
+        size_t indexStart = move & INDEX_MASK;
+        size_t indexEnd = (move >> (2 * INDEX_WIDTH)) & INDEX_MASK;
+        if ((cells[indexStart] & TYPE_MASK) != TYPE_WISE)
         {
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
@@ -423,9 +423,9 @@ namespace PijersiEngine::AlphaBeta
     int64_t evaluateMoveParallel(uint64_t move, int recursionDepth, int64_t alpha, int64_t beta, const uint8_t cells[45], uint8_t currentPlayer, time_point<steady_clock> finishTime, bool allowNullMove)
     {
         // Stop the recursion if a winning position is achieved
-        size_t indexStart = move & 0x000000FF;
-        size_t indexEnd = (move >> 16) & 0x000000FF;
-        if ((cells[indexStart] & 12) != 12)
+        size_t indexStart = move & INDEX_MASK;
+        size_t indexEnd = (move >> (2 * INDEX_WIDTH)) & INDEX_MASK;
+        if ((cells[indexStart] & TYPE_MASK) != TYPE_WISE)
         {
             if ((currentPlayer == 1 && (indexEnd <= 5)) || (currentPlayer == 0 && (indexEnd >= 39)))
             {
@@ -527,12 +527,12 @@ namespace PijersiEngine::AlphaBeta
         int64_t score;
 
         // If the piece isn't Wise
-        if ((piece & 12) != 12)
+        if ((piece & TYPE_MASK) != TYPE_WISE)
         {
             score = 15 - 12 * (piece & 2) - i;
 
             // If the piece is in a winning position
-            if ((i == 0 && (piece & 2) == 0) || (i == 6 && (piece & 2) == 2))
+            if ((i == 0 && (piece & COLOUR_MASK) == COLOUR_WHITE) || (i == 6 && (piece & COLOUR_MASK) == COLOUR_WHITE))
             {
                 score *= 256;
             }

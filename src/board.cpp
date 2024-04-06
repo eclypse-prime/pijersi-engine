@@ -450,8 +450,8 @@ namespace PijersiEngine
                 uint8_t piece = cells[Logic::coordsToIndex(i, j)];
                 if (piece != 0)
                 {
-                    char1 = Logic::pieceToChar[piece & 0x0FU];
-                    char2 = Logic::pieceToChar[piece >> 4];
+                    char1 = Logic::pieceToChar[piece & TOP_MASK];
+                    char2 = Logic::pieceToChar[piece >> HALF_PIECE_WIDTH];
                 }
                 output += char1;
                 output += char2;
