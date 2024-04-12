@@ -532,7 +532,7 @@ namespace PijersiEngine::AlphaBeta
             score = 15 - 12 * (piece & 2) - i;
 
             // If the piece is in a winning position
-            if ((i == 0 && (piece & COLOUR_MASK) == COLOUR_WHITE) || (i == 6 && (piece & COLOUR_MASK) == COLOUR_WHITE))
+            if ((i == 0 && (piece & COLOUR_MASK) == COLOUR_WHITE) || (i == 6 && (piece & COLOUR_MASK) == COLOUR_BLACK))
             {
                 score *= 256;
             }
