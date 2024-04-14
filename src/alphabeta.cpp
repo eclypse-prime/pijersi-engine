@@ -287,7 +287,7 @@ namespace PijersiEngine::AlphaBeta
                 endPiece = (midPiece & TOP_MASK) + (endPiece << HALF_PIECE_WIDTH);
                 if (indexStart == indexEnd)
                 {
-                    endPiece = (midPiece & 15);
+                    endPiece = (midPiece & TOP_MASK);
                 }
                 midPiece = (midPiece >> HALF_PIECE_WIDTH);
 
